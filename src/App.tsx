@@ -8,6 +8,9 @@ import { Sidebar } from "@/components/layout/Sidebar";
 import { Navbar } from "@/components/layout/Navbar";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
+import VCenters from "./pages/compute/VCenters";
+import Testbeds from "./pages/compute/Testbeds";
+import Kubernetes from "./pages/compute/Kubernetes";
 
 const queryClient = new QueryClient();
 
@@ -54,7 +57,7 @@ const App = () => (
             path="/vcenters" 
             element={
               <Layout title="vCenter Management">
-                <ComingSoon feature="vCenter" />
+                <VCenters />
               </Layout>
             } 
           />
@@ -62,7 +65,7 @@ const App = () => (
             path="/testbeds" 
             element={
               <Layout title="Testbed Management">
-                <ComingSoon feature="Testbed" />
+                <Testbeds />
               </Layout>
             } 
           />
@@ -70,7 +73,7 @@ const App = () => (
             path="/kubernetes" 
             element={
               <Layout title="Kubernetes Management">
-                <ComingSoon feature="Kubernetes" />
+                <Kubernetes />
               </Layout>
             } 
           />
