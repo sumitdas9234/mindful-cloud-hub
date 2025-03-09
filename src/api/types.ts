@@ -1,0 +1,43 @@
+
+export interface ServerData {
+  id: number;
+  name: string;
+  cpu: number;
+  memory: number;
+  disk: number;
+  status: 'online' | 'offline' | 'maintenance';
+}
+
+export interface ResourceUsageData {
+  name: string;
+  cpu: number;
+  memory: number;
+  network: number;
+}
+
+export interface StatsData {
+  title: string;
+  value: string;
+  description: string;
+  trend: 'up' | 'down' | 'neutral';
+  trendValue: string;
+}
+
+export interface SystemLoadData {
+  cpu: number;
+  memory: {
+    value: number;
+    used: string;
+    total: string;
+  };
+  storage: {
+    value: number;
+    used: string;
+    total: string;
+  };
+  network: {
+    value: number;
+    used: string;
+    total: string;
+  };
+}
