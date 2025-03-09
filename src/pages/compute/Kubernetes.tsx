@@ -1,288 +1,382 @@
 
 import React, { useState } from 'react';
 import { 
-  Cloud,
-  Search,
-  Plus,
-  RefreshCw,
-  MoreHorizontal,
-  CheckCircle,
-  AlertTriangle,
+  Search, 
+  Plus, 
+  RefreshCw, 
+  MoreVertical, 
+  Cloud, 
+  CheckCircle2, 
+  AlertCircle,
   XCircle,
-  Download
+  PieChart,
+  CpuIcon,
+  Database
 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
-} from '@/components/ui/table';
-import { Progress } from '@/components/ui/progress';
+  Card, 
+  CardContent, 
+  CardDescription, 
+  CardFooter, 
+  CardHeader, 
+  CardTitle 
+} from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { 
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuGroup,
   DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger
+  DropdownMenuTrigger,
+  DropdownMenuSeparator
 } from '@/components/ui/dropdown-menu';
-import { toast } from 'sonner';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import { Progress } from "@/components/ui/progress";
+import { useQuery } from '@tanstack/react-query';
+import { useToast } from '@/hooks/use-toast';
 
+// Types for our Kubernetes data
 interface KubernetesCluster {
   id: string;
   name: string;
   version: string;
-  status: 'healthy' | 'warning' | 'critical';
-  provider: 'rke' | 'aks' | 'eks' | 'gke' | 'ocp';
-  nodes: number;
-  pods: number;
-  namespaces: number;
-  cpu: {
-    usage: number;
-    total: number;
-  };
-  memory: {
-    usage: number;
-    total: number;
-  };
-  storage: {
-    usage: number;
-    total: number;
-  };
-  created: string;
-  lastUpdated: string;
+  status: 'running' | 'provisioning' | 'degraded' | 'stopped';
+  provider: 'on-premise' | 'aws' | 'azure' | 'gcp';
+  location: string;
+  nodeCount: number;
+  cpuUsage: number;
+  memoryUsage: number;
+  storageUsage: number;
+  namespaceCount: number;
+  podCount: number;
+  deploymentCount: number;
+  serviceCount: number;
+  createdAt: string;
+  lastUpdatedAt: string;
 }
 
-const clusters: KubernetesCluster[] = [
+// Mock data for Kubernetes clusters
+const mockKubernetesClusters: KubernetesCluster[] = [
   {
-    id: '1',
-    name: 'prod-cluster-01',
-    version: 'v1.28.3',
-    status: 'healthy',
-    provider: 'rke',
-    nodes: 12,
-    pods: 245,
-    namespaces: 8,
-    cpu: {
-      usage: 42,
-      total: 96
-    },
-    memory: {
-      usage: 156,
-      total: 384
-    },
-    storage: {
-      usage: 2.8,
-      total: 10
-    },
-    created: '2023-01-15',
-    lastUpdated: '2023-10-05'
+    id: 'k8s-1',
+    name: 'production-cluster',
+    version: '1.26.3',
+    status: 'running',
+    provider: 'on-premise',
+    location: 'East Datacenter',
+    nodeCount: 8,
+    cpuUsage: 65,
+    memoryUsage: 72,
+    storageUsage: 45,
+    namespaceCount: 12,
+    podCount: 86,
+    deploymentCount: 24,
+    serviceCount: 36,
+    createdAt: '2023-01-15T10:30:00Z',
+    lastUpdatedAt: '2023-08-10T15:45:00Z'
   },
   {
-    id: '2',
-    name: 'staging-cluster-01',
-    version: 'v1.28.2',
-    status: 'healthy',
-    provider: 'rke',
-    nodes: 6,
-    pods: 124,
-    namespaces: 5,
-    cpu: {
-      usage: 18,
-      total: 48
-    },
-    memory: {
-      usage: 72,
-      total: 192
-    },
-    storage: {
-      usage: 1.4,
-      total: 5
-    },
-    created: '2023-02-20',
-    lastUpdated: '2023-09-28'
+    id: 'k8s-2',
+    name: 'development-cluster',
+    version: '1.27.0',
+    status: 'running',
+    provider: 'aws',
+    location: 'us-east-1',
+    nodeCount: 5,
+    cpuUsage: 42,
+    memoryUsage: 50,
+    storageUsage: 35,
+    namespaceCount: 8,
+    podCount: 48,
+    deploymentCount: 16,
+    serviceCount: 20,
+    createdAt: '2023-03-20T09:15:00Z',
+    lastUpdatedAt: '2023-08-05T11:30:00Z'
   },
   {
-    id: '3',
-    name: 'dev-cluster-01',
-    version: 'v1.28.1',
-    status: 'warning',
-    provider: 'rke',
-    nodes: 3,
-    pods: 87,
-    namespaces: 4,
-    cpu: {
-      usage: 12,
-      total: 24
-    },
-    memory: {
-      usage: 58,
-      total: 96
-    },
-    storage: {
-      usage: 0.9,
-      total: 2
-    },
-    created: '2023-03-10',
-    lastUpdated: '2023-08-15'
+    id: 'k8s-3',
+    name: 'staging-cluster',
+    version: '1.25.9',
+    status: 'degraded',
+    provider: 'azure',
+    location: 'East US',
+    nodeCount: 4,
+    cpuUsage: 78,
+    memoryUsage: 85,
+    storageUsage: 60,
+    namespaceCount: 6,
+    podCount: 52,
+    deploymentCount: 18,
+    serviceCount: 22,
+    createdAt: '2023-02-05T14:20:00Z',
+    lastUpdatedAt: '2023-08-12T08:45:00Z'
   },
   {
-    id: '4',
-    name: 'azure-east-prod',
-    version: 'v1.27.4',
-    status: 'healthy',
-    provider: 'aks',
-    nodes: 8,
-    pods: 156,
-    namespaces: 6,
-    cpu: {
-      usage: 32,
-      total: 64
-    },
-    memory: {
-      usage: 120,
-      total: 256
-    },
-    storage: {
-      usage: 2.1,
-      total: 8
-    },
-    created: '2023-04-05',
-    lastUpdated: '2023-09-10'
+    id: 'k8s-4',
+    name: 'test-cluster',
+    version: '1.26.6',
+    status: 'provisioning',
+    provider: 'gcp',
+    location: 'us-central1',
+    nodeCount: 3,
+    cpuUsage: 10,
+    memoryUsage: 15,
+    storageUsage: 8,
+    namespaceCount: 4,
+    podCount: 12,
+    deploymentCount: 6,
+    serviceCount: 8,
+    createdAt: '2023-08-01T16:40:00Z',
+    lastUpdatedAt: '2023-08-01T16:40:00Z'
   },
   {
-    id: '5',
-    name: 'aws-west-prod',
-    version: 'v1.27.6',
-    status: 'critical',
-    provider: 'eks',
-    nodes: 10,
-    pods: 189,
-    namespaces: 7,
-    cpu: {
-      usage: 68,
-      total: 80
-    },
-    memory: {
-      usage: 210,
-      total: 320
-    },
-    storage: {
-      usage: 5.8,
-      total: 12
-    },
-    created: '2023-02-28',
-    lastUpdated: '2023-10-01'
+    id: 'k8s-5',
+    name: 'backup-cluster',
+    version: '1.25.12',
+    status: 'stopped',
+    provider: 'on-premise',
+    location: 'West Datacenter',
+    nodeCount: 6,
+    cpuUsage: 0,
+    memoryUsage: 0,
+    storageUsage: 25,
+    namespaceCount: 10,
+    podCount: 0,
+    deploymentCount: 22,
+    serviceCount: 28,
+    createdAt: '2022-11-10T11:05:00Z',
+    lastUpdatedAt: '2023-07-25T09:30:00Z'
   }
 ];
 
-const Kubernetes: React.FC = () => {
-  const [searchQuery, setSearchQuery] = useState('');
-  const [isRefreshing, setIsRefreshing] = useState(false);
+// Summary stats type
+interface KubernetesStats {
+  total: number;
+  running: number;
+  degraded: number;
+  provisioning: number;
+  stopped: number;
+  totalNodes: number;
+  totalPods: number;
+  totalDeployments: number;
+  avgCpuUsage: number;
+  avgMemoryUsage: number;
+  avgStorageUsage: number;
+}
 
-  const filteredClusters = clusters.filter(cluster => 
-    cluster.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    cluster.provider.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    cluster.version.toLowerCase().includes(searchQuery.toLowerCase())
+const calculateStats = (clusters: KubernetesCluster[]): KubernetesStats => {
+  const activeClusters = clusters.filter(c => c.status === 'running' || c.status === 'degraded');
+  
+  return {
+    total: clusters.length,
+    running: clusters.filter(c => c.status === 'running').length,
+    degraded: clusters.filter(c => c.status === 'degraded').length,
+    provisioning: clusters.filter(c => c.status === 'provisioning').length,
+    stopped: clusters.filter(c => c.status === 'stopped').length,
+    totalNodes: clusters.reduce((sum, c) => sum + c.nodeCount, 0),
+    totalPods: clusters.reduce((sum, c) => sum + c.podCount, 0),
+    totalDeployments: clusters.reduce((sum, c) => sum + c.deploymentCount, 0),
+    avgCpuUsage: activeClusters.length ? Math.round(activeClusters.reduce((sum, c) => sum + c.cpuUsage, 0) / activeClusters.length) : 0,
+    avgMemoryUsage: activeClusters.length ? Math.round(activeClusters.reduce((sum, c) => sum + c.memoryUsage, 0) / activeClusters.length) : 0,
+    avgStorageUsage: activeClusters.length ? Math.round(activeClusters.reduce((sum, c) => sum + c.storageUsage, 0) / activeClusters.length) : 0
+  };
+};
+
+const KubernetesPage: React.FC = () => {
+  const [searchQuery, setSearchQuery] = useState('');
+  const [view, setView] = useState('grid');
+  const { toast } = useToast();
+
+  // In a real application, this would use the real API
+  const { data: kubernetesClusters = [], isLoading, refetch } = useQuery({
+    queryKey: ['kubernetes'],
+    queryFn: () => Promise.resolve(mockKubernetesClusters),
+  });
+
+  const filteredClusters = kubernetesClusters.filter(
+    cluster => cluster.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+               cluster.provider.toLowerCase().includes(searchQuery.toLowerCase()) ||
+               cluster.location.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  const stats = calculateStats(kubernetesClusters);
+
   const handleRefresh = () => {
-    setIsRefreshing(true);
-    // Simulate API call
-    setTimeout(() => {
-      setIsRefreshing(false);
-      toast.success('Kubernetes data refreshed successfully');
-    }, 1500);
+    refetch();
+    toast({
+      title: "Refreshing clusters",
+      description: "The Kubernetes cluster list has been refreshed.",
+    });
   };
 
-  const handleAddNew = () => {
-    toast.info('Add Kubernetes cluster functionality coming soon');
+  const handleAddCluster = () => {
+    toast({
+      title: "Add Kubernetes Cluster",
+      description: "This would open a dialog to add a new Kubernetes cluster.",
+    });
   };
 
-  const handleExportKubeconfig = (clusterId: string) => {
-    toast.success(`Kubeconfig for cluster ${clusterId} downloaded`);
+  const handleClusterAction = (action: string, cluster: KubernetesCluster) => {
+    toast({
+      title: `${action} Kubernetes Cluster`,
+      description: `Action "${action}" has been triggered for cluster "${cluster.name}".`,
+    });
   };
 
-  const getStatusBadge = (status: KubernetesCluster['status']) => {
+  const getStatusBadgeColor = (status: KubernetesCluster['status']) => {
     switch (status) {
-      case 'healthy':
-        return (
-          <div className="flex items-center">
-            <CheckCircle className="h-4 w-4 text-green-500 mr-1" />
-            <Badge variant="default" className="bg-green-500">Healthy</Badge>
-          </div>
-        );
-      case 'warning':
-        return (
-          <div className="flex items-center">
-            <AlertTriangle className="h-4 w-4 text-amber-500 mr-1" />
-            <Badge variant="default" className="bg-amber-500">Warning</Badge>
-          </div>
-        );
-      case 'critical':
-        return (
-          <div className="flex items-center">
-            <XCircle className="h-4 w-4 text-red-500 mr-1" />
-            <Badge variant="default" className="bg-red-500">Critical</Badge>
-          </div>
-        );
+      case 'running':
+        return 'bg-green-500/10 text-green-500 hover:bg-green-500/20';
+      case 'provisioning':
+        return 'bg-blue-500/10 text-blue-500 hover:bg-blue-500/20';
+      case 'degraded':
+        return 'bg-yellow-500/10 text-yellow-500 hover:bg-yellow-500/20';
+      case 'stopped':
+        return 'bg-gray-500/10 text-gray-500 hover:bg-gray-500/20';
+      default:
+        return 'bg-gray-500/10 text-gray-500 hover:bg-gray-500/20';
     }
   };
 
-  const getProviderBadge = (provider: KubernetesCluster['provider']) => {
+  const getStatusIcon = (status: KubernetesCluster['status']) => {
+    switch (status) {
+      case 'running':
+        return <CheckCircle2 className="h-4 w-4 text-green-500" />;
+      case 'provisioning':
+        return <Cloud className="h-4 w-4 text-blue-500" />;
+      case 'degraded':
+        return <AlertCircle className="h-4 w-4 text-yellow-500" />;
+      case 'stopped':
+        return <XCircle className="h-4 w-4 text-gray-500" />;
+      default:
+        return null;
+    }
+  };
+
+  const getProviderBadgeColor = (provider: KubernetesCluster['provider']) => {
     switch (provider) {
-      case 'rke':
-        return <Badge variant="outline">RKE</Badge>;
-      case 'aks':
-        return <Badge variant="outline" className="border-blue-500 text-blue-500">AKS</Badge>;
-      case 'eks':
-        return <Badge variant="outline" className="border-orange-500 text-orange-500">EKS</Badge>;
-      case 'gke':
-        return <Badge variant="outline" className="border-green-500 text-green-500">GKE</Badge>;
-      case 'ocp':
-        return <Badge variant="outline" className="border-red-500 text-red-500">OCP</Badge>;
+      case 'on-premise':
+        return 'bg-purple-500/10 text-purple-500 hover:bg-purple-500/20';
+      case 'aws':
+        return 'bg-orange-500/10 text-orange-500 hover:bg-orange-500/20';
+      case 'azure':
+        return 'bg-blue-500/10 text-blue-500 hover:bg-blue-500/20';
+      case 'gcp':
+        return 'bg-red-500/10 text-red-500 hover:bg-red-500/20';
+      default:
+        return 'bg-gray-500/10 text-gray-500 hover:bg-gray-500/20';
     }
   };
 
-  const calculateResourceUsagePercentage = (used: number, total: number) => {
-    return Math.round((used / total) * 100);
+  const getResourceColor = (usage: number) => {
+    if (usage >= 80) return 'text-red-500';
+    if (usage >= 60) return 'text-yellow-500';
+    return 'text-green-500';
   };
 
-  const getResourceColor = (percentage: number) => {
-    if (percentage < 60) return "hsl(var(--primary))";
-    if (percentage < 80) return "hsl(var(--warning))";
-    return "hsl(var(--destructive))";
+  const getProgressColor = (usage: number) => {
+    if (usage >= 80) return 'bg-red-500';
+    if (usage >= 60) return 'bg-yellow-500';
+    return 'bg-green-500';
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <div className="space-y-1">
-          <h2 className="text-3xl font-bold tracking-tight">Kubernetes Management</h2>
-          <p className="text-muted-foreground">
-            Manage and monitor your Kubernetes clusters
-          </p>
+    <div className="container mx-auto space-y-6">
+      <div className="flex flex-col space-y-4 md:flex-row md:items-center md:justify-between md:space-y-0">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">Kubernetes Management</h1>
+          <p className="text-muted-foreground">Manage your Kubernetes infrastructure and workloads.</p>
         </div>
-        <div className="flex gap-2">
-          <Button variant="outline" onClick={handleRefresh} disabled={isRefreshing}>
-            <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
+        <div className="flex items-center space-x-2">
+          <Button onClick={handleRefresh} variant="outline" size="sm">
+            <RefreshCw className="mr-2 h-4 w-4" />
             Refresh
           </Button>
-          <Button onClick={handleAddNew}>
-            <Plus className="h-4 w-4 mr-2" />
+          <Button onClick={handleAddCluster} size="sm">
+            <Plus className="mr-2 h-4 w-4" />
             Add Cluster
           </Button>
         </div>
       </div>
 
-      <div className="flex items-center gap-4 mb-4">
-        <div className="relative flex-1">
+      <div className="grid gap-4 md:grid-cols-4">
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium">Clusters</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats.total}</div>
+            <p className="text-xs text-muted-foreground mt-1">
+              {stats.running} running, {stats.degraded} degraded
+            </p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium">Nodes</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats.totalNodes}</div>
+            <p className="text-xs text-muted-foreground mt-1">
+              {stats.totalPods} pods running
+            </p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium">Deployments</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats.totalDeployments}</div>
+            <p className="text-xs text-muted-foreground mt-1">
+              Across all clusters
+            </p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium">Resource Usage</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center">
+                  <CpuIcon className="h-4 w-4 mr-1" />
+                  <span className="text-xs text-muted-foreground">CPU</span>
+                </div>
+                <span className={`text-xs font-medium ${getResourceColor(stats.avgCpuUsage)}`}>
+                  {stats.avgCpuUsage}%
+                </span>
+              </div>
+              <Progress value={stats.avgCpuUsage} className={getProgressColor(stats.avgCpuUsage)} />
+              
+              <div className="flex items-center justify-between">
+                <div className="flex items-center">
+                  <div className="h-4 w-4 mr-1">📊</div>
+                  <span className="text-xs text-muted-foreground">Memory</span>
+                </div>
+                <span className={`text-xs font-medium ${getResourceColor(stats.avgMemoryUsage)}`}>
+                  {stats.avgMemoryUsage}%
+                </span>
+              </div>
+              <Progress value={stats.avgMemoryUsage} className={getProgressColor(stats.avgMemoryUsage)} />
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="flex items-center justify-between">
+        <div className="relative w-full max-w-sm">
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
             type="search"
@@ -292,191 +386,265 @@ const Kubernetes: React.FC = () => {
             onChange={(e) => setSearchQuery(e.target.value)}
           />
         </div>
+        <Tabs defaultValue="grid" className="hidden md:block" onValueChange={setView}>
+          <TabsList>
+            <TabsTrigger value="grid">Grid</TabsTrigger>
+            <TabsTrigger value="table">Table</TabsTrigger>
+          </TabsList>
+        </Tabs>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Total Clusters</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{clusters.length}</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Healthy</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-green-500">
-              {clusters.filter(c => c.status === 'healthy').length}
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Total Nodes</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-blue-500">
-              {clusters.reduce((sum, c) => sum + c.nodes, 0)}
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Total Pods</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-purple-500">
-              {clusters.reduce((sum, c) => sum + c.pods, 0)}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+      <Separator />
 
-      {filteredClusters.map((cluster) => (
-        <Card key={cluster.id} className="mb-4">
-          <CardHeader className="pb-2">
-            <div className="flex justify-between items-start">
-              <div>
-                <CardTitle className="text-xl font-bold">{cluster.name}</CardTitle>
-                <div className="flex items-center mt-1 space-x-2">
-                  {getProviderBadge(cluster.provider)}
-                  <span className="text-sm text-muted-foreground">v{cluster.version}</span>
-                </div>
-              </div>
-              <div className="flex items-center space-x-2">
-                {getStatusBadge(cluster.status)}
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon">
-                      <MoreHorizontal className="h-4 w-4" />
-                      <span className="sr-only">Actions</span>
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuGroup>
-                      <DropdownMenuItem>View Dashboard</DropdownMenuItem>
-                      <DropdownMenuItem>View Details</DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => handleExportKubeconfig(cluster.id)}>
-                        <Download className="h-4 w-4 mr-2" />
-                        Export Kubeconfig
+      {isLoading ? (
+        <div className="flex items-center justify-center h-64">
+          <p className="text-muted-foreground">Loading Kubernetes clusters...</p>
+        </div>
+      ) : filteredClusters.length === 0 ? (
+        <div className="flex flex-col items-center justify-center h-64">
+          <Cloud className="h-12 w-12 text-muted-foreground mb-4" />
+          <h3 className="text-lg font-medium">No Kubernetes Clusters Found</h3>
+          <p className="text-muted-foreground">
+            {searchQuery
+              ? "No clusters match your search criteria."
+              : "No Kubernetes clusters have been added yet."}
+          </p>
+        </div>
+      ) : view === 'grid' ? (
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {filteredClusters.map((cluster) => (
+            <Card key={cluster.id}>
+              <CardHeader className="pb-2">
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-lg font-medium">
+                    {cluster.name}
+                  </CardTitle>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="icon">
+                        <MoreVertical className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem onClick={() => handleClusterAction('Details', cluster)}>
+                        View Details
                       </DropdownMenuItem>
-                    </DropdownMenuGroup>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuGroup>
-                      <DropdownMenuItem>Upgrade Cluster</DropdownMenuItem>
-                      <DropdownMenuItem>Add Node</DropdownMenuItem>
-                      <DropdownMenuItem>Add Namespace</DropdownMenuItem>
-                    </DropdownMenuGroup>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem className="text-red-500">Delete Cluster</DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {/* Resource usage */}
-              <div className="space-y-4">
-                <div>
-                  <div className="flex justify-between mb-1">
-                    <span className="text-sm font-medium">CPU Usage</span>
-                    <span className="text-sm text-muted-foreground">
-                      {cluster.cpu.usage} / {cluster.cpu.total} cores
-                    </span>
+                      <DropdownMenuItem onClick={() => handleClusterAction('Dashboard', cluster)}>
+                        Open Dashboard
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem onClick={() => handleClusterAction('Upgrade', cluster)}>
+                        Upgrade Kubernetes
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => handleClusterAction('Scale', cluster)}>
+                        Scale Nodes
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      {cluster.status === 'running' ? (
+                        <DropdownMenuItem onClick={() => handleClusterAction('Stop', cluster)}>
+                          Stop Cluster
+                        </DropdownMenuItem>
+                      ) : cluster.status === 'stopped' ? (
+                        <DropdownMenuItem onClick={() => handleClusterAction('Start', cluster)}>
+                          Start Cluster
+                        </DropdownMenuItem>
+                      ) : null}
+                      <DropdownMenuItem 
+                        onClick={() => handleClusterAction('Delete', cluster)}
+                        className="text-red-500"
+                      >
+                        Delete Cluster
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Badge
+                    variant="outline"
+                    className={getProviderBadgeColor(cluster.provider)}
+                  >
+                    {cluster.provider}
+                  </Badge>
+                  <span className="text-xs text-muted-foreground">{cluster.location}</span>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="flex flex-col">
+                    <span className="text-xs text-muted-foreground">Status</span>
+                    <div className="flex items-center">
+                      {getStatusIcon(cluster.status)}
+                      <span className="ml-1 capitalize">{cluster.status}</span>
+                    </div>
                   </div>
-                  <Progress 
-                    value={calculateResourceUsagePercentage(cluster.cpu.usage, cluster.cpu.total)} 
-                    className="h-2"
-                    style={{ 
-                      color: getResourceColor(
-                        calculateResourceUsagePercentage(cluster.cpu.usage, cluster.cpu.total)
-                      ) 
-                    }}
-                  />
-                </div>
-                <div>
-                  <div className="flex justify-between mb-1">
-                    <span className="text-sm font-medium">Memory Usage</span>
-                    <span className="text-sm text-muted-foreground">
-                      {cluster.memory.usage} / {cluster.memory.total} GB
-                    </span>
+                  <div className="flex flex-col">
+                    <span className="text-xs text-muted-foreground">Version</span>
+                    <span>v{cluster.version}</span>
                   </div>
-                  <Progress 
-                    value={calculateResourceUsagePercentage(cluster.memory.usage, cluster.memory.total)} 
-                    className="h-2"
-                    style={{ 
-                      color: getResourceColor(
-                        calculateResourceUsagePercentage(cluster.memory.usage, cluster.memory.total)
-                      ) 
-                    }}
-                  />
-                </div>
-                <div>
-                  <div className="flex justify-between mb-1">
-                    <span className="text-sm font-medium">Storage Usage</span>
-                    <span className="text-sm text-muted-foreground">
-                      {cluster.storage.usage} / {cluster.storage.total} TB
-                    </span>
+                  <div className="flex flex-col">
+                    <span className="text-xs text-muted-foreground">Nodes</span>
+                    <span>{cluster.nodeCount}</span>
                   </div>
-                  <Progress 
-                    value={calculateResourceUsagePercentage(cluster.storage.usage, cluster.storage.total)} 
-                    className="h-2"
-                    style={{ 
-                      color: getResourceColor(
-                        calculateResourceUsagePercentage(cluster.storage.usage, cluster.storage.total)
-                      ) 
-                    }}
-                  />
+                  <div className="flex flex-col">
+                    <span className="text-xs text-muted-foreground">Namespaces</span>
+                    <span>{cluster.namespaceCount}</span>
+                  </div>
                 </div>
-              </div>
-              
-              {/* Cluster stats */}
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <p className="text-sm text-muted-foreground mb-1">Nodes</p>
-                  <p className="text-2xl font-bold">{cluster.nodes}</p>
+                
+                <div className="mt-4 space-y-2">
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-muted-foreground">CPU Usage</span>
+                    <span className={getResourceColor(cluster.cpuUsage)}>{cluster.cpuUsage}%</span>
+                  </div>
+                  <Progress value={cluster.cpuUsage} className={getProgressColor(cluster.cpuUsage)} />
+                  
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-muted-foreground">Memory Usage</span>
+                    <span className={getResourceColor(cluster.memoryUsage)}>{cluster.memoryUsage}%</span>
+                  </div>
+                  <Progress value={cluster.memoryUsage} className={getProgressColor(cluster.memoryUsage)} />
+                  
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-muted-foreground">Storage Usage</span>
+                    <span className={getResourceColor(cluster.storageUsage)}>{cluster.storageUsage}%</span>
+                  </div>
+                  <Progress value={cluster.storageUsage} className={getProgressColor(cluster.storageUsage)} />
                 </div>
-                <div>
-                  <p className="text-sm text-muted-foreground mb-1">Pods</p>
-                  <p className="text-2xl font-bold">{cluster.pods}</p>
+              </CardContent>
+              <CardFooter className="pt-1">
+                <div className="w-full flex justify-between">
+                  <div className="flex items-center space-x-2">
+                    <div className="flex items-center">
+                      <PieChart className="h-3 w-3 mr-1" />
+                      <span className="text-xs">{cluster.podCount} pods</span>
+                    </div>
+                    <div className="flex items-center">
+                      <Database className="h-3 w-3 mr-1" />
+                      <span className="text-xs">{cluster.deploymentCount} deployments</span>
+                    </div>
+                  </div>
+                  <Badge
+                    variant="outline"
+                    className={getStatusBadgeColor(cluster.status)}
+                  >
+                    {cluster.status}
+                  </Badge>
                 </div>
-                <div>
-                  <p className="text-sm text-muted-foreground mb-1">Namespaces</p>
-                  <p className="text-2xl font-bold">{cluster.namespaces}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground mb-1">Healthy</p>
-                  <p className="text-2xl font-bold text-green-500">
-                    {cluster.status === 'healthy' ? 'Yes' : 'No'}
-                  </p>
-                </div>
-              </div>
-              
-              {/* Dates & Actions */}
-              <div>
-                <div className="mb-4">
-                  <p className="text-sm text-muted-foreground mb-1">Created</p>
-                  <p className="text-sm font-medium">{cluster.created}</p>
-                </div>
-                <div className="mb-4">
-                  <p className="text-sm text-muted-foreground mb-1">Last Updated</p>
-                  <p className="text-sm font-medium">{cluster.lastUpdated}</p>
-                </div>
-                <div className="flex space-x-2">
-                  <Button size="sm" variant="outline" className="flex-1">View Nodes</Button>
-                  <Button size="sm" className="flex-1">Access</Button>
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      ))}
+              </CardFooter>
+            </Card>
+          ))}
+        </div>
+      ) : (
+        <div className="rounded-md border">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Name</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Provider</TableHead>
+                <TableHead>Version</TableHead>
+                <TableHead>Nodes</TableHead>
+                <TableHead>Resources</TableHead>
+                <TableHead>Workloads</TableHead>
+                <TableHead>Last Updated</TableHead>
+                <TableHead className="w-[50px]"></TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filteredClusters.map((cluster) => (
+                <TableRow key={cluster.id}>
+                  <TableCell className="font-medium">
+                    <div>
+                      {cluster.name}
+                      <p className="text-xs text-muted-foreground">{cluster.location}</p>
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex items-center">
+                      {getStatusIcon(cluster.status)}
+                      <span className="ml-1 capitalize">{cluster.status}</span>
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <Badge
+                      variant="outline"
+                      className={getProviderBadgeColor(cluster.provider)}
+                    >
+                      {cluster.provider}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>v{cluster.version}</TableCell>
+                  <TableCell>{cluster.nodeCount}</TableCell>
+                  <TableCell>
+                    <div className="space-y-1">
+                      <div className="flex items-center justify-between text-xs">
+                        <span>CPU</span>
+                        <span className={getResourceColor(cluster.cpuUsage)}>{cluster.cpuUsage}%</span>
+                      </div>
+                      <Progress value={cluster.cpuUsage} className={`h-1 ${getProgressColor(cluster.cpuUsage)}`} />
+                      <div className="flex items-center justify-between text-xs">
+                        <span>Mem</span>
+                        <span className={getResourceColor(cluster.memoryUsage)}>{cluster.memoryUsage}%</span>
+                      </div>
+                      <Progress value={cluster.memoryUsage} className={`h-1 ${getProgressColor(cluster.memoryUsage)}`} />
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <div className="text-xs">
+                      <div>{cluster.namespaceCount} namespaces</div>
+                      <div>{cluster.podCount} pods</div>
+                      <div>{cluster.deploymentCount} deployments</div>
+                    </div>
+                  </TableCell>
+                  <TableCell>{new Date(cluster.lastUpdatedAt).toLocaleString()}</TableCell>
+                  <TableCell>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon">
+                          <MoreVertical className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={() => handleClusterAction('Details', cluster)}>
+                          View Details
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleClusterAction('Dashboard', cluster)}>
+                          Open Dashboard
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem onClick={() => handleClusterAction('Upgrade', cluster)}>
+                          Upgrade Kubernetes
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleClusterAction('Scale', cluster)}>
+                          Scale Nodes
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        {cluster.status === 'running' ? (
+                          <DropdownMenuItem onClick={() => handleClusterAction('Stop', cluster)}>
+                            Stop Cluster
+                          </DropdownMenuItem>
+                        ) : cluster.status === 'stopped' ? (
+                          <DropdownMenuItem onClick={() => handleClusterAction('Start', cluster)}>
+                            Start Cluster
+                          </DropdownMenuItem>
+                        ) : null}
+                        <DropdownMenuItem 
+                          onClick={() => handleClusterAction('Delete', cluster)}
+                          className="text-red-500"
+                        >
+                          Delete Cluster
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+      )}
     </div>
   );
 };
 
-export default Kubernetes;
+export default KubernetesPage;
