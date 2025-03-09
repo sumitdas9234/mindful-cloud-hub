@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { 
   Search, 
@@ -17,7 +18,6 @@ import {
 } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { 
   DropdownMenu,
@@ -182,19 +182,6 @@ const VCentersPage: React.FC = () => {
     setDetailSheetOpen(true);
   };
 
-  const getStatusBadgeColor = (status: VCenter['status']) => {
-    switch (status) {
-      case 'healthy':
-        return 'bg-green-500/10 text-green-500 hover:bg-green-500/20';
-      case 'warning':
-        return 'bg-yellow-500/10 text-yellow-500 hover:bg-yellow-500/20';
-      case 'error':
-        return 'bg-red-500/10 text-red-500 hover:bg-red-500/20';
-      default:
-        return 'bg-gray-500/10 text-gray-500 hover:bg-gray-500/20';
-    }
-  };
-
   const getStatusIcon = (status: VCenter['status']) => {
     switch (status) {
       case 'healthy':
@@ -313,7 +300,7 @@ const VCentersPage: React.FC = () => {
               {filteredVCenters.map((vcenter) => (
                 <TableRow 
                   key={vcenter.id} 
-                  className="cursor-pointer"
+                  className="cursor-pointer hover:bg-muted/50"
                   onClick={() => openVCenterDetails(vcenter)}
                 >
                   <TableCell className="font-medium">{vcenter.name}</TableCell>
