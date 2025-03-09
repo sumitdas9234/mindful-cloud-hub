@@ -11,9 +11,7 @@ import {
   Database,
   HardDrive,
   Network,
-  Settings,
   Users,
-  Shield,
   AlertTriangle,
   Cloud,
   Cpu,
@@ -200,20 +198,6 @@ export const Sidebar = () => {
             path="/users"
             collapsed={collapsed}
             active={location.pathname === '/users'}
-          />
-          <SidebarItem 
-            icon={Shield} 
-            label="Security" 
-            path="/security"
-            collapsed={collapsed}
-            active={location.pathname === '/security'}
-          />
-          <SidebarItem 
-            icon={Settings} 
-            label="Settings" 
-            path="/settings"
-            collapsed={collapsed}
-            active={location.pathname === '/settings'}
           />
         </SidebarSection>
       </div>

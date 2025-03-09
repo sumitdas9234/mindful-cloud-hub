@@ -120,22 +120,6 @@ const App = () => (
               </Layout>
             } 
           />
-          <Route 
-            path="/security" 
-            element={
-              <Layout title="Security Management">
-                <ComingSoon feature="Security" />
-              </Layout>
-            } 
-          />
-          <Route 
-            path="/settings" 
-            element={
-              <Layout title="Settings">
-                <ComingSoon feature="Settings" />
-              </Layout>
-            } 
-          />
           
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
