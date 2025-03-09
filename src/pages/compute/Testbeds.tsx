@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { 
   Folder, 
@@ -8,7 +7,8 @@ import {
   MoreHorizontal,
   PlayCircle,
   StopCircle,
-  Trash2
+  Trash2,
+  XCircle
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -349,7 +349,6 @@ const Testbeds: React.FC = () => {
           <Card>
             <CardContent className="p-0">
               <Table>
-                {/* Same table structure as "all" tab */}
                 <TableHeader>
                   <TableRow>
                     <TableHead>Name</TableHead>
@@ -412,7 +411,6 @@ const Testbeds: React.FC = () => {
           </Card>
         </TabsContent>
         <TabsContent value="stopped" className="mt-6">
-          {/* Same card structure */}
           <Card>
             <CardContent className="p-6 text-center">
               <div className="mb-4">
@@ -430,7 +428,6 @@ const Testbeds: React.FC = () => {
           </Card>
         </TabsContent>
         <TabsContent value="provisioning" className="mt-6">
-          {/* Provisioning content */}
           <Card>
             <CardContent className="p-6 text-center">
               <div className="flex justify-center mb-4">
@@ -444,7 +441,6 @@ const Testbeds: React.FC = () => {
           </Card>
         </TabsContent>
         <TabsContent value="failed" className="mt-6">
-          {/* Failed content */}
           <Card>
             <CardContent className="p-6 text-center">
               <div className="mb-4">
