@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Monitor, Memory, HardDrive, Wifi } from 'lucide-react';
+import { Monitor, Cpu, HardDrive, Wifi } from 'lucide-react';
 import { ResourceCard } from '@/components/dashboard/ResourceCard';
 import { fetchSystemLoad } from '@/api/dashboardApi';
 
@@ -43,7 +43,7 @@ export const SystemLoad: React.FC<SystemLoadProps> = ({ vCenterId, clusterId, ta
             subtitle={data ? `${data.memory.used} / ${data.memory.total}` : ''}
             color="bg-indigo-500"
             textColor="text-indigo-500"
-            icon={Memory}
+            icon={Cpu}
           />
           <ResourceCard
             title="Storage"

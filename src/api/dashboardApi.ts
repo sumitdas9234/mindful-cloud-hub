@@ -1,3 +1,4 @@
+
 import { ServerData, ResourceUsageData, StatsData, SystemLoadData, VCenterData, ClusterData, InfraTagData } from './types';
 
 // Mock data for vCenters
@@ -71,8 +72,8 @@ export const fetchClustersByTags = async (tagIds: string[]): Promise<ClusterData
   );
 };
 
-// Mock time-series data generator with vCenter and cluster filtering
-export const fetchResourceUsageData = async (vCenterId?: string, clusterId?: string): Promise<ResourceUsageData[]> => {
+// Updated function signature to accept an object parameter
+export const fetchResourceUsageData = async (params: { vCenterId?: string, clusterId?: string, tagIds?: string[] }): Promise<ResourceUsageData[]> => {
   // Simulate API delay
   await new Promise(resolve => setTimeout(resolve, 300));
   
@@ -80,8 +81,8 @@ export const fetchResourceUsageData = async (vCenterId?: string, clusterId?: str
   const data: ResourceUsageData[] = [];
   
   // Create a seeded random factor based on vCenter and cluster
-  const seedFactor = vCenterId === 'vc1' ? 1.2 : vCenterId === 'vc2' ? 0.8 : 1;
-  const clusterFactor = clusterId ? parseFloat(clusterId.replace('cl', '')) / 3 : 1;
+  const seedFactor = params.vCenterId === 'vc1' ? 1.2 : params.vCenterId === 'vc2' ? 0.8 : 1;
+  const clusterFactor = params.clusterId ? parseFloat(params.clusterId.replace('cl', '')) / 3 : 1;
   
   for (let i = 23; i >= 0; i--) {
     const time = new Date(now);
@@ -99,8 +100,8 @@ export const fetchResourceUsageData = async (vCenterId?: string, clusterId?: str
   return data;
 };
 
-// Mock server data with filtering
-export const fetchServers = async (vCenterId?: string, clusterId?: string): Promise<ServerData[]> => {
+// Updated function signature to accept an object parameter
+export const fetchServers = async (params: { vCenterId?: string, clusterId?: string, tagIds?: string[] }): Promise<ServerData[]> => {
   // Simulate API delay
   await new Promise(resolve => setTimeout(resolve, 500));
   
@@ -112,38 +113,38 @@ export const fetchServers = async (vCenterId?: string, clusterId?: string): Prom
     { id: 4, name: 'staging-app-server-01', cpu: 22, memory: 34, disk: 19, status: 'online' },
   ];
   
-  if (vCenterId === 'vc1') {
+  if (params.vCenterId === 'vc1') {
     servers = [
       { id: 101, name: 'east-app-server-01', cpu: 58, memory: 62, disk: 39, status: 'online' },
       { id: 102, name: 'east-app-server-02', cpu: 41, memory: 68, disk: 35, status: 'online' },
       { id: 103, name: 'east-db-server-01', cpu: 82, memory: 71, disk: 73, status: 'online' },
     ];
-    if (clusterId === 'cl1') {
+    if (params.clusterId === 'cl1') {
       servers = servers.map(s => ({...s, name: s.name.replace('east', 'prod-east')}));
-    } else if (clusterId === 'cl2') {
+    } else if (params.clusterId === 'cl2') {
       servers = servers.map(s => ({...s, name: s.name.replace('east', 'dev-east')}));
     }
-  } else if (vCenterId === 'vc2') {
+  } else if (params.vCenterId === 'vc2') {
     servers = [
       { id: 201, name: 'west-app-server-01', cpu: 35, memory: 45, disk: 28, status: 'online' },
       { id: 202, name: 'west-app-server-02', cpu: 29, memory: 51, disk: 25, status: 'online' },
       { id: 203, name: 'west-db-server-01', cpu: 65, memory: 58, disk: 52, status: 'online' },
       { id: 204, name: 'west-cache-server-01', cpu: 42, memory: 38, disk: 15, status: 'maintenance' },
     ];
-    if (clusterId === 'cl3') {
+    if (params.clusterId === 'cl3') {
       servers = servers.map(s => ({...s, name: s.name.replace('west', 'test-west')}));
-    } else if (clusterId === 'cl4') {
+    } else if (params.clusterId === 'cl4') {
       servers = servers.map(s => ({...s, name: s.name.replace('west', 'staging-west')}));
     }
-  } else if (vCenterId === 'vc3') {
+  } else if (params.vCenterId === 'vc3') {
     servers = [
       { id: 301, name: 'central-app-server-01', cpu: 48, memory: 53, disk: 32, status: 'online' },
       { id: 302, name: 'central-app-server-02', cpu: 36, memory: 47, disk: 29, status: 'offline' },
       { id: 303, name: 'central-db-server-01', cpu: 72, memory: 68, disk: 65, status: 'online' },
     ];
-    if (clusterId === 'cl5') {
+    if (params.clusterId === 'cl5') {
       servers = servers.map(s => ({...s, name: s.name.replace('central', 'main')}));
-    } else if (clusterId === 'cl6') {
+    } else if (params.clusterId === 'cl6') {
       servers = servers.map(s => ({...s, name: s.name.replace('central', 'backup')}));
     }
   }
@@ -151,8 +152,8 @@ export const fetchServers = async (vCenterId?: string, clusterId?: string): Prom
   return servers;
 };
 
-// Stats cards data with filtering
-export const fetchStatsData = async (vCenterId?: string, clusterId?: string): Promise<StatsData[]> => {
+// Updated function signature to accept an object parameter
+export const fetchStatsData = async (params: { vCenterId?: string, clusterId?: string, tagIds?: string[] }): Promise<StatsData[]> => {
   // Simulate API delay
   await new Promise(resolve => setTimeout(resolve, 200));
   
@@ -189,17 +190,17 @@ export const fetchStatsData = async (vCenterId?: string, clusterId?: string): Pr
   ];
   
   // Modify stats based on vCenter
-  if (vCenterId === 'vc1') {
+  if (params.vCenterId === 'vc1') {
     stats[0].value = "14";
     stats[1].value = "10";
     stats[2].value = "5.2 TB";
     stats[3].value = "48";
-  } else if (vCenterId === 'vc2') {
+  } else if (params.vCenterId === 'vc2') {
     stats[0].value = "9";
     stats[1].value = "6";
     stats[2].value = "3.8 TB";
     stats[3].value = "35";
-  } else if (vCenterId === 'vc3') {
+  } else if (params.vCenterId === 'vc3') {
     stats[0].value = "11";
     stats[1].value = "7";
     stats[2].value = "4.0 TB";
@@ -207,8 +208,8 @@ export const fetchStatsData = async (vCenterId?: string, clusterId?: string): Pr
   }
   
   // Further adjust based on cluster
-  if (clusterId) {
-    const clusterNum = parseInt(clusterId.replace('cl', ''));
+  if (params.clusterId) {
+    const clusterNum = parseInt(params.clusterId.replace('cl', ''));
     stats[0].value = (parseInt(stats[0].value) - (clusterNum % 3)).toString();
     stats[1].value = (parseInt(stats[1].value) - (clusterNum % 2)).toString();
     const storageAdjust = (clusterNum % 5) * 0.2;
@@ -218,8 +219,8 @@ export const fetchStatsData = async (vCenterId?: string, clusterId?: string): Pr
   return stats;
 };
 
-// System load data with filtering
-export const fetchSystemLoad = async (vCenterId?: string, clusterId?: string): Promise<SystemLoadData> => {
+// Updated function signature to accept an object parameter
+export const fetchSystemLoad = async (params: { vCenterId?: string, clusterId?: string, tagIds?: string[] }): Promise<SystemLoadData> => {
   // Simulate API delay
   await new Promise(resolve => setTimeout(resolve, 400));
   
@@ -244,7 +245,7 @@ export const fetchSystemLoad = async (vCenterId?: string, clusterId?: string): P
   };
   
   // Modify based on vCenter
-  if (vCenterId === 'vc1') {
+  if (params.vCenterId === 'vc1') {
     systemLoad.cpu = 78;
     systemLoad.memory.value = 70;
     systemLoad.memory.used = "35 GB";
@@ -252,7 +253,7 @@ export const fetchSystemLoad = async (vCenterId?: string, clusterId?: string): P
     systemLoad.storage.used = "4.8 TB";
     systemLoad.network.value = 65;
     systemLoad.network.used = "650 Mbps";
-  } else if (vCenterId === 'vc2') {
+  } else if (params.vCenterId === 'vc2') {
     systemLoad.cpu = 62;
     systemLoad.memory.value = 55;
     systemLoad.memory.used = "27.5 GB";
@@ -260,7 +261,7 @@ export const fetchSystemLoad = async (vCenterId?: string, clusterId?: string): P
     systemLoad.storage.used = "3.8 TB";
     systemLoad.network.value = 48;
     systemLoad.network.used = "480 Mbps";
-  } else if (vCenterId === 'vc3') {
+  } else if (params.vCenterId === 'vc3') {
     systemLoad.cpu = 68;
     systemLoad.memory.value = 60;
     systemLoad.memory.used = "30 GB";
@@ -271,8 +272,8 @@ export const fetchSystemLoad = async (vCenterId?: string, clusterId?: string): P
   }
   
   // Further adjust based on cluster
-  if (clusterId) {
-    const clusterNum = parseInt(clusterId.replace('cl', ''));
+  if (params.clusterId) {
+    const clusterNum = parseInt(params.clusterId.replace('cl', ''));
     systemLoad.cpu = Math.min(95, systemLoad.cpu + (clusterNum * 2));
     systemLoad.memory.value = Math.min(95, systemLoad.memory.value + (clusterNum % 4));
     systemLoad.storage.value = Math.min(90, systemLoad.storage.value + (clusterNum % 3));
