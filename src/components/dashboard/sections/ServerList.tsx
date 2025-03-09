@@ -3,10 +3,15 @@ import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { fetchServers } from '@/api/dashboardApi';
 
-export const ServerList = () => {
+interface ServerListProps {
+  vCenterId?: string;
+  clusterId?: string;
+}
+
+export const ServerList: React.FC<ServerListProps> = ({ vCenterId, clusterId }) => {
   const { data: servers, isLoading } = useQuery({
-    queryKey: ['servers'],
-    queryFn: fetchServers,
+    queryKey: ['servers', vCenterId, clusterId],
+    queryFn: () => fetchServers(vCenterId, clusterId),
     refetchInterval: 60000, // Refetch every minute
   });
 

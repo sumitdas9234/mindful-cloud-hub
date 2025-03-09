@@ -4,10 +4,15 @@ import { useQuery } from '@tanstack/react-query';
 import { UsageChart } from '@/components/dashboard/UsageChart';
 import { fetchResourceUsageData } from '@/api/dashboardApi';
 
-export const ResourceUsageChart = () => {
+interface ResourceUsageChartProps {
+  vCenterId?: string;
+  clusterId?: string;
+}
+
+export const ResourceUsageChart: React.FC<ResourceUsageChartProps> = ({ vCenterId, clusterId }) => {
   const { data, isLoading } = useQuery({
-    queryKey: ['resourceUsage'],
-    queryFn: fetchResourceUsageData,
+    queryKey: ['resourceUsage', vCenterId, clusterId],
+    queryFn: () => fetchResourceUsageData(vCenterId, clusterId),
     refetchInterval: 60000, // Refetch every minute
   });
 

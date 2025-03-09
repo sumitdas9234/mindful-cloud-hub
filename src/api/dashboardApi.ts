@@ -1,48 +1,124 @@
 
-import { ServerData, ResourceUsageData, StatsData, SystemLoadData } from './types';
+import { ServerData, ResourceUsageData, StatsData, SystemLoadData, VCenterData, ClusterData } from './types';
 
-// Mock time-series data generator
-export const fetchResourceUsageData = async (): Promise<ResourceUsageData[]> => {
+// Mock data for vCenters
+const mockVCenters: VCenterData[] = [
+  { id: 'vc1', name: 'vCenter East' },
+  { id: 'vc2', name: 'vCenter West' },
+  { id: 'vc3', name: 'vCenter Central' }
+];
+
+// Mock data for clusters
+const mockClusters: ClusterData[] = [
+  { id: 'cl1', name: 'Production Cluster', vCenterId: 'vc1' },
+  { id: 'cl2', name: 'Development Cluster', vCenterId: 'vc1' },
+  { id: 'cl3', name: 'Testing Cluster', vCenterId: 'vc2' },
+  { id: 'cl4', name: 'Staging Cluster', vCenterId: 'vc2' },
+  { id: 'cl5', name: 'Main Cluster', vCenterId: 'vc3' },
+  { id: 'cl6', name: 'Backup Cluster', vCenterId: 'vc3' }
+];
+
+// Fetch vCenters
+export const fetchVCenters = async (): Promise<VCenterData[]> => {
+  // Simulate API delay
+  await new Promise(resolve => setTimeout(resolve, 300));
+  return mockVCenters;
+};
+
+// Fetch clusters for a specific vCenter
+export const fetchClusters = async (vCenterId: string): Promise<ClusterData[]> => {
+  // Simulate API delay
+  await new Promise(resolve => setTimeout(resolve, 300));
+  return mockClusters.filter(cluster => cluster.vCenterId === vCenterId);
+};
+
+// Mock time-series data generator with vCenter and cluster filtering
+export const fetchResourceUsageData = async (vCenterId?: string, clusterId?: string): Promise<ResourceUsageData[]> => {
   // Simulate API delay
   await new Promise(resolve => setTimeout(resolve, 300));
   
   const now = new Date();
   const data: ResourceUsageData[] = [];
   
+  // Create a seeded random factor based on vCenter and cluster
+  const seedFactor = vCenterId === 'vc1' ? 1.2 : vCenterId === 'vc2' ? 0.8 : 1;
+  const clusterFactor = clusterId ? parseFloat(clusterId.replace('cl', '')) / 3 : 1;
+  
   for (let i = 23; i >= 0; i--) {
     const time = new Date(now);
     time.setHours(now.getHours() - i);
     
+    // Use the seed factors to generate data that varies by selection
     data.push({
       name: `${time.getHours()}:00`,
-      cpu: Math.floor(Math.random() * 30) + 30,
-      memory: Math.floor(Math.random() * 25) + 40,
-      network: Math.floor(Math.random() * 80) + 100,
+      cpu: Math.floor(Math.random() * 30 * seedFactor * clusterFactor) + 30,
+      memory: Math.floor(Math.random() * 25 * seedFactor * clusterFactor) + 40,
+      network: Math.floor(Math.random() * 80 * seedFactor * clusterFactor) + 100,
     });
   }
   
   return data;
 };
 
-// Mock server data
-export const fetchServers = async (): Promise<ServerData[]> => {
+// Mock server data with filtering
+export const fetchServers = async (vCenterId?: string, clusterId?: string): Promise<ServerData[]> => {
   // Simulate API delay
   await new Promise(resolve => setTimeout(resolve, 500));
   
-  return [
+  // Generate different server data based on vCenter and cluster
+  let servers: ServerData[] = [
     { id: 1, name: 'prod-app-server-01', cpu: 62, memory: 58, disk: 43, status: 'online' },
     { id: 2, name: 'prod-app-server-02', cpu: 45, memory: 72, disk: 32, status: 'online' },
     { id: 3, name: 'prod-db-server-01', cpu: 78, memory: 65, disk: 68, status: 'online' },
     { id: 4, name: 'staging-app-server-01', cpu: 22, memory: 34, disk: 19, status: 'online' },
   ];
+  
+  if (vCenterId === 'vc1') {
+    servers = [
+      { id: 101, name: 'east-app-server-01', cpu: 58, memory: 62, disk: 39, status: 'online' },
+      { id: 102, name: 'east-app-server-02', cpu: 41, memory: 68, disk: 35, status: 'online' },
+      { id: 103, name: 'east-db-server-01', cpu: 82, memory: 71, disk: 73, status: 'online' },
+    ];
+    if (clusterId === 'cl1') {
+      servers = servers.map(s => ({...s, name: s.name.replace('east', 'prod-east')}));
+    } else if (clusterId === 'cl2') {
+      servers = servers.map(s => ({...s, name: s.name.replace('east', 'dev-east')}));
+    }
+  } else if (vCenterId === 'vc2') {
+    servers = [
+      { id: 201, name: 'west-app-server-01', cpu: 35, memory: 45, disk: 28, status: 'online' },
+      { id: 202, name: 'west-app-server-02', cpu: 29, memory: 51, disk: 25, status: 'online' },
+      { id: 203, name: 'west-db-server-01', cpu: 65, memory: 58, disk: 52, status: 'online' },
+      { id: 204, name: 'west-cache-server-01', cpu: 42, memory: 38, disk: 15, status: 'maintenance' },
+    ];
+    if (clusterId === 'cl3') {
+      servers = servers.map(s => ({...s, name: s.name.replace('west', 'test-west')}));
+    } else if (clusterId === 'cl4') {
+      servers = servers.map(s => ({...s, name: s.name.replace('west', 'staging-west')}));
+    }
+  } else if (vCenterId === 'vc3') {
+    servers = [
+      { id: 301, name: 'central-app-server-01', cpu: 48, memory: 53, disk: 32, status: 'online' },
+      { id: 302, name: 'central-app-server-02', cpu: 36, memory: 47, disk: 29, status: 'offline' },
+      { id: 303, name: 'central-db-server-01', cpu: 72, memory: 68, disk: 65, status: 'online' },
+    ];
+    if (clusterId === 'cl5') {
+      servers = servers.map(s => ({...s, name: s.name.replace('central', 'main')}));
+    } else if (clusterId === 'cl6') {
+      servers = servers.map(s => ({...s, name: s.name.replace('central', 'backup')}));
+    }
+  }
+  
+  return servers;
 };
 
-// Stats cards data
-export const fetchStatsData = async (): Promise<StatsData[]> => {
+// Stats cards data with filtering
+export const fetchStatsData = async (vCenterId?: string, clusterId?: string): Promise<StatsData[]> => {
   // Simulate API delay
   await new Promise(resolve => setTimeout(resolve, 200));
   
-  return [
+  // Default stats
+  let stats: StatsData[] = [
     {
       title: "Total Servers",
       value: "12",
@@ -72,14 +148,44 @@ export const fetchStatsData = async (): Promise<StatsData[]> => {
       trendValue: "+5 from last month"
     }
   ];
+  
+  // Modify stats based on vCenter
+  if (vCenterId === 'vc1') {
+    stats[0].value = "14";
+    stats[1].value = "10";
+    stats[2].value = "5.2 TB";
+    stats[3].value = "48";
+  } else if (vCenterId === 'vc2') {
+    stats[0].value = "9";
+    stats[1].value = "6";
+    stats[2].value = "3.8 TB";
+    stats[3].value = "35";
+  } else if (vCenterId === 'vc3') {
+    stats[0].value = "11";
+    stats[1].value = "7";
+    stats[2].value = "4.0 TB";
+    stats[3].value = "40";
+  }
+  
+  // Further adjust based on cluster
+  if (clusterId) {
+    const clusterNum = parseInt(clusterId.replace('cl', ''));
+    stats[0].value = (parseInt(stats[0].value) - (clusterNum % 3)).toString();
+    stats[1].value = (parseInt(stats[1].value) - (clusterNum % 2)).toString();
+    const storageAdjust = (clusterNum % 5) * 0.2;
+    stats[2].value = (parseFloat(stats[2].value.replace(' TB', '')) - storageAdjust).toFixed(1) + ' TB';
+  }
+  
+  return stats;
 };
 
-// System load data
-export const fetchSystemLoad = async (): Promise<SystemLoadData> => {
+// System load data with filtering
+export const fetchSystemLoad = async (vCenterId?: string, clusterId?: string): Promise<SystemLoadData> => {
   // Simulate API delay
   await new Promise(resolve => setTimeout(resolve, 400));
   
-  return {
+  // Base system load data
+  let systemLoad: SystemLoadData = {
     cpu: 72,
     memory: {
       value: 64,
@@ -97,4 +203,55 @@ export const fetchSystemLoad = async (): Promise<SystemLoadData> => {
       total: "1 Gbps"
     }
   };
+  
+  // Modify based on vCenter
+  if (vCenterId === 'vc1') {
+    systemLoad.cpu = 78;
+    systemLoad.memory.value = 70;
+    systemLoad.memory.used = "35 GB";
+    systemLoad.storage.value = 48;
+    systemLoad.storage.used = "4.8 TB";
+    systemLoad.network.value = 65;
+    systemLoad.network.used = "650 Mbps";
+  } else if (vCenterId === 'vc2') {
+    systemLoad.cpu = 62;
+    systemLoad.memory.value = 55;
+    systemLoad.memory.used = "27.5 GB";
+    systemLoad.storage.value = 38;
+    systemLoad.storage.used = "3.8 TB";
+    systemLoad.network.value = 48;
+    systemLoad.network.used = "480 Mbps";
+  } else if (vCenterId === 'vc3') {
+    systemLoad.cpu = 68;
+    systemLoad.memory.value = 60;
+    systemLoad.memory.used = "30 GB";
+    systemLoad.storage.value = 40;
+    systemLoad.storage.used = "4.0 TB";
+    systemLoad.network.value = 55;
+    systemLoad.network.used = "550 Mbps";
+  }
+  
+  // Further adjust based on cluster
+  if (clusterId) {
+    const clusterNum = parseInt(clusterId.replace('cl', ''));
+    systemLoad.cpu = Math.min(95, systemLoad.cpu + (clusterNum * 2));
+    systemLoad.memory.value = Math.min(95, systemLoad.memory.value + (clusterNum % 4));
+    systemLoad.storage.value = Math.min(90, systemLoad.storage.value + (clusterNum % 3));
+    systemLoad.network.value = Math.min(90, systemLoad.network.value + (clusterNum % 5));
+    
+    // Update the used values proportionally
+    const memTotal = parseFloat(systemLoad.memory.total.replace(' GB', ''));
+    const memUsed = (memTotal * systemLoad.memory.value / 100).toFixed(1);
+    systemLoad.memory.used = `${memUsed} GB`;
+    
+    const storageTotal = parseFloat(systemLoad.storage.total.replace(' TB', ''));
+    const storageUsed = (storageTotal * systemLoad.storage.value / 100).toFixed(1);
+    systemLoad.storage.used = `${storageUsed} TB`;
+    
+    const networkTotal = parseFloat(systemLoad.network.total.replace(' Gbps', '')) * 1000;
+    const networkUsed = Math.round(networkTotal * systemLoad.network.value / 100);
+    systemLoad.network.used = `${networkUsed} Mbps`;
+  }
+  
+  return systemLoad;
 };

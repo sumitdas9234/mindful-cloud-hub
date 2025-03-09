@@ -5,10 +5,15 @@ import { Cpu, Database, HardDrive, Network } from 'lucide-react';
 import { ResourceCard } from '@/components/dashboard/ResourceCard';
 import { fetchSystemLoad } from '@/api/dashboardApi';
 
-export const SystemLoad = () => {
+interface SystemLoadProps {
+  vCenterId?: string;
+  clusterId?: string;
+}
+
+export const SystemLoad: React.FC<SystemLoadProps> = ({ vCenterId, clusterId }) => {
   const { data, isLoading } = useQuery({
-    queryKey: ['systemLoad'],
-    queryFn: fetchSystemLoad,
+    queryKey: ['systemLoad', vCenterId, clusterId],
+    queryFn: () => fetchSystemLoad(vCenterId, clusterId),
     refetchInterval: 30000, // Refetch every 30 seconds
   });
 

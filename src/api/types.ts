@@ -41,3 +41,14 @@ export interface SystemLoadData {
     total: string;
   };
 }
+
+export interface VCenterData {
+  id: string;
+  name: string;
+}
+
+export interface ClusterData {
+  id: string;
+  name: string;
+  vCenterId: string;
+}

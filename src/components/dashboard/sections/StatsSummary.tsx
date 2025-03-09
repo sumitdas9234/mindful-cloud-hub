@@ -5,10 +5,15 @@ import { Server, Database, HardDrive, Users } from 'lucide-react';
 import { StatsCard } from '@/components/dashboard/StatsCard';
 import { fetchStatsData } from '@/api/dashboardApi';
 
-export const StatsSummary = () => {
+interface StatsSummaryProps {
+  vCenterId?: string;
+  clusterId?: string;
+}
+
+export const StatsSummary: React.FC<StatsSummaryProps> = ({ vCenterId, clusterId }) => {
   const { data: stats, isLoading } = useQuery({
-    queryKey: ['dashboardStats'],
-    queryFn: fetchStatsData
+    queryKey: ['dashboardStats', vCenterId, clusterId],
+    queryFn: () => fetchStatsData(vCenterId, clusterId)
   });
 
   const iconMap = {
