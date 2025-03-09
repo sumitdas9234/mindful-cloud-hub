@@ -14,7 +14,11 @@ import {
   Settings,
   Users,
   Shield,
-  AlertTriangle
+  AlertTriangle,
+  Cloud,
+  Cpu,
+  MemoryStick,
+  Folder
 } from 'lucide-react';
 
 interface SidebarItemProps {
@@ -106,7 +110,7 @@ export const Sidebar = () => {
             <Server className="w-5 h-5 text-primary" />
           </div>
           {!collapsed && (
-            <span className="ml-2 text-lg font-semibold">CloudDash</span>
+            <span className="ml-2 text-lg font-semibold">InfraOps</span>
           )}
         </div>
         <Button
@@ -131,20 +135,37 @@ export const Sidebar = () => {
           />
         </SidebarSection>
         
-        <SidebarSection title="Resources" collapsed={collapsed}>
+        <SidebarSection title="Compute" collapsed={collapsed}>
           <SidebarItem 
             icon={Server} 
-            label="Servers" 
-            path="/servers"
+            label="vCenters" 
+            path="/vcenters"
             collapsed={collapsed}
-            active={location.pathname === '/servers'}
+            active={location.pathname === '/vcenters'}
           />
           <SidebarItem 
-            icon={Database} 
-            label="Databases" 
-            path="/databases"
+            icon={Folder} 
+            label="Testbeds" 
+            path="/testbeds"
             collapsed={collapsed}
-            active={location.pathname === '/databases'}
+            active={location.pathname === '/testbeds'}
+          />
+          <SidebarItem 
+            icon={Cloud} 
+            label="Kubernetes" 
+            path="/kubernetes"
+            collapsed={collapsed}
+            active={location.pathname === '/kubernetes'}
+          />
+        </SidebarSection>
+        
+        <SidebarSection title="Infrastructure" collapsed={collapsed}>
+          <SidebarItem 
+            icon={Network} 
+            label="Networking" 
+            path="/networking"
+            collapsed={collapsed}
+            active={location.pathname === '/networking'}
           />
           <SidebarItem 
             icon={HardDrive} 
@@ -153,16 +174,26 @@ export const Sidebar = () => {
             collapsed={collapsed}
             active={location.pathname === '/storage'}
           />
+        </SidebarSection>
+        
+        <SidebarSection title="Observability" collapsed={collapsed}>
           <SidebarItem 
-            icon={Network} 
-            label="Network" 
-            path="/network"
+            icon={Cpu} 
+            label="Monitoring" 
+            path="/monitoring"
             collapsed={collapsed}
-            active={location.pathname === '/network'}
+            active={location.pathname === '/monitoring'}
+          />
+          <SidebarItem 
+            icon={AlertTriangle} 
+            label="Alerts" 
+            path="/alerts"
+            collapsed={collapsed}
+            active={location.pathname === '/alerts'}
           />
         </SidebarSection>
         
-        <SidebarSection title="Management" collapsed={collapsed}>
+        <SidebarSection title="Administration" collapsed={collapsed}>
           <SidebarItem 
             icon={Users} 
             label="Users" 
@@ -176,13 +207,6 @@ export const Sidebar = () => {
             path="/security"
             collapsed={collapsed}
             active={location.pathname === '/security'}
-          />
-          <SidebarItem 
-            icon={AlertTriangle} 
-            label="Alerts" 
-            path="/alerts"
-            collapsed={collapsed}
-            active={location.pathname === '/alerts'}
           />
           <SidebarItem 
             icon={Settings} 

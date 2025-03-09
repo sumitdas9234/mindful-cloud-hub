@@ -25,6 +25,14 @@ const Layout = ({ children, title }: { children: React.ReactNode; title: string 
   );
 };
 
+// Placeholder component for unimplemented routes
+const ComingSoon = ({ feature }: { feature: string }) => (
+  <div className="flex flex-col items-center justify-center h-full">
+    <h2 className="text-2xl font-bold mb-2">{feature} Management</h2>
+    <p className="text-muted-foreground">This feature is coming soon.</p>
+  </div>
+);
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
@@ -40,6 +48,95 @@ const App = () => (
               </Layout>
             } 
           />
+          
+          {/* Compute Routes */}
+          <Route 
+            path="/vcenters" 
+            element={
+              <Layout title="vCenter Management">
+                <ComingSoon feature="vCenter" />
+              </Layout>
+            } 
+          />
+          <Route 
+            path="/testbeds" 
+            element={
+              <Layout title="Testbed Management">
+                <ComingSoon feature="Testbed" />
+              </Layout>
+            } 
+          />
+          <Route 
+            path="/kubernetes" 
+            element={
+              <Layout title="Kubernetes Management">
+                <ComingSoon feature="Kubernetes" />
+              </Layout>
+            } 
+          />
+          
+          {/* Infrastructure Routes */}
+          <Route 
+            path="/networking" 
+            element={
+              <Layout title="Network Management">
+                <ComingSoon feature="Network" />
+              </Layout>
+            } 
+          />
+          <Route 
+            path="/storage" 
+            element={
+              <Layout title="Storage Management">
+                <ComingSoon feature="Storage" />
+              </Layout>
+            } 
+          />
+          
+          {/* Observability Routes */}
+          <Route 
+            path="/monitoring" 
+            element={
+              <Layout title="Monitoring">
+                <ComingSoon feature="Monitoring" />
+              </Layout>
+            } 
+          />
+          <Route 
+            path="/alerts" 
+            element={
+              <Layout title="Alerts">
+                <ComingSoon feature="Alert" />
+              </Layout>
+            } 
+          />
+          
+          {/* Administration Routes */}
+          <Route 
+            path="/users" 
+            element={
+              <Layout title="User Management">
+                <ComingSoon feature="User" />
+              </Layout>
+            } 
+          />
+          <Route 
+            path="/security" 
+            element={
+              <Layout title="Security Management">
+                <ComingSoon feature="Security" />
+              </Layout>
+            } 
+          />
+          <Route 
+            path="/settings" 
+            element={
+              <Layout title="Settings">
+                <ComingSoon feature="Settings" />
+              </Layout>
+            } 
+          />
+          
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
