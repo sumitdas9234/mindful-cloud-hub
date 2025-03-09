@@ -34,7 +34,6 @@ export const SystemLoad: React.FC<SystemLoadProps> = ({ vCenterId, clusterId, ta
             title="CPU"
             value={data?.cpu || 0}
             color="bg-blue-500"
-            textColor="text-blue-500"
             icon={Monitor}
           />
           <ResourceCard
@@ -42,7 +41,6 @@ export const SystemLoad: React.FC<SystemLoadProps> = ({ vCenterId, clusterId, ta
             value={data?.memory.value || 0}
             subtitle={data ? `${data.memory.used} / ${data.memory.total}` : ''}
             color="bg-indigo-500"
-            textColor="text-indigo-500"
             icon={Cpu}
           />
           <ResourceCard
@@ -50,7 +48,6 @@ export const SystemLoad: React.FC<SystemLoadProps> = ({ vCenterId, clusterId, ta
             value={data?.storage.value || 0}
             subtitle={data ? `${data.storage.used} / ${data.storage.total}` : ''}
             color="bg-purple-500"
-            textColor="text-purple-500"
             icon={HardDrive}
           />
           <ResourceCard
@@ -58,7 +55,6 @@ export const SystemLoad: React.FC<SystemLoadProps> = ({ vCenterId, clusterId, ta
             value={data?.network.value || 0}
             subtitle={data ? `${data.network.used} / ${data.network.total}` : ''}
             color="bg-green-500"
-            textColor="text-green-500"
             icon={Wifi}
           />
         </div>

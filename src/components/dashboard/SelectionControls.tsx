@@ -7,8 +7,7 @@ import {
   SelectValue 
 } from "@/components/ui/select";
 import { useQuery } from '@tanstack/react-query';
-import { fetchVCenters, fetchClusters, fetchInfraTags, fetchClustersByTags } from '@/api/dashboardApi';
-import { Filter } from 'lucide-react';
+import { fetchVCenters, fetchClusters, fetchInfraTags } from '@/api/dashboardApi';
 
 interface SelectionControlsProps {
   onVCenterChange: (vCenterId: string) => void;
@@ -82,11 +81,6 @@ export const SelectionControls: React.FC<SelectionControlsProps> = ({
     
     setSelectedTags(newTags);
     onTagsChange(newTags);
-    
-    // If no tags selected, make sure we're not filtering
-    if (newTags.length === 0) {
-      onTagsChange([]);
-    }
   };
 
   return (
@@ -137,8 +131,7 @@ export const SelectionControls: React.FC<SelectionControlsProps> = ({
         <Select 
           disabled={isLoadingTags}
         >
-          <SelectTrigger className="w-full sm:w-[200px] flex items-center">
-            <Filter className="h-4 w-4 mr-2" />
+          <SelectTrigger className="w-full sm:w-[200px]">
             <SelectValue placeholder="Filter by Tags" />
           </SelectTrigger>
           <SelectContent>

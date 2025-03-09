@@ -17,6 +17,8 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { fetchServers } from '@/api/dashboardApi';
+import { ServerDetailSheet } from './ServerDetailSheet';
+import { ServerData } from '@/api/types';
 
 interface ServerListProps {
   vCenterId?: string;
@@ -25,6 +27,9 @@ interface ServerListProps {
 }
 
 export const ServerList: React.FC<ServerListProps> = ({ vCenterId, clusterId, tagIds }) => {
+  const [selectedServer, setSelectedServer] = useState<ServerData | null>(null);
+  const [detailSheetOpen, setDetailSheetOpen] = useState(false);
+
   const { data: servers, isLoading } = useQuery({
     queryKey: ['servers', vCenterId, clusterId, tagIds],
     queryFn: () => fetchServers({ vCenterId, clusterId, tagIds }),
@@ -44,66 +49,83 @@ export const ServerList: React.FC<ServerListProps> = ({ vCenterId, clusterId, ta
     }
   };
 
+  const handleServerClick = (server: ServerData) => {
+    setSelectedServer(server);
+    setDetailSheetOpen(true);
+  };
+
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Server Status</CardTitle>
-      </CardHeader>
-      <CardContent>
-        {isLoading ? (
-          <div className="h-80 w-full rounded-lg bg-muted/50 animate-pulse" />
-        ) : (
-          <div className="rounded-md border">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>CPU</TableHead>
-                  <TableHead>Memory</TableHead>
-                  <TableHead>Disk</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {servers && servers.length > 0 ? (
-                  servers.map((server) => (
-                    <TableRow key={server.id}>
-                      <TableCell className="font-medium">{server.name}</TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          <div className={`h-2.5 w-2.5 rounded-full ${getStatusColor(server.status)}`}></div>
-                          <span className="capitalize">{server.status}</span>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant="outline" className="font-mono">
-                          {server.cpu}%
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant="outline" className="font-mono">
-                          {server.memory}%
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant="outline" className="font-mono">
-                          {server.disk}%
-                        </Badge>
+    <>
+      <Card>
+        <CardHeader>
+          <CardTitle>Server Status</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {isLoading ? (
+            <div className="h-80 w-full rounded-lg bg-muted/50 animate-pulse" />
+          ) : (
+            <div className="rounded-md border">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Name</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>CPU</TableHead>
+                    <TableHead>Memory</TableHead>
+                    <TableHead>Disk</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {servers && servers.length > 0 ? (
+                    servers.map((server) => (
+                      <TableRow 
+                        key={server.id} 
+                        className="cursor-pointer hover:bg-muted/50"
+                        onClick={() => handleServerClick(server)}
+                      >
+                        <TableCell className="font-medium">{server.name}</TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            <div className={`h-2.5 w-2.5 rounded-full ${getStatusColor(server.status)}`}></div>
+                            <span className="capitalize">{server.status}</span>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant="outline" className="font-mono">
+                            {server.cpu}%
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant="outline" className="font-mono">
+                            {server.memory}%
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant="outline" className="font-mono">
+                            {server.disk}%
+                          </Badge>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  ) : (
+                    <TableRow>
+                      <TableCell colSpan={5} className="text-center text-muted-foreground py-6">
+                        No servers found
                       </TableCell>
                     </TableRow>
-                  ))
-                ) : (
-                  <TableRow>
-                    <TableCell colSpan={5} className="text-center text-muted-foreground py-6">
-                      No servers found
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </div>
-        )}
-      </CardContent>
-    </Card>
+                  )}
+                </TableBody>
+              </Table>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      <ServerDetailSheet 
+        server={selectedServer}
+        open={detailSheetOpen}
+        onOpenChange={setDetailSheetOpen}
+      />
+    </>
   );
 };
