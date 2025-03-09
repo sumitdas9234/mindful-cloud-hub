@@ -1,5 +1,4 @@
-
-import { ServerData, ResourceUsageData, StatsData, SystemLoadData, VCenterData, ClusterData } from './types';
+import { ServerData, ResourceUsageData, StatsData, SystemLoadData, VCenterData, ClusterData, InfraTagData } from './types';
 
 // Mock data for vCenters
 const mockVCenters: VCenterData[] = [
@@ -8,14 +7,23 @@ const mockVCenters: VCenterData[] = [
   { id: 'vc3', name: 'vCenter Central' }
 ];
 
-// Mock data for clusters
+// Mock data for infra tags
+const mockInfraTags: InfraTagData[] = [
+  { id: 'tag1', name: 'Production' },
+  { id: 'tag2', name: 'Development' },
+  { id: 'tag3', name: 'Testing' },
+  { id: 'tag4', name: 'Staging' },
+  { id: 'tag5', name: 'Backup' }
+];
+
+// Mock data for clusters with tags
 const mockClusters: ClusterData[] = [
-  { id: 'cl1', name: 'Production Cluster', vCenterId: 'vc1' },
-  { id: 'cl2', name: 'Development Cluster', vCenterId: 'vc1' },
-  { id: 'cl3', name: 'Testing Cluster', vCenterId: 'vc2' },
-  { id: 'cl4', name: 'Staging Cluster', vCenterId: 'vc2' },
-  { id: 'cl5', name: 'Main Cluster', vCenterId: 'vc3' },
-  { id: 'cl6', name: 'Backup Cluster', vCenterId: 'vc3' }
+  { id: 'cl1', name: 'Production Cluster', vCenterId: 'vc1', tags: ['tag1'] },
+  { id: 'cl2', name: 'Development Cluster', vCenterId: 'vc1', tags: ['tag2'] },
+  { id: 'cl3', name: 'Testing Cluster', vCenterId: 'vc2', tags: ['tag3'] },
+  { id: 'cl4', name: 'Staging Cluster', vCenterId: 'vc2', tags: ['tag4'] },
+  { id: 'cl5', name: 'Main Cluster', vCenterId: 'vc3', tags: ['tag1', 'tag5'] },
+  { id: 'cl6', name: 'Backup Cluster', vCenterId: 'vc3', tags: ['tag5'] }
 ];
 
 // Fetch vCenters
@@ -25,11 +33,42 @@ export const fetchVCenters = async (): Promise<VCenterData[]> => {
   return mockVCenters;
 };
 
-// Fetch clusters for a specific vCenter
-export const fetchClusters = async (vCenterId: string): Promise<ClusterData[]> => {
+// Fetch clusters for a specific vCenter and/or tags
+export const fetchClusters = async (vCenterId: string, tagIds?: string[]): Promise<ClusterData[]> => {
   // Simulate API delay
   await new Promise(resolve => setTimeout(resolve, 300));
-  return mockClusters.filter(cluster => cluster.vCenterId === vCenterId);
+  
+  let filteredClusters = mockClusters.filter(cluster => cluster.vCenterId === vCenterId);
+  
+  // Further filter by tags if provided
+  if (tagIds && tagIds.length > 0) {
+    filteredClusters = filteredClusters.filter(cluster => 
+      cluster.tags?.some(tag => tagIds.includes(tag))
+    );
+  }
+  
+  return filteredClusters;
+};
+
+// Fetch all infra tags
+export const fetchInfraTags = async (): Promise<InfraTagData[]> => {
+  // Simulate API delay
+  await new Promise(resolve => setTimeout(resolve, 300));
+  return mockInfraTags;
+};
+
+// Fetch clusters for specific tags across all vCenters
+export const fetchClustersByTags = async (tagIds: string[]): Promise<ClusterData[]> => {
+  if (!tagIds || tagIds.length === 0) {
+    return [];
+  }
+  
+  // Simulate API delay
+  await new Promise(resolve => setTimeout(resolve, 300));
+  
+  return mockClusters.filter(cluster => 
+    cluster.tags?.some(tag => tagIds.includes(tag))
+  );
 };
 
 // Mock time-series data generator with vCenter and cluster filtering

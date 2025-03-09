@@ -51,4 +51,10 @@ export interface ClusterData {
   id: string;
   name: string;
   vCenterId: string;
+  tags?: string[];
+}
+
+export interface InfraTagData {
+  id: string;
+  name: string;
 }

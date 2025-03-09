@@ -8,12 +8,13 @@ import { fetchStatsData } from '@/api/dashboardApi';
 interface StatsSummaryProps {
   vCenterId?: string;
   clusterId?: string;
+  tagIds?: string[];
 }
 
-export const StatsSummary: React.FC<StatsSummaryProps> = ({ vCenterId, clusterId }) => {
+export const StatsSummary: React.FC<StatsSummaryProps> = ({ vCenterId, clusterId, tagIds }) => {
   const { data: stats, isLoading } = useQuery({
-    queryKey: ['dashboardStats', vCenterId, clusterId],
-    queryFn: () => fetchStatsData(vCenterId, clusterId)
+    queryKey: ['dashboardStats', vCenterId, clusterId, tagIds],
+    queryFn: () => fetchStatsData(vCenterId, clusterId, tagIds)
   });
 
   const iconMap = {

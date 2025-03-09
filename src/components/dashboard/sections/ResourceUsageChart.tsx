@@ -7,12 +7,13 @@ import { fetchResourceUsageData } from '@/api/dashboardApi';
 interface ResourceUsageChartProps {
   vCenterId?: string;
   clusterId?: string;
+  tagIds?: string[];
 }
 
-export const ResourceUsageChart: React.FC<ResourceUsageChartProps> = ({ vCenterId, clusterId }) => {
+export const ResourceUsageChart: React.FC<ResourceUsageChartProps> = ({ vCenterId, clusterId, tagIds }) => {
   const { data, isLoading } = useQuery({
-    queryKey: ['resourceUsage', vCenterId, clusterId],
-    queryFn: () => fetchResourceUsageData(vCenterId, clusterId),
+    queryKey: ['resourceUsage', vCenterId, clusterId, tagIds],
+    queryFn: () => fetchResourceUsageData(vCenterId, clusterId, tagIds),
     refetchInterval: 60000, // Refetch every minute
   });
 

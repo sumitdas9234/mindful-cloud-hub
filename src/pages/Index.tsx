@@ -11,6 +11,7 @@ const Index = () => {
   const [animateIn, setAnimateIn] = useState(false);
   const [selectedVCenter, setSelectedVCenter] = useState<string>('');
   const [selectedCluster, setSelectedCluster] = useState<string>('');
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
   
   useEffect(() => {
     setAnimateIn(true);
@@ -24,34 +25,43 @@ const Index = () => {
     setSelectedCluster(clusterId);
   };
 
+  const handleTagsChange = (tagIds: string[]) => {
+    setSelectedTags(tagIds);
+  };
+
   return (
     <div className={`space-y-6 transition-opacity duration-500 ${animateIn ? 'opacity-100' : 'opacity-0'}`}>
       <DashboardHeader />
       
       <SelectionControls 
         onVCenterChange={handleVCenterChange} 
-        onClusterChange={handleClusterChange} 
+        onClusterChange={handleClusterChange}
+        onTagsChange={handleTagsChange}
       />
       
       <StatsSummary 
         vCenterId={selectedVCenter} 
-        clusterId={selectedCluster} 
+        clusterId={selectedCluster}
+        tagIds={selectedTags}
       />
       
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <ResourceUsageChart 
           vCenterId={selectedVCenter} 
-          clusterId={selectedCluster} 
+          clusterId={selectedCluster}
+          tagIds={selectedTags}
         />
         <SystemLoad 
           vCenterId={selectedVCenter} 
-          clusterId={selectedCluster} 
+          clusterId={selectedCluster}
+          tagIds={selectedTags}
         />
       </div>
       
       <ServerList 
         vCenterId={selectedVCenter} 
-        clusterId={selectedCluster} 
+        clusterId={selectedCluster}
+        tagIds={selectedTags}
       />
     </div>
   );
