@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { 
   Search, 
@@ -13,7 +12,6 @@ import {
   Card, 
   CardContent, 
   CardDescription, 
-  CardFooter, 
   CardHeader, 
   CardTitle 
 } from '@/components/ui/card';
@@ -21,7 +19,6 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { 
   DropdownMenu,
   DropdownMenuContent,
@@ -38,7 +35,7 @@ import {
 } from '@/components/ui/table';
 import { useQuery } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
-import { fetchVCenters } from '@/api/dashboardApi';
+import { VCenterDetailSheet } from '@/components/compute/VCenterDetailSheet';
 
 // Types for our vCenter data
 interface VCenter {
@@ -141,7 +138,8 @@ const calculateStats = (vcenters: VCenter[]): VCenterStats => {
 
 const VCentersPage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
-  const [view, setView] = useState('grid');
+  const [selectedVCenter, setSelectedVCenter] = useState<VCenter | null>(null);
+  const [detailSheetOpen, setDetailSheetOpen] = useState(false);
   const { toast } = useToast();
 
   // In a real application, this would use the real API
@@ -177,6 +175,11 @@ const VCentersPage: React.FC = () => {
       title: `${action} vCenter`,
       description: `Action "${action}" has been triggered for vCenter "${vcenter.name}".`,
     });
+  };
+
+  const openVCenterDetails = (vcenter: VCenter) => {
+    setSelectedVCenter(vcenter);
+    setDetailSheetOpen(true);
   };
 
   const getStatusBadgeColor = (status: VCenter['status']) => {
@@ -262,23 +265,15 @@ const VCentersPage: React.FC = () => {
         </Card>
       </div>
 
-      <div className="flex items-center justify-between">
-        <div className="relative w-full max-w-sm">
-          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-          <Input
-            type="search"
-            placeholder="Search vCenters..."
-            className="pl-8"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-        </div>
-        <Tabs defaultValue="grid" className="hidden md:block" onValueChange={setView}>
-          <TabsList>
-            <TabsTrigger value="grid">Grid</TabsTrigger>
-            <TabsTrigger value="table">Table</TabsTrigger>
-          </TabsList>
-        </Tabs>
+      <div className="relative w-full max-w-sm">
+        <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+        <Input
+          type="search"
+          placeholder="Search vCenters..."
+          className="pl-8"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+        />
       </div>
 
       <Separator />
@@ -296,86 +291,6 @@ const VCentersPage: React.FC = () => {
               ? "No vCenters match your search criteria."
               : "No vCenters have been added yet."}
           </p>
-        </div>
-      ) : view === 'grid' ? (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {filteredVCenters.map((vcenter) => (
-            <Card key={vcenter.id}>
-              <CardHeader className="pb-2">
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-lg font-medium">
-                    {vcenter.name}
-                  </CardTitle>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon">
-                        <MoreVertical className="h-4 w-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem onClick={() => handleVCenterAction('Edit', vcenter)}>
-                        Edit
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => handleVCenterAction('Refresh', vcenter)}>
-                        Refresh
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => handleVCenterAction('Disconnect', vcenter)}>
-                        Disconnect
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => handleVCenterAction('Remove', vcenter)} className="text-red-500">
-                        Remove
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </div>
-                <CardDescription>{vcenter.url}</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-2 gap-2">
-                  <div className="flex flex-col">
-                    <span className="text-xs text-muted-foreground">Version</span>
-                    <span>{vcenter.version}</span>
-                  </div>
-                  <div className="flex flex-col">
-                    <span className="text-xs text-muted-foreground">Status</span>
-                    <div className="flex items-center">
-                      {getStatusIcon(vcenter.status)}
-                      <span className="ml-1 capitalize">{vcenter.status}</span>
-                    </div>
-                  </div>
-                  <div className="flex flex-col">
-                    <span className="text-xs text-muted-foreground">Datacenters</span>
-                    <span>{vcenter.datacenters}</span>
-                  </div>
-                  <div className="flex flex-col">
-                    <span className="text-xs text-muted-foreground">Clusters</span>
-                    <span>{vcenter.clusters}</span>
-                  </div>
-                  <div className="flex flex-col">
-                    <span className="text-xs text-muted-foreground">Hosts</span>
-                    <span>{vcenter.hosts}</span>
-                  </div>
-                  <div className="flex flex-col">
-                    <span className="text-xs text-muted-foreground">VMs</span>
-                    <span>{vcenter.vms}</span>
-                  </div>
-                </div>
-              </CardContent>
-              <CardFooter className="pt-1">
-                <div className="flex w-full justify-between items-center">
-                  <span className="text-xs text-muted-foreground">
-                    Last Sync: {new Date(vcenter.lastSync).toLocaleString()}
-                  </span>
-                  <Badge
-                    variant="outline"
-                    className={getStatusBadgeColor(vcenter.status)}
-                  >
-                    {vcenter.status}
-                  </Badge>
-                </div>
-              </CardFooter>
-            </Card>
-          ))}
         </div>
       ) : (
         <div className="rounded-md border">
@@ -396,7 +311,11 @@ const VCentersPage: React.FC = () => {
             </TableHeader>
             <TableBody>
               {filteredVCenters.map((vcenter) => (
-                <TableRow key={vcenter.id}>
+                <TableRow 
+                  key={vcenter.id} 
+                  className="cursor-pointer"
+                  onClick={() => openVCenterDetails(vcenter)}
+                >
                   <TableCell className="font-medium">{vcenter.name}</TableCell>
                   <TableCell>{vcenter.url}</TableCell>
                   <TableCell>
@@ -411,7 +330,7 @@ const VCentersPage: React.FC = () => {
                   <TableCell>{vcenter.hosts}</TableCell>
                   <TableCell>{vcenter.vms}</TableCell>
                   <TableCell>{new Date(vcenter.lastSync).toLocaleString()}</TableCell>
-                  <TableCell>
+                  <TableCell onClick={(e) => e.stopPropagation()}>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <Button variant="ghost" size="icon">
@@ -440,6 +359,12 @@ const VCentersPage: React.FC = () => {
           </Table>
         </div>
       )}
+
+      <VCenterDetailSheet
+        vcenter={selectedVCenter}
+        open={detailSheetOpen}
+        onOpenChange={setDetailSheetOpen}
+      />
     </div>
   );
 };

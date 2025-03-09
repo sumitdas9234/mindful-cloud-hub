@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { 
   Search, 
@@ -9,7 +8,6 @@ import {
   CheckCircle2, 
   AlertCircle,
   XCircle,
-  PieChart,
   CpuIcon,
   Database
 } from 'lucide-react';
@@ -17,7 +15,6 @@ import {
   Card, 
   CardContent, 
   CardDescription, 
-  CardFooter, 
   CardHeader, 
   CardTitle 
 } from '@/components/ui/card';
@@ -25,7 +22,6 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { 
   DropdownMenu,
   DropdownMenuContent,
@@ -44,6 +40,7 @@ import {
 import { Progress } from "@/components/ui/progress";
 import { useQuery } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
+import { ClusterDetailSheet } from '@/components/compute/ClusterDetailSheet';
 
 // Types for our Kubernetes data
 interface KubernetesCluster {
@@ -194,7 +191,8 @@ const calculateStats = (clusters: KubernetesCluster[]): KubernetesStats => {
 
 const KubernetesPage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
-  const [view, setView] = useState('grid');
+  const [selectedCluster, setSelectedCluster] = useState<KubernetesCluster | null>(null);
+  const [detailSheetOpen, setDetailSheetOpen] = useState(false);
   const { toast } = useToast();
 
   // In a real application, this would use the real API
@@ -233,19 +231,9 @@ const KubernetesPage: React.FC = () => {
     });
   };
 
-  const getStatusBadgeColor = (status: KubernetesCluster['status']) => {
-    switch (status) {
-      case 'running':
-        return 'bg-green-500/10 text-green-500 hover:bg-green-500/20';
-      case 'provisioning':
-        return 'bg-blue-500/10 text-blue-500 hover:bg-blue-500/20';
-      case 'degraded':
-        return 'bg-yellow-500/10 text-yellow-500 hover:bg-yellow-500/20';
-      case 'stopped':
-        return 'bg-gray-500/10 text-gray-500 hover:bg-gray-500/20';
-      default:
-        return 'bg-gray-500/10 text-gray-500 hover:bg-gray-500/20';
-    }
+  const openClusterDetails = (cluster: KubernetesCluster) => {
+    setSelectedCluster(cluster);
+    setDetailSheetOpen(true);
   };
 
   const getStatusIcon = (status: KubernetesCluster['status']) => {
@@ -260,6 +248,21 @@ const KubernetesPage: React.FC = () => {
         return <XCircle className="h-4 w-4 text-gray-500" />;
       default:
         return null;
+    }
+  };
+
+  const getStatusBadgeColor = (status: KubernetesCluster['status']) => {
+    switch (status) {
+      case 'running':
+        return 'bg-green-500/10 text-green-500 hover:bg-green-500/20';
+      case 'provisioning':
+        return 'bg-blue-500/10 text-blue-500 hover:bg-blue-500/20';
+      case 'degraded':
+        return 'bg-yellow-500/10 text-yellow-500 hover:bg-yellow-500/20';
+      case 'stopped':
+        return 'bg-gray-500/10 text-gray-500 hover:bg-gray-500/20';
+      default:
+        return 'bg-gray-500/10 text-gray-500 hover:bg-gray-500/20';
     }
   };
 
@@ -375,23 +378,15 @@ const KubernetesPage: React.FC = () => {
         </Card>
       </div>
 
-      <div className="flex items-center justify-between">
-        <div className="relative w-full max-w-sm">
-          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-          <Input
-            type="search"
-            placeholder="Search clusters..."
-            className="pl-8"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-        </div>
-        <Tabs defaultValue="grid" className="hidden md:block" onValueChange={setView}>
-          <TabsList>
-            <TabsTrigger value="grid">Grid</TabsTrigger>
-            <TabsTrigger value="table">Table</TabsTrigger>
-          </TabsList>
-        </Tabs>
+      <div className="relative w-full max-w-sm">
+        <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+        <Input
+          type="search"
+          placeholder="Search clusters..."
+          className="pl-8"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+        />
       </div>
 
       <Separator />
@@ -409,130 +404,6 @@ const KubernetesPage: React.FC = () => {
               ? "No clusters match your search criteria."
               : "No Kubernetes clusters have been added yet."}
           </p>
-        </div>
-      ) : view === 'grid' ? (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {filteredClusters.map((cluster) => (
-            <Card key={cluster.id}>
-              <CardHeader className="pb-2">
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-lg font-medium">
-                    {cluster.name}
-                  </CardTitle>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon">
-                        <MoreVertical className="h-4 w-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem onClick={() => handleClusterAction('Details', cluster)}>
-                        View Details
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => handleClusterAction('Dashboard', cluster)}>
-                        Open Dashboard
-                      </DropdownMenuItem>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem onClick={() => handleClusterAction('Upgrade', cluster)}>
-                        Upgrade Kubernetes
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => handleClusterAction('Scale', cluster)}>
-                        Scale Nodes
-                      </DropdownMenuItem>
-                      <DropdownMenuSeparator />
-                      {cluster.status === 'running' ? (
-                        <DropdownMenuItem onClick={() => handleClusterAction('Stop', cluster)}>
-                          Stop Cluster
-                        </DropdownMenuItem>
-                      ) : cluster.status === 'stopped' ? (
-                        <DropdownMenuItem onClick={() => handleClusterAction('Start', cluster)}>
-                          Start Cluster
-                        </DropdownMenuItem>
-                      ) : null}
-                      <DropdownMenuItem 
-                        onClick={() => handleClusterAction('Delete', cluster)}
-                        className="text-red-500"
-                      >
-                        Delete Cluster
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Badge
-                    variant="outline"
-                    className={getProviderBadgeColor(cluster.provider)}
-                  >
-                    {cluster.provider}
-                  </Badge>
-                  <span className="text-xs text-muted-foreground">{cluster.location}</span>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-2 gap-2">
-                  <div className="flex flex-col">
-                    <span className="text-xs text-muted-foreground">Status</span>
-                    <div className="flex items-center">
-                      {getStatusIcon(cluster.status)}
-                      <span className="ml-1 capitalize">{cluster.status}</span>
-                    </div>
-                  </div>
-                  <div className="flex flex-col">
-                    <span className="text-xs text-muted-foreground">Version</span>
-                    <span>v{cluster.version}</span>
-                  </div>
-                  <div className="flex flex-col">
-                    <span className="text-xs text-muted-foreground">Nodes</span>
-                    <span>{cluster.nodeCount}</span>
-                  </div>
-                  <div className="flex flex-col">
-                    <span className="text-xs text-muted-foreground">Namespaces</span>
-                    <span>{cluster.namespaceCount}</span>
-                  </div>
-                </div>
-                
-                <div className="mt-4 space-y-2">
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="text-muted-foreground">CPU Usage</span>
-                    <span className={getResourceColor(cluster.cpuUsage)}>{cluster.cpuUsage}%</span>
-                  </div>
-                  <Progress value={cluster.cpuUsage} className={getProgressColor(cluster.cpuUsage)} />
-                  
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="text-muted-foreground">Memory Usage</span>
-                    <span className={getResourceColor(cluster.memoryUsage)}>{cluster.memoryUsage}%</span>
-                  </div>
-                  <Progress value={cluster.memoryUsage} className={getProgressColor(cluster.memoryUsage)} />
-                  
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="text-muted-foreground">Storage Usage</span>
-                    <span className={getResourceColor(cluster.storageUsage)}>{cluster.storageUsage}%</span>
-                  </div>
-                  <Progress value={cluster.storageUsage} className={getProgressColor(cluster.storageUsage)} />
-                </div>
-              </CardContent>
-              <CardFooter className="pt-1">
-                <div className="w-full flex justify-between">
-                  <div className="flex items-center space-x-2">
-                    <div className="flex items-center">
-                      <PieChart className="h-3 w-3 mr-1" />
-                      <span className="text-xs">{cluster.podCount} pods</span>
-                    </div>
-                    <div className="flex items-center">
-                      <Database className="h-3 w-3 mr-1" />
-                      <span className="text-xs">{cluster.deploymentCount} deployments</span>
-                    </div>
-                  </div>
-                  <Badge
-                    variant="outline"
-                    className={getStatusBadgeColor(cluster.status)}
-                  >
-                    {cluster.status}
-                  </Badge>
-                </div>
-              </CardFooter>
-            </Card>
-          ))}
         </div>
       ) : (
         <div className="rounded-md border">
@@ -552,7 +423,11 @@ const KubernetesPage: React.FC = () => {
             </TableHeader>
             <TableBody>
               {filteredClusters.map((cluster) => (
-                <TableRow key={cluster.id}>
+                <TableRow 
+                  key={cluster.id} 
+                  className="cursor-pointer"
+                  onClick={() => openClusterDetails(cluster)}
+                >
                   <TableCell className="font-medium">
                     <div>
                       {cluster.name}
@@ -597,7 +472,7 @@ const KubernetesPage: React.FC = () => {
                     </div>
                   </TableCell>
                   <TableCell>{new Date(cluster.lastUpdatedAt).toLocaleString()}</TableCell>
-                  <TableCell>
+                  <TableCell onClick={(e) => e.stopPropagation()}>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <Button variant="ghost" size="icon">
@@ -643,6 +518,12 @@ const KubernetesPage: React.FC = () => {
           </Table>
         </div>
       )}
+      
+      <ClusterDetailSheet
+        cluster={selectedCluster}
+        open={detailSheetOpen}
+        onOpenChange={setDetailSheetOpen}
+      />
     </div>
   );
 };
