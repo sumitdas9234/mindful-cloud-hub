@@ -1,813 +1,654 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { 
   Network, 
+  Search, 
+  Plus, 
   RefreshCw, 
-  Search,
-  PlusCircle, 
   MoreHorizontal,
-  Globe,
-  ArrowRightLeft,
-  Share2,
   Router,
-  WifiOff,
-  ShieldCheck,
-  CheckCircle2,
-  XCircle,
-  AlertTriangle
+  Wifi,
+  Globe,
+  Shield,
+  Activity,
+  CircleAlert
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import { 
-  Card, 
-  CardContent, 
-  CardDescription, 
-  CardFooter, 
-  CardHeader, 
-  CardTitle 
-} from '@/components/ui/card';
-import {
+  Table, 
+  TableBody, 
+  TableCell, 
+  TableHead, 
+  TableHeader, 
+  TableRow 
+} from '@/components/ui/table';
+import { 
+  Tabs, 
+  TabsContent, 
+  TabsList, 
+  TabsTrigger 
+} from '@/components/ui/tabs';
+import { 
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuLabel,
   DropdownMenuSeparator,
-  DropdownMenuTrigger,
+  DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu';
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from '@/components/ui/tabs';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
-import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { useToast } from '@/components/ui/use-toast';
-import { Separator } from '@/components/ui/separator';
+import { toast } from 'sonner';
 
-interface NetworkData {
+// Network Devices Types
+type DeviceType = 'router' | 'switch' | 'firewall' | 'loadbalancer' | 'gateway';
+type DeviceStatus = 'online' | 'offline' | 'maintenance' | 'warning';
+
+interface NetworkDevice {
   id: string;
   name: string;
-  type: 'VLAN' | 'VPN' | 'Public' | 'Private' | 'DMZ';
-  cidr: string;
-  gateway?: string;
-  status: 'Active' | 'Inactive' | 'Maintenance';
-  connected: number;
-  security: 'High' | 'Medium' | 'Low';
-  bandwidth: {
-    allocated: string;
-    utilized: number;
+  type: DeviceType;
+  status: DeviceStatus;
+  ip: string;
+  location: string;
+  model: string;
+  throughput: {
+    current: number;
+    max: number;
   };
-  latency: number;
+  connections: number;
+  lastChecked: string;
 }
 
-interface RouteData {
+// VLANs
+interface VLAN {
+  id: number;
+  name: string;
+  subnet: string;
+  purpose: string;
+  devices: number;
+  traffic: number;
+  secure: boolean;
+}
+
+// Firewall Rules
+interface FirewallRule {
   id: string;
+  name: string;
   source: string;
   destination: string;
-  type: 'Static' | 'Dynamic' | 'BGP';
-  status: 'Active' | 'Inactive';
-  hops: number;
-  metric: number;
+  port: string | null;
+  protocol: 'tcp' | 'udp' | 'icmp' | 'any';
+  action: 'allow' | 'deny';
+  enabled: boolean;
+  hits: number;
 }
 
-const mockNetworks: NetworkData[] = [
+// Sample data
+const networkDevices: NetworkDevice[] = [
   {
-    id: 'net1',
-    name: 'Production VLAN',
-    type: 'VLAN',
-    cidr: '10.0.1.0/24',
-    gateway: '10.0.1.1',
-    status: 'Active',
-    connected: 48,
-    security: 'High',
-    bandwidth: {
-      allocated: '10 Gbps',
-      utilized: 68
+    id: '1',
+    name: 'core-rtr-01',
+    type: 'router',
+    status: 'online',
+    ip: '10.0.0.1',
+    location: 'DC1 - Rack A01',
+    model: 'Cisco Nexus 9000',
+    throughput: {
+      current: 18.4,
+      max: 40
     },
-    latency: 1.2
+    connections: 124,
+    lastChecked: '2023-10-12 14:35:22'
   },
   {
-    id: 'net2',
-    name: 'Development Network',
-    type: 'Private',
-    cidr: '10.0.2.0/24',
-    gateway: '10.0.2.1',
-    status: 'Active',
-    connected: 32,
-    security: 'Medium',
-    bandwidth: {
-      allocated: '5 Gbps',
-      utilized: 45
+    id: '2',
+    name: 'edge-fw-01',
+    type: 'firewall',
+    status: 'online',
+    ip: '10.0.0.254',
+    location: 'DC1 - Rack A03',
+    model: 'Palo Alto PA-5260',
+    throughput: {
+      current: 8.2,
+      max: 20
     },
-    latency: 2.1
+    connections: 4582,
+    lastChecked: '2023-10-12 14:34:12'
   },
   {
-    id: 'net3',
-    name: 'Public Web Services',
-    type: 'Public',
-    cidr: '203.0.113.0/24',
-    gateway: '203.0.113.1',
-    status: 'Active',
-    connected: 12,
-    security: 'High',
-    bandwidth: {
-      allocated: '2 Gbps',
-      utilized: 72
+    id: '3',
+    name: 'dist-sw-03',
+    type: 'switch',
+    status: 'warning',
+    ip: '10.0.1.3',
+    location: 'DC1 - Rack B07',
+    model: 'Arista DCS-7280R',
+    throughput: {
+      current: 36.8,
+      max: 40
     },
-    latency: 18.5
+    connections: 48,
+    lastChecked: '2023-10-12 14:33:05'
   },
   {
-    id: 'net4',
-    name: 'Remote Office VPN',
-    type: 'VPN',
-    cidr: '10.1.0.0/16',
-    status: 'Inactive',
-    connected: 0,
-    security: 'High',
-    bandwidth: {
-      allocated: '1 Gbps',
-      utilized: 0
+    id: '4',
+    name: 'lb-cluster-01',
+    type: 'loadbalancer',
+    status: 'online',
+    ip: '10.0.2.10',
+    location: 'DC1 - Rack C02',
+    model: 'F5 BIG-IP i4800',
+    throughput: {
+      current: 5.6,
+      max: 20
     },
-    latency: 0
+    connections: 2845,
+    lastChecked: '2023-10-12 14:32:01'
   },
   {
-    id: 'net5',
-    name: 'DMZ Services',
-    type: 'DMZ',
-    cidr: '172.16.0.0/24',
-    gateway: '172.16.0.1',
-    status: 'Maintenance',
-    connected: 4,
-    security: 'High',
-    bandwidth: {
-      allocated: '5 Gbps',
-      utilized: 12
+    id: '5',
+    name: 'vpn-gw-01',
+    type: 'gateway',
+    status: 'online',
+    ip: '10.0.0.240',
+    location: 'DC1 - Rack A04',
+    model: 'Cisco ASA 5585-X',
+    throughput: {
+      current: 1.2,
+      max: 10
     },
-    latency: 5.4
+    connections: 86,
+    lastChecked: '2023-10-12 14:30:56'
+  },
+  {
+    id: '6',
+    name: 'dist-sw-08',
+    type: 'switch',
+    status: 'offline',
+    ip: '10.0.1.8',
+    location: 'DC2 - Rack D03',
+    model: 'Arista DCS-7280R',
+    throughput: {
+      current: 0,
+      max: 40
+    },
+    connections: 0,
+    lastChecked: '2023-10-12 13:15:42'
   }
 ];
 
-const mockRoutes: RouteData[] = [
+const vlans: VLAN[] = [
   {
-    id: 'route1',
-    source: '10.0.1.0/24',
-    destination: '10.0.2.0/24',
-    type: 'Static',
-    status: 'Active',
-    hops: 1,
-    metric: 100
+    id: 10,
+    name: 'Management',
+    subnet: '10.0.0.0/24',
+    purpose: 'Device Management',
+    devices: 48,
+    traffic: 2.4,
+    secure: true
   },
   {
-    id: 'route2',
-    source: '10.0.1.0/24',
-    destination: '203.0.113.0/24',
-    type: 'Static',
-    status: 'Active',
-    hops: 1,
-    metric: 100
+    id: 20,
+    name: 'Servers',
+    subnet: '10.0.1.0/24',
+    purpose: 'Production Servers',
+    devices: 124,
+    traffic: 34.8,
+    secure: true
   },
   {
-    id: 'route3',
-    source: '10.0.2.0/24',
-    destination: '172.16.0.0/24',
-    type: 'Dynamic',
-    status: 'Active',
-    hops: 2,
-    metric: 120
+    id: 30,
+    name: 'Storage',
+    subnet: '10.0.2.0/24',
+    purpose: 'SAN Network',
+    devices: 18,
+    traffic: 28.4,
+    secure: true
   },
   {
-    id: 'route4',
-    source: '10.1.0.0/16',
-    destination: '10.0.0.0/8',
-    type: 'BGP',
-    status: 'Inactive',
-    hops: 3,
-    metric: 200
+    id: 40,
+    name: 'DMZ',
+    subnet: '192.168.1.0/24',
+    purpose: 'Internet Facing',
+    devices: 12,
+    traffic: 15.6,
+    secure: true
   },
   {
-    id: 'route5',
-    source: '172.16.0.0/24',
-    destination: '0.0.0.0/0',
-    type: 'Static',
-    status: 'Active',
-    hops: 1,
-    metric: 10
+    id: 50,
+    name: 'Guest',
+    subnet: '172.16.0.0/24',
+    purpose: 'Guest Wi-Fi',
+    devices: 102,
+    traffic: 8.2,
+    secure: false
   }
 ];
 
-const Networking = () => {
-  const [networks, setNetworks] = useState<NetworkData[]>([]);
-  const [routes, setRoutes] = useState<RouteData[]>([]);
-  const [searchQuery, setSearchQuery] = useState<string>('');
-  const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [selectedTab, setSelectedTab] = useState<string>('networks');
-  const [selectedNetworkTab, setSelectedNetworkTab] = useState<string>('all');
-  const { toast } = useToast();
+const firewallRules: FirewallRule[] = [
+  {
+    id: '1',
+    name: 'Allow HTTP/S Inbound',
+    source: 'Any',
+    destination: 'DMZ Servers',
+    port: '80, 443',
+    protocol: 'tcp',
+    action: 'allow',
+    enabled: true,
+    hits: 28456
+  },
+  {
+    id: '2',
+    name: 'Block Suspicious IPs',
+    source: 'Threat List',
+    destination: 'Any',
+    port: 'Any',
+    protocol: 'any',
+    action: 'deny',
+    enabled: true,
+    hits: 4567
+  },
+  {
+    id: '3',
+    name: 'Allow VPN Access',
+    source: 'Remote Users',
+    destination: 'VPN Gateway',
+    port: '1194',
+    protocol: 'udp',
+    action: 'allow',
+    enabled: true,
+    hits: 892
+  },
+  {
+    id: '4',
+    name: 'Internal SSH',
+    source: 'Admin Subnet',
+    destination: 'Server Subnet',
+    port: '22',
+    protocol: 'tcp',
+    action: 'allow',
+    enabled: true,
+    hits: 345
+  },
+  {
+    id: '5',
+    name: 'Block P2P Traffic',
+    source: 'Any',
+    destination: 'Any',
+    port: 'Various',
+    protocol: 'any',
+    action: 'deny',
+    enabled: true,
+    hits: 1204
+  }
+];
 
-  useEffect(() => {
-    fetchNetworkData();
-  }, []);
+const Networking: React.FC = () => {
+  const [searchQuery, setSearchQuery] = useState('');
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [activeTab, setActiveTab] = useState('devices');
 
-  const fetchNetworkData = async () => {
-    setIsLoading(true);
-    try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 800));
-      setNetworks(mockNetworks);
-      setRoutes(mockRoutes);
-    } catch (error) {
-      toast({
-        title: "Error fetching network data",
-        description: "Failed to load network information. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleRefresh = () => {
-    fetchNetworkData();
-    toast({
-      title: "Refreshing network data",
-      description: "The network data is being refreshed."
-    });
-  };
-
-  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchQuery(e.target.value);
-  };
-
-  const filteredNetworks = networks.filter(network => 
-    network.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    network.cidr.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    network.type.toLowerCase().includes(searchQuery.toLowerCase())
-  ).filter(network => {
-    if (selectedNetworkTab === 'all') return true;
-    if (selectedNetworkTab === 'active') return network.status === 'Active';
-    if (selectedNetworkTab === 'maintenance') return network.status === 'Maintenance';
-    if (selectedNetworkTab === 'inactive') return network.status === 'Inactive';
-    return true;
-  });
-
-  const filteredRoutes = routes.filter(route => 
-    route.source.includes(searchQuery) ||
-    route.destination.includes(searchQuery) ||
-    route.type.toLowerCase().includes(searchQuery.toLowerCase())
+  const filteredDevices = networkDevices.filter(device => 
+    device.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    device.ip.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    device.type.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    device.location.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const getNetworkStatusIcon = (status: string) => {
-    switch (status) {
-      case 'Active':
-        return <CheckCircle2 className="h-4 w-4 text-green-500" />;
-      case 'Maintenance':
-        return <AlertTriangle className="h-4 w-4 text-yellow-500" />;
-      case 'Inactive':
-        return <XCircle className="h-4 w-4 text-red-500" />;
-      default:
-        return null;
+  const filteredVLANs = vlans.filter(vlan => 
+    vlan.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    vlan.subnet.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    vlan.purpose.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const filteredFirewallRules = firewallRules.filter(rule => 
+    rule.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    rule.source.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    rule.destination.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const handleRefresh = () => {
+    setIsRefreshing(true);
+    // Simulate API call
+    setTimeout(() => {
+      setIsRefreshing(false);
+      toast.success('Network data refreshed successfully');
+    }, 1500);
+  };
+
+  const handleAddNew = () => {
+    switch (activeTab) {
+      case 'devices':
+        toast.info('Add network device functionality coming soon');
+        break;
+      case 'vlans':
+        toast.info('Add VLAN functionality coming soon');
+        break;
+      case 'firewall':
+        toast.info('Add firewall rule functionality coming soon');
+        break;
     }
   };
 
-  const getNetworkTypeIcon = (type: string) => {
+  const getDeviceTypeIcon = (type: DeviceType) => {
     switch (type) {
-      case 'VLAN':
-        return <Network className="h-4 w-4 text-blue-500" />;
-      case 'VPN':
-        return <ShieldCheck className="h-4 w-4 text-purple-500" />;
-      case 'Public':
-        return <Globe className="h-4 w-4 text-green-500" />;
-      case 'Private':
-        return <Share2 className="h-4 w-4 text-orange-500" />;
-      case 'DMZ':
-        return <Router className="h-4 w-4 text-red-500" />;
-      default:
-        return <Network className="h-4 w-4" />;
+      case 'router':
+        return <Router className="h-4 w-4 text-blue-500" />;
+      case 'switch':
+        return <Network className="h-4 w-4 text-green-500" />;
+      case 'firewall':
+        return <Shield className="h-4 w-4 text-red-500" />;
+      case 'loadbalancer':
+        return <Activity className="h-4 w-4 text-purple-500" />;
+      case 'gateway':
+        return <Globe className="h-4 w-4 text-amber-500" />;
     }
   };
 
-  const getSecurityBadge = (level: string) => {
-    switch (level) {
-      case 'High':
-        return <Badge className="bg-green-500">High</Badge>;
-      case 'Medium':
-        return <Badge variant="outline" className="text-yellow-500 border-yellow-500">Medium</Badge>;
-      case 'Low':
-        return <Badge variant="destructive">Low</Badge>;
-      default:
-        return null;
+  const getDeviceStatusBadge = (status: DeviceStatus) => {
+    switch (status) {
+      case 'online':
+        return <Badge variant="default" className="bg-green-500">Online</Badge>;
+      case 'offline':
+        return <Badge variant="default" className="bg-red-500">Offline</Badge>;
+      case 'maintenance':
+        return <Badge variant="default" className="bg-blue-500">Maintenance</Badge>;
+      case 'warning':
+        return <Badge variant="default" className="bg-amber-500">Warning</Badge>;
     }
-  };
-
-  const handleAddNetwork = () => {
-    toast({
-      title: "Feature coming soon",
-      description: "Adding new network functionality is under development."
-    });
   };
 
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold">Network Management</h1>
-        <div className="flex space-x-2">
-          <Button variant="outline" size="sm" onClick={handleRefresh} disabled={isLoading}>
-            <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
+        <div className="space-y-1">
+          <h2 className="text-3xl font-bold tracking-tight">Network Management</h2>
+          <p className="text-muted-foreground">
+            Manage network devices, VLANs, and security policies
+          </p>
+        </div>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={handleRefresh} disabled={isRefreshing}>
+            <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
             Refresh
           </Button>
-          <Button size="sm" onClick={handleAddNetwork}>
-            <PlusCircle className="h-4 w-4 mr-2" />
-            Add Network
+          <Button onClick={handleAddNew}>
+            <Plus className="h-4 w-4 mr-2" />
+            {activeTab === 'devices' ? 'Add Device' : activeTab === 'vlans' ? 'Add VLAN' : 'Add Rule'}
           </Button>
         </div>
       </div>
 
-      <div className="flex items-center space-x-2">
-        <Search className="h-5 w-5 text-muted-foreground" />
-        <Input 
-          placeholder="Search networks or routes..." 
-          className="max-w-sm"
-          value={searchQuery}
-          onChange={handleSearch}
-        />
+      <div className="flex items-center gap-4 mb-4">
+        <div className="relative flex-1">
+          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+          <Input
+            type="search"
+            placeholder={`Search ${activeTab}...`}
+            className="pl-8"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+        </div>
       </div>
 
-      <Tabs defaultValue="networks" onValueChange={setSelectedTab}>
-        <TabsList>
-          <TabsTrigger value="networks">Networks</TabsTrigger>
-          <TabsTrigger value="routes">Routes</TabsTrigger>
-          <TabsTrigger value="topology">Network Topology</TabsTrigger>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium">Devices</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{networkDevices.length}</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium">VLANs</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{vlans.length}</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium">Firewall Rules</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{firewallRules.length}</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium">
+              <div className="flex items-center">
+                <CircleAlert className="h-4 w-4 text-red-500 mr-1" />
+                Alerts
+              </div>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-red-500">2</div>
+          </CardContent>
+        </Card>
+      </div>
+
+      <Tabs defaultValue="devices" onValueChange={setActiveTab}>
+        <TabsList className="mb-6">
+          <TabsTrigger value="devices">Devices</TabsTrigger>
+          <TabsTrigger value="vlans">VLANs</TabsTrigger>
+          <TabsTrigger value="firewall">Firewall Rules</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="networks" className="space-y-4 mt-6">
-          <Tabs defaultValue="all" onValueChange={setSelectedNetworkTab}>
-            <TabsList>
-              <TabsTrigger value="all">All Networks</TabsTrigger>
-              <TabsTrigger value="active">Active</TabsTrigger>
-              <TabsTrigger value="maintenance">Maintenance</TabsTrigger>
-              <TabsTrigger value="inactive">Inactive</TabsTrigger>
-            </TabsList>
-            
-            <TabsContent value="all" className="mt-6">
-              <Card>
-                <CardContent className="p-0">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Name</TableHead>
-                        <TableHead>Type</TableHead>
-                        <TableHead>CIDR</TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead>Connected</TableHead>
-                        <TableHead>Security</TableHead>
-                        <TableHead>Bandwidth</TableHead>
-                        <TableHead>Actions</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {isLoading ? (
-                        Array(3).fill(0).map((_, i) => (
-                          <TableRow key={`skeleton-${i}`} className="animate-pulse">
-                            <TableCell>
-                              <div className="h-4 w-3/4 bg-muted rounded" />
-                            </TableCell>
-                            <TableCell>
-                              <div className="h-4 w-16 bg-muted rounded" />
-                            </TableCell>
-                            <TableCell>
-                              <div className="h-4 w-24 bg-muted rounded" />
-                            </TableCell>
-                            <TableCell>
-                              <div className="h-4 w-16 bg-muted rounded" />
-                            </TableCell>
-                            <TableCell>
-                              <div className="h-4 w-8 bg-muted rounded" />
-                            </TableCell>
-                            <TableCell>
-                              <div className="h-4 w-16 bg-muted rounded" />
-                            </TableCell>
-                            <TableCell>
-                              <div className="h-4 w-full bg-muted rounded" />
-                            </TableCell>
-                            <TableCell>
-                              <div className="h-8 w-8 bg-muted rounded" />
-                            </TableCell>
-                          </TableRow>
-                        ))
-                      ) : filteredNetworks.length === 0 ? (
-                        <TableRow>
-                          <TableCell colSpan={8} className="text-center text-muted-foreground py-8">
-                            No networks found matching your criteria.
-                          </TableCell>
-                        </TableRow>
-                      ) : (
-                        filteredNetworks.map(network => (
-                          <TableRow key={network.id}>
-                            <TableCell className="font-medium">
-                              <div className="flex items-center">
-                                {getNetworkTypeIcon(network.type)}
-                                <span className="ml-2">{network.name}</span>
-                              </div>
-                            </TableCell>
-                            <TableCell>{network.type}</TableCell>
-                            <TableCell>
-                              <div>
-                                <div>{network.cidr}</div>
-                                {network.gateway && (
-                                  <div className="text-xs text-muted-foreground">
-                                    Gateway: {network.gateway}
-                                  </div>
-                                )}
-                              </div>
-                            </TableCell>
-                            <TableCell>
-                              <div className="flex items-center">
-                                {getNetworkStatusIcon(network.status)}
-                                <span className="ml-1">{network.status}</span>
-                              </div>
-                            </TableCell>
-                            <TableCell>{network.connected} devices</TableCell>
-                            <TableCell>{getSecurityBadge(network.security)}</TableCell>
-                            <TableCell>
-                              <div>
-                                <div className="flex items-center justify-between text-xs mb-1">
-                                  <span>{network.bandwidth.allocated}</span>
-                                  <span>{network.bandwidth.utilized}%</span>
-                                </div>
-                                <Progress value={network.bandwidth.utilized} className="h-1.5" />
-                              </div>
-                            </TableCell>
-                            <TableCell>
-                              <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                  <Button variant="ghost" size="icon" className="h-8 w-8">
-                                    <MoreHorizontal className="h-4 w-4" />
-                                  </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end">
-                                  <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                                  <DropdownMenuSeparator />
-                                  <DropdownMenuItem>View Details</DropdownMenuItem>
-                                  <DropdownMenuItem>Edit Network</DropdownMenuItem>
-                                  <DropdownMenuItem>Manage Devices</DropdownMenuItem>
-                                  <DropdownMenuItem>Configure Firewall</DropdownMenuItem>
-                                  <DropdownMenuSeparator />
-                                  {network.status === 'Active' ? (
-                                    <DropdownMenuItem className="text-destructive">
-                                      Deactivate Network
-                                    </DropdownMenuItem>
-                                  ) : (
-                                    <DropdownMenuItem>
-                                      Activate Network
-                                    </DropdownMenuItem>
-                                  )}
-                                </DropdownMenuContent>
-                              </DropdownMenu>
-                            </TableCell>
-                          </TableRow>
-                        ))
-                      )}
-                    </TableBody>
-                  </Table>
-                </CardContent>
-              </Card>
-            </TabsContent>
-            
-            <TabsContent value="active" className="mt-6">
-              <Card>
-                <CardContent className="p-0">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Name</TableHead>
-                        <TableHead>Type</TableHead>
-                        <TableHead>CIDR</TableHead>
-                        <TableHead>Connected</TableHead>
-                        <TableHead>Bandwidth Utilization</TableHead>
-                        <TableHead>Latency</TableHead>
-                        <TableHead>Actions</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {filteredNetworks.length === 0 ? (
-                        <TableRow>
-                          <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
-                            No active networks found.
-                          </TableCell>
-                        </TableRow>
-                      ) : (
-                        filteredNetworks.map(network => (
-                          <TableRow key={network.id}>
-                            <TableCell className="font-medium">
-                              <div className="flex items-center">
-                                {getNetworkTypeIcon(network.type)}
-                                <span className="ml-2">{network.name}</span>
-                              </div>
-                            </TableCell>
-                            <TableCell>{network.type}</TableCell>
-                            <TableCell>{network.cidr}</TableCell>
-                            <TableCell>{network.connected} devices</TableCell>
-                            <TableCell>
-                              <div>
-                                <div className="flex items-center justify-between text-xs mb-1">
-                                  <span>{network.bandwidth.utilized}%</span>
-                                </div>
-                                <Progress value={network.bandwidth.utilized} className="h-1.5" />
-                              </div>
-                            </TableCell>
-                            <TableCell>
-                              {network.latency > 0 ? `${network.latency} ms` : 'N/A'}
-                            </TableCell>
-                            <TableCell>
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => {
-                                  toast({
-                                    title: "Monitoring network",
-                                    description: `Viewing live metrics for ${network.name}`,
-                                  });
-                                }}
-                              >
-                                Monitor
-                              </Button>
-                            </TableCell>
-                          </TableRow>
-                        ))
-                      )}
-                    </TableBody>
-                  </Table>
-                </CardContent>
-              </Card>
-            </TabsContent>
-            
-            <TabsContent value="maintenance" className="mt-6">
-              <Card>
-                <CardContent className="p-0">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Name</TableHead>
-                        <TableHead>Type</TableHead>
-                        <TableHead>CIDR</TableHead>
-                        <TableHead>Maintenance Since</TableHead>
-                        <TableHead>Expected Completion</TableHead>
-                        <TableHead>Actions</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {filteredNetworks.length === 0 ? (
-                        <TableRow>
-                          <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
-                            No networks in maintenance mode.
-                          </TableCell>
-                        </TableRow>
-                      ) : (
-                        filteredNetworks.map(network => (
-                          <TableRow key={network.id}>
-                            <TableCell className="font-medium">
-                              <div className="flex items-center">
-                                {getNetworkTypeIcon(network.type)}
-                                <span className="ml-2">{network.name}</span>
-                              </div>
-                            </TableCell>
-                            <TableCell>{network.type}</TableCell>
-                            <TableCell>{network.cidr}</TableCell>
-                            <TableCell>Today, 08:00</TableCell>
-                            <TableCell>Today, 18:00</TableCell>
-                            <TableCell>
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => {
-                                  toast({
-                                    title: "Maintenance completed",
-                                    description: `${network.name} is now active`,
-                                  });
-                                }}
-                              >
-                                Complete Maintenance
-                              </Button>
-                            </TableCell>
-                          </TableRow>
-                        ))
-                      )}
-                    </TableBody>
-                  </Table>
-                </CardContent>
-              </Card>
-            </TabsContent>
-            
-            <TabsContent value="inactive" className="mt-6">
-              <Card>
-                <CardContent className="p-0">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Name</TableHead>
-                        <TableHead>Type</TableHead>
-                        <TableHead>CIDR</TableHead>
-                        <TableHead>Last Active</TableHead>
-                        <TableHead>Actions</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {filteredNetworks.length === 0 ? (
-                        <TableRow>
-                          <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
-                            No inactive networks found.
-                          </TableCell>
-                        </TableRow>
-                      ) : (
-                        filteredNetworks.map(network => (
-                          <TableRow key={network.id}>
-                            <TableCell className="font-medium">
-                              <div className="flex items-center">
-                                <WifiOff className="h-4 w-4 mr-2 text-red-500" />
-                                <span>{network.name}</span>
-                              </div>
-                            </TableCell>
-                            <TableCell>{network.type}</TableCell>
-                            <TableCell>{network.cidr}</TableCell>
-                            <TableCell>3 days ago</TableCell>
-                            <TableCell>
-                              <Button
-                                variant="default"
-                                size="sm"
-                                onClick={() => {
-                                  toast({
-                                    title: "Network activated",
-                                    description: `${network.name} is now active`,
-                                  });
-                                }}
-                              >
-                                Activate Network
-                              </Button>
-                            </TableCell>
-                          </TableRow>
-                        ))
-                      )}
-                    </TableBody>
-                  </Table>
-                </CardContent>
-              </Card>
-            </TabsContent>
-          </Tabs>
-        </TabsContent>
-        
-        <TabsContent value="routes" className="mt-6">
+        <TabsContent value="devices">
           <Card>
             <CardContent className="p-0">
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Source</TableHead>
-                    <TableHead>Destination</TableHead>
+                    <TableHead>Name</TableHead>
                     <TableHead>Type</TableHead>
                     <TableHead>Status</TableHead>
-                    <TableHead>Hops</TableHead>
-                    <TableHead>Metric</TableHead>
-                    <TableHead>Actions</TableHead>
+                    <TableHead>IP Address</TableHead>
+                    <TableHead>Location</TableHead>
+                    <TableHead>Throughput</TableHead>
+                    <TableHead>Connections</TableHead>
+                    <TableHead>Last Check</TableHead>
+                    <TableHead></TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {isLoading ? (
-                    Array(3).fill(0).map((_, i) => (
-                      <TableRow key={`skeleton-${i}`} className="animate-pulse">
-                        <TableCell>
-                          <div className="h-4 w-24 bg-muted rounded" />
-                        </TableCell>
-                        <TableCell>
-                          <div className="h-4 w-24 bg-muted rounded" />
-                        </TableCell>
-                        <TableCell>
-                          <div className="h-4 w-16 bg-muted rounded" />
-                        </TableCell>
-                        <TableCell>
-                          <div className="h-4 w-16 bg-muted rounded" />
-                        </TableCell>
-                        <TableCell>
-                          <div className="h-4 w-8 bg-muted rounded" />
-                        </TableCell>
-                        <TableCell>
-                          <div className="h-4 w-8 bg-muted rounded" />
-                        </TableCell>
-                        <TableCell>
-                          <div className="h-4 w-16 bg-muted rounded" />
-                        </TableCell>
-                      </TableRow>
-                    ))
-                  ) : filteredRoutes.length === 0 ? (
-                    <TableRow>
-                      <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
-                        No routes found matching your criteria.
+                  {filteredDevices.map((device) => (
+                    <TableRow key={device.id}>
+                      <TableCell className="font-medium">{device.name}</TableCell>
+                      <TableCell>
+                        <div className="flex items-center">
+                          {getDeviceTypeIcon(device.type)}
+                          <span className="ml-2 capitalize">{device.type}</span>
+                        </div>
+                      </TableCell>
+                      <TableCell>{getDeviceStatusBadge(device.status)}</TableCell>
+                      <TableCell>{device.ip}</TableCell>
+                      <TableCell>{device.location}</TableCell>
+                      <TableCell>
+                        <div className="w-32">
+                          <div className="flex justify-between text-xs mb-1">
+                            <span>{device.throughput.current} Gbps</span>
+                            <span className="text-muted-foreground">{device.throughput.max} Gbps</span>
+                          </div>
+                          <Progress 
+                            value={(device.throughput.current / device.throughput.max) * 100} 
+                            className="h-1.5"
+                            style={{ 
+                              color: device.throughput.current / device.throughput.max > 0.8 
+                                ? "hsl(var(--destructive))" 
+                                : device.throughput.current / device.throughput.max > 0.6 
+                                ? "hsl(var(--warning))" 
+                                : "hsl(var(--primary))" 
+                            }}
+                          />
+                        </div>
+                      </TableCell>
+                      <TableCell>{device.connections.toLocaleString()}</TableCell>
+                      <TableCell>{device.lastChecked}</TableCell>
+                      <TableCell>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon">
+                              <MoreHorizontal className="h-4 w-4" />
+                              <span className="sr-only">Actions</span>
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem>View Details</DropdownMenuItem>
+                            <DropdownMenuItem>Edit</DropdownMenuItem>
+                            <DropdownMenuItem>View Config</DropdownMenuItem>
+                            <DropdownMenuItem>View Traffic</DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem className="text-red-500">Shutdown</DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                       </TableCell>
                     </TableRow>
-                  ) : (
-                    filteredRoutes.map(route => (
-                      <TableRow key={route.id}>
-                        <TableCell>
-                          {route.source}
-                        </TableCell>
-                        <TableCell>
-                          {route.destination}
-                        </TableCell>
-                        <TableCell>{route.type}</TableCell>
-                        <TableCell>
-                          <Badge 
-                            variant={route.status === 'Active' ? 'default' : 'destructive'}
-                          >
-                            {route.status}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>{route.hops}</TableCell>
-                        <TableCell>{route.metric}</TableCell>
-                        <TableCell>
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="icon" className="h-8 w-8">
-                                <MoreHorizontal className="h-4 w-4" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                              <DropdownMenuSeparator />
-                              <DropdownMenuItem>View Details</DropdownMenuItem>
-                              <DropdownMenuItem>Edit Route</DropdownMenuItem>
-                              <DropdownMenuItem>Trace Route</DropdownMenuItem>
-                              <DropdownMenuSeparator />
-                              {route.status === 'Active' ? (
-                                <DropdownMenuItem className="text-destructive">
-                                  Disable Route
-                                </DropdownMenuItem>
-                              ) : (
-                                <DropdownMenuItem>
-                                  Enable Route
-                                </DropdownMenuItem>
-                              )}
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </TableCell>
-                      </TableRow>
-                    ))
-                  )}
+                  ))}
                 </TableBody>
               </Table>
             </CardContent>
-            <CardFooter className="justify-between py-4">
-              <div className="text-sm text-muted-foreground">
-                Showing {filteredRoutes.length} routes
-              </div>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => {
-                  toast({
-                    title: "Feature coming soon",
-                    description: "Adding new routes functionality is under development",
-                  });
-                }}
-              >
-                <PlusCircle className="h-4 w-4 mr-2" />
-                Add Route
-              </Button>
-            </CardFooter>
           </Card>
         </TabsContent>
-        
-        <TabsContent value="topology" className="mt-6">
+
+        <TabsContent value="vlans">
           <Card>
-            <CardHeader>
-              <CardTitle>Network Topology</CardTitle>
-              <CardDescription>
-                Visual representation of network connections and routing paths
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="flex justify-center items-center h-96 border border-dashed rounded-md bg-muted/20">
-                <div className="text-center space-y-4">
-                  <Network className="h-12 w-12 text-primary mx-auto opacity-70" />
-                  <div>
-                    <h3 className="text-lg font-medium">Network Topology Viewer</h3>
-                    <p className="text-sm text-muted-foreground mt-1">
-                      Interactive network topology visualization coming soon
-                    </p>
-                  </div>
-                  <Button variant="outline">
-                    <ArrowRightLeft className="h-4 w-4 mr-2" />
-                    Load Sample Topology
-                  </Button>
-                </div>
-              </div>
+            <CardContent className="p-0">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>ID</TableHead>
+                    <TableHead>Name</TableHead>
+                    <TableHead>Subnet</TableHead>
+                    <TableHead>Purpose</TableHead>
+                    <TableHead>Devices</TableHead>
+                    <TableHead>Traffic (Gbps)</TableHead>
+                    <TableHead>Secure</TableHead>
+                    <TableHead></TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredVLANs.map((vlan) => (
+                    <TableRow key={vlan.id}>
+                      <TableCell>{vlan.id}</TableCell>
+                      <TableCell className="font-medium">{vlan.name}</TableCell>
+                      <TableCell>{vlan.subnet}</TableCell>
+                      <TableCell>{vlan.purpose}</TableCell>
+                      <TableCell>{vlan.devices}</TableCell>
+                      <TableCell>{vlan.traffic}</TableCell>
+                      <TableCell>
+                        {vlan.secure ? (
+                          <Badge className="bg-green-500">Secure</Badge>
+                        ) : (
+                          <Badge variant="outline" className="text-amber-500 border-amber-500">Open</Badge>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon">
+                              <MoreHorizontal className="h-4 w-4" />
+                              <span className="sr-only">Actions</span>
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem>View Details</DropdownMenuItem>
+                            <DropdownMenuItem>Edit</DropdownMenuItem>
+                            <DropdownMenuItem>View Devices</DropdownMenuItem>
+                            <DropdownMenuItem>View Traffic</DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem className="text-red-500">Delete</DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="firewall">
+          <Card>
+            <CardContent className="p-0">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Rule Name</TableHead>
+                    <TableHead>Source</TableHead>
+                    <TableHead>Destination</TableHead>
+                    <TableHead>Port/Protocol</TableHead>
+                    <TableHead>Action</TableHead>
+                    <TableHead>Enabled</TableHead>
+                    <TableHead>Hits</TableHead>
+                    <TableHead></TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredFirewallRules.map((rule) => (
+                    <TableRow key={rule.id}>
+                      <TableCell className="font-medium">{rule.name}</TableCell>
+                      <TableCell>{rule.source}</TableCell>
+                      <TableCell>{rule.destination}</TableCell>
+                      <TableCell>
+                        {rule.port ? `${rule.port} (${rule.protocol})` : rule.protocol}
+                      </TableCell>
+                      <TableCell>
+                        {rule.action === 'allow' ? (
+                          <Badge className="bg-green-500">Allow</Badge>
+                        ) : (
+                          <Badge className="bg-red-500">Deny</Badge>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        {rule.enabled ? (
+                          <div className="flex items-center">
+                            <div className="h-2 w-2 rounded-full bg-green-500 mr-2"></div>
+                            <span>Yes</span>
+                          </div>
+                        ) : (
+                          <div className="flex items-center">
+                            <div className="h-2 w-2 rounded-full bg-slate-300 mr-2"></div>
+                            <span>No</span>
+                          </div>
+                        )}
+                      </TableCell>
+                      <TableCell>{rule.hits.toLocaleString()}</TableCell>
+                      <TableCell>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon">
+                              <MoreHorizontal className="h-4 w-4" />
+                              <span className="sr-only">Actions</span>
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem>Edit Rule</DropdownMenuItem>
+                            <DropdownMenuItem>Duplicate</DropdownMenuItem>
+                            <DropdownMenuItem>Move Up</DropdownMenuItem>
+                            <DropdownMenuItem>Move Down</DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            {rule.enabled ? (
+                              <DropdownMenuItem>Disable</DropdownMenuItem>
+                            ) : (
+                              <DropdownMenuItem>Enable</DropdownMenuItem>
+                            )}
+                            <DropdownMenuItem className="text-red-500">Delete</DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
             </CardContent>
           </Card>
         </TabsContent>
