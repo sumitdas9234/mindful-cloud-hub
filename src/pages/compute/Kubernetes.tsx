@@ -1,480 +1,621 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
-  Cloud,
+  Cloud, 
+  RefreshCw, 
   Search,
-  Plus,
-  RefreshCw,
+  PlusCircle, 
   MoreHorizontal,
-  CheckCircle,
-  AlertTriangle,
+  CheckCircle2,
   XCircle,
-  Download
+  AlertTriangle,
+  Cpu,
+  HardDrive,
+  Network,
+  DownloadCloud,
+  ChevronRight
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
-} from '@/components/ui/table';
-import { Progress } from '@/components/ui/progress';
-import { 
+  Card, 
+  CardContent, 
+  CardDescription, 
+  CardFooter, 
+  CardHeader, 
+  CardTitle 
+} from '@/components/ui/card';
+import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuGroup,
   DropdownMenuItem,
+  DropdownMenuLabel,
   DropdownMenuSeparator,
-  DropdownMenuTrigger
+  DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { toast } from 'sonner';
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from '@/components/ui/tabs';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import { Badge } from '@/components/ui/badge';
+import { Progress } from '@/components/ui/progress';
+import { useToast } from '@/components/ui/use-toast';
 
-interface KubernetesCluster {
+interface ClusterHealth {
+  apiServer: 'Healthy' | 'Degraded' | 'Unhealthy';
+  scheduler: 'Healthy' | 'Degraded' | 'Unhealthy';
+  controller: 'Healthy' | 'Degraded' | 'Unhealthy';
+  etcd: 'Healthy' | 'Degraded' | 'Unhealthy';
+}
+
+interface ClusterData {
   id: string;
   name: string;
   version: string;
-  status: 'healthy' | 'warning' | 'critical';
-  provider: 'rke' | 'aks' | 'eks' | 'gke' | 'ocp';
   nodes: number;
   pods: number;
-  namespaces: number;
-  cpu: {
-    usage: number;
-    total: number;
+  status: 'Running' | 'Degraded' | 'Failed';
+  health: ClusterHealth;
+  resourceUsage: {
+    cpu: number;
+    memory: number;
+    storage: number;
+    network: number;
   };
-  memory: {
-    usage: number;
-    total: number;
-  };
-  storage: {
-    usage: number;
-    total: number;
-  };
+  provider: 'On-Premise' | 'AWS' | 'Azure' | 'GCP';
   created: string;
-  lastUpdated: string;
 }
 
-const clusters: KubernetesCluster[] = [
+const mockClusters: ClusterData[] = [
   {
-    id: '1',
-    name: 'prod-cluster-01',
-    version: 'v1.28.3',
-    status: 'healthy',
-    provider: 'rke',
+    id: 'k8s-1',
+    name: 'Production Cluster',
+    version: 'v1.28.5',
     nodes: 12,
-    pods: 245,
-    namespaces: 8,
-    cpu: {
-      usage: 42,
-      total: 96
+    pods: 128,
+    status: 'Running',
+    health: {
+      apiServer: 'Healthy',
+      scheduler: 'Healthy',
+      controller: 'Healthy',
+      etcd: 'Healthy'
     },
-    memory: {
-      usage: 156,
-      total: 384
+    resourceUsage: {
+      cpu: 68,
+      memory: 75,
+      storage: 52,
+      network: 48
     },
-    storage: {
-      usage: 2.8,
-      total: 10
-    },
-    created: '2023-01-15',
-    lastUpdated: '2023-10-05'
+    provider: 'On-Premise',
+    created: '2023-06-15'
   },
   {
-    id: '2',
-    name: 'staging-cluster-01',
-    version: 'v1.28.2',
-    status: 'healthy',
-    provider: 'rke',
+    id: 'k8s-2',
+    name: 'Development Cluster',
+    version: 'v1.29.0',
     nodes: 6,
-    pods: 124,
-    namespaces: 5,
-    cpu: {
-      usage: 18,
-      total: 48
+    pods: 64,
+    status: 'Running',
+    health: {
+      apiServer: 'Healthy',
+      scheduler: 'Healthy',
+      controller: 'Healthy',
+      etcd: 'Healthy'
     },
-    memory: {
-      usage: 72,
-      total: 192
+    resourceUsage: {
+      cpu: 42,
+      memory: 58,
+      storage: 35,
+      network: 28
     },
-    storage: {
-      usage: 1.4,
-      total: 5
-    },
-    created: '2023-02-20',
-    lastUpdated: '2023-09-28'
+    provider: 'AWS',
+    created: '2023-09-22'
   },
   {
-    id: '3',
-    name: 'dev-cluster-01',
-    version: 'v1.28.1',
-    status: 'warning',
-    provider: 'rke',
+    id: 'k8s-3',
+    name: 'Testing Cluster',
+    version: 'v1.28.3',
+    nodes: 4,
+    pods: 48,
+    status: 'Degraded',
+    health: {
+      apiServer: 'Healthy',
+      scheduler: 'Degraded',
+      controller: 'Healthy',
+      etcd: 'Healthy'
+    },
+    resourceUsage: {
+      cpu: 55,
+      memory: 62,
+      storage: 48,
+      network: 35
+    },
+    provider: 'Azure',
+    created: '2023-11-05'
+  },
+  {
+    id: 'k8s-4',
+    name: 'CI/CD Cluster',
+    version: 'v1.27.8',
     nodes: 3,
-    pods: 87,
-    namespaces: 4,
-    cpu: {
-      usage: 12,
-      total: 24
+    pods: 42,
+    status: 'Running',
+    health: {
+      apiServer: 'Healthy',
+      scheduler: 'Healthy',
+      controller: 'Healthy',
+      etcd: 'Healthy'
     },
-    memory: {
-      usage: 58,
-      total: 96
+    resourceUsage: {
+      cpu: 78,
+      memory: 82,
+      storage: 58,
+      network: 60
     },
-    storage: {
-      usage: 0.9,
-      total: 2
-    },
-    created: '2023-03-10',
-    lastUpdated: '2023-08-15'
+    provider: 'GCP',
+    created: '2023-08-12'
   },
   {
-    id: '4',
-    name: 'azure-east-prod',
-    version: 'v1.27.4',
-    status: 'healthy',
-    provider: 'aks',
-    nodes: 8,
-    pods: 156,
-    namespaces: 6,
-    cpu: {
-      usage: 32,
-      total: 64
+    id: 'k8s-5',
+    name: 'Backup Cluster',
+    version: 'v1.28.0',
+    nodes: 2,
+    pods: 24,
+    status: 'Failed',
+    health: {
+      apiServer: 'Unhealthy',
+      scheduler: 'Unhealthy',
+      controller: 'Unhealthy',
+      etcd: 'Degraded'
     },
-    memory: {
-      usage: 120,
-      total: 256
+    resourceUsage: {
+      cpu: 0,
+      memory: 0,
+      storage: 15,
+      network: 0
     },
-    storage: {
-      usage: 2.1,
-      total: 8
-    },
-    created: '2023-04-05',
-    lastUpdated: '2023-09-10'
-  },
-  {
-    id: '5',
-    name: 'aws-west-prod',
-    version: 'v1.27.6',
-    status: 'critical',
-    provider: 'eks',
-    nodes: 10,
-    pods: 189,
-    namespaces: 7,
-    cpu: {
-      usage: 68,
-      total: 80
-    },
-    memory: {
-      usage: 210,
-      total: 320
-    },
-    storage: {
-      usage: 5.8,
-      total: 12
-    },
-    created: '2023-02-28',
-    lastUpdated: '2023-10-01'
+    provider: 'On-Premise',
+    created: '2023-07-28'
   }
 ];
 
-const Kubernetes: React.FC = () => {
-  const [searchQuery, setSearchQuery] = useState('');
-  const [isRefreshing, setIsRefreshing] = useState(false);
+const Kubernetes = () => {
+  const [clusters, setClusters] = useState<ClusterData[]>([]);
+  const [searchQuery, setSearchQuery] = useState<string>('');
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [selectedTab, setSelectedTab] = useState<string>('all');
+  const { toast } = useToast();
+
+  useEffect(() => {
+    fetchClusters();
+  }, []);
+
+  const fetchClusters = async () => {
+    setIsLoading(true);
+    try {
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 800));
+      setClusters(mockClusters);
+    } catch (error) {
+      toast({
+        title: "Error fetching clusters",
+        description: "Failed to load Kubernetes cluster data. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleRefresh = () => {
+    fetchClusters();
+    toast({
+      title: "Refreshing cluster data",
+      description: "The Kubernetes cluster data is being refreshed."
+    });
+  };
+
+  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchQuery(e.target.value);
+  };
 
   const filteredClusters = clusters.filter(cluster => 
     cluster.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     cluster.provider.toLowerCase().includes(searchQuery.toLowerCase()) ||
     cluster.version.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  ).filter(cluster => {
+    if (selectedTab === 'all') return true;
+    if (selectedTab === 'running') return cluster.status === 'Running';
+    if (selectedTab === 'degraded') return cluster.status === 'Degraded';
+    if (selectedTab === 'failed') return cluster.status === 'Failed';
+    return true;
+  });
 
-  const handleRefresh = () => {
-    setIsRefreshing(true);
-    // Simulate API call
-    setTimeout(() => {
-      setIsRefreshing(false);
-      toast.success('Kubernetes data refreshed successfully');
-    }, 1500);
-  };
-
-  const handleAddNew = () => {
-    toast.info('Add Kubernetes cluster functionality coming soon');
-  };
-
-  const handleExportKubeconfig = (clusterId: string) => {
-    toast.success(`Kubeconfig for cluster ${clusterId} downloaded`);
-  };
-
-  const getStatusBadge = (status: KubernetesCluster['status']) => {
+  const getStatusIcon = (status: string) => {
     switch (status) {
-      case 'healthy':
-        return (
-          <div className="flex items-center">
-            <CheckCircle className="h-4 w-4 text-green-500 mr-1" />
-            <Badge variant="default" className="bg-green-500">Healthy</Badge>
-          </div>
-        );
-      case 'warning':
-        return (
-          <div className="flex items-center">
-            <AlertTriangle className="h-4 w-4 text-amber-500 mr-1" />
-            <Badge variant="default" className="bg-amber-500">Warning</Badge>
-          </div>
-        );
-      case 'critical':
-        return (
-          <div className="flex items-center">
-            <XCircle className="h-4 w-4 text-red-500 mr-1" />
-            <Badge variant="default" className="bg-red-500">Critical</Badge>
-          </div>
-        );
+      case 'Healthy':
+        return <CheckCircle2 className="h-4 w-4 text-green-500" />;
+      case 'Degraded':
+        return <AlertTriangle className="h-4 w-4 text-yellow-500" />;
+      case 'Unhealthy':
+        return <XCircle className="h-4 w-4 text-red-500" />;
+      default:
+        return null;
     }
   };
 
-  const getProviderBadge = (provider: KubernetesCluster['provider']) => {
-    switch (provider) {
-      case 'rke':
-        return <Badge variant="outline">RKE</Badge>;
-      case 'aks':
-        return <Badge variant="outline" className="border-blue-500 text-blue-500">AKS</Badge>;
-      case 'eks':
-        return <Badge variant="outline" className="border-orange-500 text-orange-500">EKS</Badge>;
-      case 'gke':
-        return <Badge variant="outline" className="border-green-500 text-green-500">GKE</Badge>;
-      case 'ocp':
-        return <Badge variant="outline" className="border-red-500 text-red-500">OCP</Badge>;
+  const getStatusBadge = (status: 'Running' | 'Degraded' | 'Failed') => {
+    switch (status) {
+      case 'Running':
+        return <Badge variant="default" className="bg-green-500">Running</Badge>;
+      case 'Degraded':
+        return <Badge variant="outline" className="text-yellow-500 border-yellow-500">Degraded</Badge>;
+      case 'Failed':
+        return <Badge variant="destructive">Failed</Badge>;
+      default:
+        return null;
     }
   };
 
-  const calculateResourceUsagePercentage = (used: number, total: number) => {
-    return Math.round((used / total) * 100);
-  };
-
-  const getResourceColor = (percentage: number) => {
-    if (percentage < 60) return "hsl(var(--primary))";
-    if (percentage < 80) return "hsl(var(--warning))";
-    return "hsl(var(--destructive))";
+  const handleAddNewCluster = () => {
+    toast({
+      title: "Feature coming soon",
+      description: "Adding new Kubernetes cluster functionality is under development."
+    });
   };
 
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <div className="space-y-1">
-          <h2 className="text-3xl font-bold tracking-tight">Kubernetes Management</h2>
-          <p className="text-muted-foreground">
-            Manage and monitor your Kubernetes clusters
-          </p>
-        </div>
-        <div className="flex gap-2">
-          <Button variant="outline" onClick={handleRefresh} disabled={isRefreshing}>
-            <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
+        <h1 className="text-2xl font-bold">Kubernetes Management</h1>
+        <div className="flex space-x-2">
+          <Button variant="outline" size="sm" onClick={handleRefresh} disabled={isLoading}>
+            <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
             Refresh
           </Button>
-          <Button onClick={handleAddNew}>
-            <Plus className="h-4 w-4 mr-2" />
-            Add Cluster
+          <Button size="sm" onClick={handleAddNewCluster}>
+            <PlusCircle className="h-4 w-4 mr-2" />
+            New Cluster
           </Button>
         </div>
       </div>
 
-      <div className="flex items-center gap-4 mb-4">
-        <div className="relative flex-1">
-          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-          <Input
-            type="search"
-            placeholder="Search clusters..."
-            className="pl-8"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-        </div>
+      <div className="flex items-center space-x-2">
+        <Search className="h-5 w-5 text-muted-foreground" />
+        <Input 
+          placeholder="Search clusters..." 
+          className="max-w-sm"
+          value={searchQuery}
+          onChange={handleSearch}
+        />
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Total Clusters</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{clusters.length}</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Healthy</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-green-500">
-              {clusters.filter(c => c.status === 'healthy').length}
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Total Nodes</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-blue-500">
-              {clusters.reduce((sum, c) => sum + c.nodes, 0)}
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Total Pods</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-purple-500">
-              {clusters.reduce((sum, c) => sum + c.pods, 0)}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+      <Tabs defaultValue="all" onValueChange={setSelectedTab}>
+        <TabsList>
+          <TabsTrigger value="all">All Clusters</TabsTrigger>
+          <TabsTrigger value="running">Running</TabsTrigger>
+          <TabsTrigger value="degraded">Degraded</TabsTrigger>
+          <TabsTrigger value="failed">Failed</TabsTrigger>
+        </TabsList>
 
-      {filteredClusters.map((cluster) => (
-        <Card key={cluster.id} className="mb-4">
-          <CardHeader className="pb-2">
-            <div className="flex justify-between items-start">
-              <div>
-                <CardTitle className="text-xl font-bold">{cluster.name}</CardTitle>
-                <div className="flex items-center mt-1 space-x-2">
-                  {getProviderBadge(cluster.provider)}
-                  <span className="text-sm text-muted-foreground">v{cluster.version}</span>
-                </div>
-              </div>
-              <div className="flex items-center space-x-2">
-                {getStatusBadge(cluster.status)}
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon">
-                      <MoreHorizontal className="h-4 w-4" />
-                      <span className="sr-only">Actions</span>
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuGroup>
-                      <DropdownMenuItem>View Dashboard</DropdownMenuItem>
-                      <DropdownMenuItem>View Details</DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => handleExportKubeconfig(cluster.id)}>
-                        <Download className="h-4 w-4 mr-2" />
-                        Export Kubeconfig
-                      </DropdownMenuItem>
-                    </DropdownMenuGroup>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuGroup>
-                      <DropdownMenuItem>Upgrade Cluster</DropdownMenuItem>
-                      <DropdownMenuItem>Add Node</DropdownMenuItem>
-                      <DropdownMenuItem>Add Namespace</DropdownMenuItem>
-                    </DropdownMenuGroup>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem className="text-red-500">Delete Cluster</DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {/* Resource usage */}
-              <div className="space-y-4">
-                <div>
-                  <div className="flex justify-between mb-1">
-                    <span className="text-sm font-medium">CPU Usage</span>
-                    <span className="text-sm text-muted-foreground">
-                      {cluster.cpu.usage} / {cluster.cpu.total} cores
-                    </span>
-                  </div>
-                  <Progress 
-                    value={calculateResourceUsagePercentage(cluster.cpu.usage, cluster.cpu.total)} 
-                    className="h-2"
-                    style={{ 
-                      color: getResourceColor(
-                        calculateResourceUsagePercentage(cluster.cpu.usage, cluster.cpu.total)
-                      ) 
-                    }}
-                  />
-                </div>
-                <div>
-                  <div className="flex justify-between mb-1">
-                    <span className="text-sm font-medium">Memory Usage</span>
-                    <span className="text-sm text-muted-foreground">
-                      {cluster.memory.usage} / {cluster.memory.total} GB
-                    </span>
-                  </div>
-                  <Progress 
-                    value={calculateResourceUsagePercentage(cluster.memory.usage, cluster.memory.total)} 
-                    className="h-2"
-                    style={{ 
-                      color: getResourceColor(
-                        calculateResourceUsagePercentage(cluster.memory.usage, cluster.memory.total)
-                      ) 
-                    }}
-                  />
-                </div>
-                <div>
-                  <div className="flex justify-between mb-1">
-                    <span className="text-sm font-medium">Storage Usage</span>
-                    <span className="text-sm text-muted-foreground">
-                      {cluster.storage.usage} / {cluster.storage.total} TB
-                    </span>
-                  </div>
-                  <Progress 
-                    value={calculateResourceUsagePercentage(cluster.storage.usage, cluster.storage.total)} 
-                    className="h-2"
-                    style={{ 
-                      color: getResourceColor(
-                        calculateResourceUsagePercentage(cluster.storage.usage, cluster.storage.total)
-                      ) 
-                    }}
-                  />
-                </div>
-              </div>
-              
-              {/* Cluster stats */}
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <p className="text-sm text-muted-foreground mb-1">Nodes</p>
-                  <p className="text-2xl font-bold">{cluster.nodes}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground mb-1">Pods</p>
-                  <p className="text-2xl font-bold">{cluster.pods}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground mb-1">Namespaces</p>
-                  <p className="text-2xl font-bold">{cluster.namespaces}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground mb-1">Healthy</p>
-                  <p className="text-2xl font-bold text-green-500">
-                    {cluster.status === 'healthy' ? 'Yes' : 'No'}
-                  </p>
-                </div>
-              </div>
-              
-              {/* Dates & Actions */}
-              <div>
-                <div className="mb-4">
-                  <p className="text-sm text-muted-foreground mb-1">Created</p>
-                  <p className="text-sm font-medium">{cluster.created}</p>
-                </div>
-                <div className="mb-4">
-                  <p className="text-sm text-muted-foreground mb-1">Last Updated</p>
-                  <p className="text-sm font-medium">{cluster.lastUpdated}</p>
-                </div>
-                <div className="flex space-x-2">
-                  <Button size="sm" variant="outline" className="flex-1">View Nodes</Button>
-                  <Button size="sm" className="flex-1">Access</Button>
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      ))}
+        <TabsContent value="all" className="mt-6">
+          <Card>
+            <CardContent className="p-0">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Name</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Version</TableHead>
+                    <TableHead>Nodes</TableHead>
+                    <TableHead>Pods</TableHead>
+                    <TableHead>Provider</TableHead>
+                    <TableHead>CPU Usage</TableHead>
+                    <TableHead>Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {isLoading ? (
+                    Array(3).fill(0).map((_, i) => (
+                      <TableRow key={`skeleton-${i}`} className="animate-pulse">
+                        <TableCell>
+                          <div className="h-4 w-3/4 bg-muted rounded" />
+                        </TableCell>
+                        <TableCell>
+                          <div className="h-4 w-16 bg-muted rounded" />
+                        </TableCell>
+                        <TableCell>
+                          <div className="h-4 w-16 bg-muted rounded" />
+                        </TableCell>
+                        <TableCell>
+                          <div className="h-4 w-8 bg-muted rounded" />
+                        </TableCell>
+                        <TableCell>
+                          <div className="h-4 w-8 bg-muted rounded" />
+                        </TableCell>
+                        <TableCell>
+                          <div className="h-4 w-24 bg-muted rounded" />
+                        </TableCell>
+                        <TableCell>
+                          <div className="h-4 w-full bg-muted rounded" />
+                        </TableCell>
+                        <TableCell>
+                          <div className="h-8 w-20 bg-muted rounded" />
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  ) : filteredClusters.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={8} className="text-center text-muted-foreground py-8">
+                        No Kubernetes clusters found matching your criteria.
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    filteredClusters.map(cluster => (
+                      <TableRow key={cluster.id}>
+                        <TableCell className="font-medium">
+                          <div className="flex items-center">
+                            <Cloud className="h-5 w-5 mr-2 text-primary" />
+                            {cluster.name}
+                          </div>
+                        </TableCell>
+                        <TableCell>{getStatusBadge(cluster.status)}</TableCell>
+                        <TableCell>{cluster.version}</TableCell>
+                        <TableCell>{cluster.nodes}</TableCell>
+                        <TableCell>{cluster.pods}</TableCell>
+                        <TableCell>{cluster.provider}</TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            <Progress value={cluster.resourceUsage.cpu} className="h-2 flex-1" />
+                            <span className="text-sm">{cluster.resourceUsage.cpu}%</span>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex space-x-2">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8"
+                              onClick={() => {
+                                toast({
+                                  title: "Opening cluster details",
+                                  description: `Viewing details for ${cluster.name}`,
+                                });
+                              }}
+                            >
+                              <ChevronRight className="h-4 w-4" />
+                            </Button>
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" size="icon" className="h-8 w-8">
+                                  <MoreHorizontal className="h-4 w-4" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem>View Dashboard</DropdownMenuItem>
+                                <DropdownMenuItem>Get Kubeconfig</DropdownMenuItem>
+                                <DropdownMenuItem>Upgrade Version</DropdownMenuItem>
+                                <DropdownMenuItem>Add Node</DropdownMenuItem>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem className="text-destructive">Delete Cluster</DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        </TabsContent>
+        
+        <TabsContent value="running" className="mt-6">
+          <Card>
+            <CardContent className="p-0">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Name</TableHead>
+                    <TableHead>Version</TableHead>
+                    <TableHead>Nodes</TableHead>
+                    <TableHead>Pods</TableHead>
+                    <TableHead>Provider</TableHead>
+                    <TableHead>Health</TableHead>
+                    <TableHead>Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredClusters.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
+                        No running Kubernetes clusters found.
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    filteredClusters.map(cluster => (
+                      <TableRow key={cluster.id}>
+                        <TableCell className="font-medium">
+                          <div className="flex items-center">
+                            <Cloud className="h-5 w-5 mr-2 text-primary" />
+                            {cluster.name}
+                          </div>
+                        </TableCell>
+                        <TableCell>{cluster.version}</TableCell>
+                        <TableCell>{cluster.nodes}</TableCell>
+                        <TableCell>{cluster.pods}</TableCell>
+                        <TableCell>{cluster.provider}</TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-1">
+                            {getStatusIcon(cluster.health.apiServer)}
+                            {getStatusIcon(cluster.health.scheduler)}
+                            {getStatusIcon(cluster.health.controller)}
+                            {getStatusIcon(cluster.health.etcd)}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-8"
+                            onClick={() => {
+                              toast({
+                                title: "Downloading Kubeconfig",
+                                description: `Kubeconfig for ${cluster.name} is ready.`,
+                              });
+                            }}
+                          >
+                            <DownloadCloud className="h-4 w-4 mr-2" />
+                            Kubeconfig
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        </TabsContent>
+        
+        <TabsContent value="degraded" className="mt-6">
+          <Card>
+            <CardContent className="p-0">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Name</TableHead>
+                    <TableHead>Version</TableHead>
+                    <TableHead>Issue</TableHead>
+                    <TableHead>Component</TableHead>
+                    <TableHead>Detected</TableHead>
+                    <TableHead>Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredClusters.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
+                        No degraded Kubernetes clusters found.
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    filteredClusters.map(cluster => (
+                      <TableRow key={cluster.id}>
+                        <TableCell className="font-medium">
+                          <div className="flex items-center">
+                            <Cloud className="h-5 w-5 mr-2 text-primary" />
+                            {cluster.name}
+                          </div>
+                        </TableCell>
+                        <TableCell>{cluster.version}</TableCell>
+                        <TableCell>Performance degradation</TableCell>
+                        <TableCell>
+                          {Object.entries(cluster.health)
+                            .filter(([_, status]) => status === 'Degraded')
+                            .map(([component]) => component)
+                            .join(', ')}
+                        </TableCell>
+                        <TableCell>12 minutes ago</TableCell>
+                        <TableCell>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-8"
+                            onClick={() => {
+                              toast({
+                                title: "Auto-remediation started",
+                                description: `Attempting to fix issues on ${cluster.name}`,
+                              });
+                            }}
+                          >
+                            <RefreshCw className="h-4 w-4 mr-2" />
+                            Auto-remediate
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        </TabsContent>
+        
+        <TabsContent value="failed" className="mt-6">
+          <Card>
+            <CardContent className="p-0">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Name</TableHead>
+                    <TableHead>Version</TableHead>
+                    <TableHead>Failure Reason</TableHead>
+                    <TableHead>Failed Since</TableHead>
+                    <TableHead>Last Healthy</TableHead>
+                    <TableHead>Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredClusters.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
+                        No failed Kubernetes clusters found.
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    filteredClusters.map(cluster => (
+                      <TableRow key={cluster.id}>
+                        <TableCell className="font-medium">
+                          <div className="flex items-center">
+                            <Cloud className="h-5 w-5 mr-2 text-primary" />
+                            {cluster.name}
+                          </div>
+                        </TableCell>
+                        <TableCell>{cluster.version}</TableCell>
+                        <TableCell>Control plane components unreachable</TableCell>
+                        <TableCell>2 hours ago</TableCell>
+                        <TableCell>Yesterday, 23:15</TableCell>
+                        <TableCell>
+                          <div className="flex space-x-2">
+                            <Button
+                              variant="default"
+                              size="sm"
+                              className="h-8"
+                              onClick={() => {
+                                toast({
+                                  title: "Recovery initiated",
+                                  description: `Attempting to recover ${cluster.name}`,
+                                });
+                              }}
+                            >
+                              <RefreshCw className="h-4 w-4 mr-2" />
+                              Recover
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };
