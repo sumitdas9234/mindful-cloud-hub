@@ -4,7 +4,7 @@ import { DashboardHeader } from '@/components/dashboard/DashboardHeader';
 import { StatsSummary } from '@/components/dashboard/sections/StatsSummary';
 import { ResourceUsageChart } from '@/components/dashboard/sections/ResourceUsageChart';
 import { SystemLoad } from '@/components/dashboard/sections/SystemLoad';
-import { ServerList } from '@/components/dashboard/sections/ServerList';
+import { ManagedServices } from '@/components/dashboard/sections/ManagedServices';
 import { SelectionControls } from '@/components/dashboard/SelectionControls';
 
 const Index = () => {
@@ -58,7 +58,7 @@ const Index = () => {
         />
       </div>
       
-      <ServerList 
+      <ManagedServices 
         vCenterId={selectedVCenter} 
         clusterId={selectedCluster}
         tagIds={selectedTags}
