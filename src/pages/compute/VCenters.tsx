@@ -1,23 +1,5 @@
-
 import React, { useState } from 'react';
-import { 
-  Search, 
-  Plus, 
-  RefreshCw, 
-  MoreVertical, 
-  Server, 
-  CheckCircle2, 
-  AlertCircle
-} from 'lucide-react';
-import { 
-  Card, 
-  CardContent, 
-  CardDescription, 
-  CardHeader, 
-  CardTitle 
-} from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
+import { MoreVertical, Server } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { 
   DropdownMenu,
@@ -33,11 +15,17 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { Button } from '@/components/ui/button';
 import { useQuery } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
+
+import { StatusIndicator } from '@/components/compute/StatusIndicator';
+import { SearchBar } from '@/components/compute/SearchBar';
+import { VCenterStatCards } from '@/components/compute/StatCards';
+import { PageHeader } from '@/components/compute/PageHeader';
+import { EmptyState } from '@/components/compute/EmptyState';
 import { VCenterDetailSheet } from '@/components/compute/VCenterDetailSheet';
 
-// Types for our vCenter data
 interface VCenter {
   id: string;
   name: string;
@@ -51,7 +39,6 @@ interface VCenter {
   lastSync: string;
 }
 
-// Mock data for vCenters
 const mockVCenters: VCenter[] = [
   {
     id: 'vc-1',
@@ -115,7 +102,6 @@ const mockVCenters: VCenter[] = [
   }
 ];
 
-// Summary stats type
 interface VCenterStats {
   total: number;
   healthy: number;
@@ -142,7 +128,6 @@ const VCentersPage: React.FC = () => {
   const [detailSheetOpen, setDetailSheetOpen] = useState(false);
   const { toast } = useToast();
 
-  // In a real application, this would use the real API
   const { data: vcenters = [], isLoading, refetch } = useQuery({
     queryKey: ['vcenters'],
     queryFn: () => Promise.resolve(mockVCenters),
@@ -182,86 +167,28 @@ const VCentersPage: React.FC = () => {
     setDetailSheetOpen(true);
   };
 
-  const getStatusIcon = (status: VCenter['status']) => {
-    switch (status) {
-      case 'healthy':
-        return <CheckCircle2 className="h-4 w-4 text-green-500" />;
-      case 'warning':
-        return <AlertCircle className="h-4 w-4 text-yellow-500" />;
-      case 'error':
-        return <AlertCircle className="h-4 w-4 text-red-500" />;
-      default:
-        return null;
-    }
-  };
-
   return (
     <div className="container mx-auto space-y-6">
-      <div className="flex flex-col space-y-4 md:flex-row md:items-center md:justify-between md:space-y-0">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">vCenter Management</h1>
-          <p className="text-muted-foreground">Manage your VMware vCenter Server instances.</p>
-        </div>
-        <div className="flex items-center space-x-2">
-          <Button onClick={handleRefresh} variant="outline" size="sm">
-            <RefreshCw className="mr-2 h-4 w-4" />
-            Refresh
-          </Button>
-          <Button onClick={handleAddVCenter} size="sm">
-            <Plus className="mr-2 h-4 w-4" />
-            Add vCenter
-          </Button>
-        </div>
-      </div>
+      <PageHeader 
+        title="vCenter Management"
+        description="Manage your VMware vCenter Server instances."
+        onRefresh={handleRefresh}
+        onAdd={handleAddVCenter}
+        addButtonText="Add vCenter"
+      />
 
-      <div className="grid gap-4 md:grid-cols-4">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Total vCenters</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.total}</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Healthy</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center">
-              <div className="text-2xl font-bold">{stats.healthy}</div>
-              <CheckCircle2 className="ml-2 h-5 w-5 text-green-500" />
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Total Hosts</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.totalHosts}</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Virtual Machines</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.totalVMs}</div>
-          </CardContent>
-        </Card>
-      </div>
+      <VCenterStatCards 
+        total={stats.total}
+        healthy={stats.healthy}
+        totalHosts={stats.totalHosts}
+        totalVMs={stats.totalVMs}
+      />
 
-      <div className="relative w-full max-w-sm">
-        <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-        <Input
-          type="search"
-          placeholder="Search vCenters..."
-          className="pl-8"
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-        />
-      </div>
+      <SearchBar 
+        searchQuery={searchQuery}
+        setSearchQuery={setSearchQuery}
+        placeholder="Search vCenters..."
+      />
 
       <Separator />
 
@@ -270,15 +197,12 @@ const VCentersPage: React.FC = () => {
           <p className="text-muted-foreground">Loading vCenters...</p>
         </div>
       ) : filteredVCenters.length === 0 ? (
-        <div className="flex flex-col items-center justify-center h-64">
-          <Server className="h-12 w-12 text-muted-foreground mb-4" />
-          <h3 className="text-lg font-medium">No vCenters Found</h3>
-          <p className="text-muted-foreground">
-            {searchQuery
-              ? "No vCenters match your search criteria."
-              : "No vCenters have been added yet."}
-          </p>
-        </div>
+        <EmptyState 
+          title="No vCenters Found"
+          description={searchQuery
+            ? "No vCenters match your search criteria."
+            : "No vCenters have been added yet."}
+        />
       ) : (
         <div className="rounded-md border">
           <Table>
@@ -306,10 +230,7 @@ const VCentersPage: React.FC = () => {
                   <TableCell className="font-medium">{vcenter.name}</TableCell>
                   <TableCell>{vcenter.url}</TableCell>
                   <TableCell>
-                    <div className="flex items-center">
-                      {getStatusIcon(vcenter.status)}
-                      <span className="ml-1 capitalize">{vcenter.status}</span>
-                    </div>
+                    <StatusIndicator status={vcenter.status} />
                   </TableCell>
                   <TableCell>{vcenter.version}</TableCell>
                   <TableCell>{vcenter.datacenters}</TableCell>

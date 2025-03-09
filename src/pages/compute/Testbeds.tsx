@@ -1,15 +1,5 @@
-
 import React, { useState } from 'react';
-import { 
-  Search, 
-  Plus, 
-  RefreshCw, 
-  MoreVertical, 
-  Server, 
-  CheckCircle2, 
-  AlertCircle,
-  XCircle 
-} from 'lucide-react';
+import { MoreVertical, Server } from 'lucide-react';
 import { 
   Card, 
   CardContent, 
@@ -17,9 +7,6 @@ import {
   CardHeader, 
   CardTitle 
 } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { 
   DropdownMenu,
@@ -37,11 +24,16 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Progress } from '@/components/ui/progress';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { useQuery } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
+import { StatusIndicator } from '@/components/compute/StatusIndicator';
+import { SearchBar } from '@/components/compute/SearchBar';
+import { PageHeader } from '@/components/compute/PageHeader';
+import { EmptyState } from '@/components/compute/EmptyState';
 import { TestbedDetailSheet } from '@/components/compute/TestbedDetailSheet';
 
-// Types for our testbed data
 interface Testbed {
   id: string;
   name: string;
@@ -63,7 +55,6 @@ interface Testbed {
   deployments: number;
 }
 
-// Mock data for testbeds
 const mockTestbeds: Testbed[] = [
   {
     id: 'tb-1',
@@ -187,7 +178,6 @@ const mockTestbeds: Testbed[] = [
   }
 ];
 
-// Summary stats type
 interface TestbedStats {
   total: number;
   active: number;
@@ -220,7 +210,6 @@ const TestbedsPage: React.FC = () => {
   const [detailSheetOpen, setDetailSheetOpen] = useState(false);
   const { toast } = useToast();
 
-  // In a real application, this would use the real API
   const { data: testbeds = [], isLoading, refetch } = useQuery({
     queryKey: ['testbeds'],
     queryFn: () => Promise.resolve(mockTestbeds),
@@ -263,36 +252,6 @@ const TestbedsPage: React.FC = () => {
     setDetailSheetOpen(true);
   };
 
-  const getStatusBadgeColor = (status: Testbed['status']) => {
-    switch (status) {
-      case 'active':
-        return 'bg-green-500/10 text-green-500 hover:bg-green-500/20';
-      case 'provisioning':
-        return 'bg-blue-500/10 text-blue-500 hover:bg-blue-500/20';
-      case 'failed':
-        return 'bg-red-500/10 text-red-500 hover:bg-red-500/20';
-      case 'decommissioned':
-        return 'bg-gray-500/10 text-gray-500 hover:bg-gray-500/20';
-      default:
-        return 'bg-gray-500/10 text-gray-500 hover:bg-gray-500/20';
-    }
-  };
-
-  const getStatusIcon = (status: Testbed['status']) => {
-    switch (status) {
-      case 'active':
-        return <CheckCircle2 className="h-4 w-4 text-green-500" />;
-      case 'provisioning':
-        return <AlertCircle className="h-4 w-4 text-blue-500" />;
-      case 'failed':
-        return <AlertCircle className="h-4 w-4 text-red-500" />;
-      case 'decommissioned':
-        return <XCircle className="h-4 w-4 text-gray-500" />;
-      default:
-        return null;
-    }
-  };
-
   const getTypeBadgeColor = (type: Testbed['type']) => {
     switch (type) {
       case 'hardware':
@@ -308,22 +267,13 @@ const TestbedsPage: React.FC = () => {
 
   return (
     <div className="container mx-auto space-y-6">
-      <div className="flex flex-col space-y-4 md:flex-row md:items-center md:justify-between md:space-y-0">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">Testbed Management</h1>
-          <p className="text-muted-foreground">Manage your testing environments and infrastructure.</p>
-        </div>
-        <div className="flex items-center space-x-2">
-          <Button onClick={handleRefresh} variant="outline" size="sm">
-            <RefreshCw className="mr-2 h-4 w-4" />
-            Refresh
-          </Button>
-          <Button onClick={handleAddTestbed} size="sm">
-            <Plus className="mr-2 h-4 w-4" />
-            Add Testbed
-          </Button>
-        </div>
-      </div>
+      <PageHeader 
+        title="Testbed Management"
+        description="Manage your testing environments and infrastructure."
+        onRefresh={handleRefresh}
+        onAdd={handleAddTestbed}
+        addButtonText="Add Testbed"
+      />
 
       <div className="grid gap-4 md:grid-cols-4">
         <Card>
@@ -372,16 +322,11 @@ const TestbedsPage: React.FC = () => {
         </Card>
       </div>
 
-      <div className="relative w-full max-w-sm">
-        <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-        <Input
-          type="search"
-          placeholder="Search testbeds..."
-          className="pl-8"
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-        />
-      </div>
+      <SearchBar 
+        searchQuery={searchQuery}
+        setSearchQuery={setSearchQuery}
+        placeholder="Search testbeds..."
+      />
 
       <Separator />
 
@@ -390,15 +335,12 @@ const TestbedsPage: React.FC = () => {
           <p className="text-muted-foreground">Loading testbeds...</p>
         </div>
       ) : filteredTestbeds.length === 0 ? (
-        <div className="flex flex-col items-center justify-center h-64">
-          <Server className="h-12 w-12 text-muted-foreground mb-4" />
-          <h3 className="text-lg font-medium">No Testbeds Found</h3>
-          <p className="text-muted-foreground">
-            {searchQuery
-              ? "No testbeds match your search criteria."
-              : "No testbeds have been added yet."}
-          </p>
-        </div>
+        <EmptyState 
+          title="No Testbeds Found"
+          description={searchQuery
+            ? "No testbeds match your search criteria."
+            : "No testbeds have been added yet."}
+        />
       ) : (
         <div className="rounded-md border">
           <Table>
@@ -420,7 +362,7 @@ const TestbedsPage: React.FC = () => {
               {filteredTestbeds.map((testbed) => (
                 <TableRow 
                   key={testbed.id} 
-                  className="cursor-pointer"
+                  className="cursor-pointer hover:bg-muted/50"
                   onClick={() => openTestbedDetails(testbed)}
                 >
                   <TableCell className="font-medium">
@@ -430,10 +372,7 @@ const TestbedsPage: React.FC = () => {
                     </div>
                   </TableCell>
                   <TableCell>
-                    <div className="flex items-center">
-                      {getStatusIcon(testbed.status)}
-                      <span className="ml-1 capitalize">{testbed.status}</span>
-                    </div>
+                    <StatusIndicator status={testbed.status} />
                   </TableCell>
                   <TableCell>
                     <Badge
