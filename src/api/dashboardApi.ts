@@ -1,4 +1,3 @@
-
 import { ServerData, ResourceUsageData, StatsData, SystemLoadData, VCenterData, ClusterData, InfraTagData } from './types';
 
 // Mock data for vCenters
@@ -100,53 +99,64 @@ export const fetchResourceUsageData = async (params: { vCenterId?: string, clust
   return data;
 };
 
-// Updated function signature to accept an object parameter
-export const fetchServers = async (params: { vCenterId?: string, clusterId?: string, tagIds?: string[] }): Promise<ServerData[]> => {
+// Updated function signature to accept an object parameter with category
+export const fetchServers = async (params: { 
+  vCenterId?: string, 
+  clusterId?: string, 
+  tagIds?: string[],
+  category?: string 
+}): Promise<ServerData[]> => {
   // Simulate API delay
   await new Promise(resolve => setTimeout(resolve, 500));
   
-  // Generate different server data based on vCenter and cluster
-  let servers: ServerData[] = [
-    { id: 1, name: 'prod-app-server-01', cpu: 62, memory: 58, disk: 43, status: 'online' },
-    { id: 2, name: 'prod-app-server-02', cpu: 45, memory: 72, disk: 32, status: 'online' },
-    { id: 3, name: 'prod-db-server-01', cpu: 78, memory: 65, disk: 68, status: 'online' },
-    { id: 4, name: 'staging-app-server-01', cpu: 22, memory: 34, disk: 19, status: 'online' },
-  ];
+  // Base server data by category
+  const serversByCategory: Record<string, ServerData[]> = {
+    rke: [
+      { id: 101, name: 'rke-control-001', cpu: 65, memory: 72, disk: 45, status: 'online', category: 'rke' },
+      { id: 102, name: 'rke-control-002', cpu: 58, memory: 65, disk: 38, status: 'online', category: 'rke' },
+      { id: 103, name: 'rke-control-003', cpu: 72, memory: 80, disk: 62, status: 'online', category: 'rke' },
+    ],
+    dogfood: [
+      { id: 201, name: 'dog-cluster-001', cpu: 78, memory: 82, disk: 55, status: 'online', category: 'dogfood' },
+      { id: 202, name: 'dog-cluster-002', cpu: 45, memory: 60, disk: 42, status: 'maintenance', category: 'dogfood' },
+      { id: 203, name: 'dog-cluster-003', cpu: 38, memory: 55, disk: 30, status: 'online', category: 'dogfood' },
+    ],
+    etcd: [
+      { id: 301, name: 'etcd-cluster-001', cpu: 42, memory: 48, disk: 35, status: 'online', category: 'etcd' },
+      { id: 302, name: 'etcd-cluster-002', cpu: 50, memory: 62, disk: 45, status: 'online', category: 'etcd' },
+      { id: 303, name: 'etcd-cluster-003', cpu: 28, memory: 40, disk: 22, status: 'offline', category: 'etcd' },
+    ],
+    nfs: [
+      { id: 401, name: 'nfs-host-001', cpu: 30, memory: 35, disk: 75, status: 'online', category: 'nfs' },
+      { id: 402, name: 'nfs-host-002', cpu: 28, memory: 32, disk: 82, status: 'online', category: 'nfs' },
+    ],
+    jenkins: [
+      { id: 501, name: 'jenkins-agent-001', cpu: 85, memory: 72, disk: 50, status: 'online', category: 'jenkins' },
+      { id: 502, name: 'jenkins-agent-002', cpu: 78, memory: 68, disk: 45, status: 'online', category: 'jenkins' },
+      { id: 503, name: 'jenkins-agent-003', cpu: 45, memory: 52, disk: 30, status: 'maintenance', category: 'jenkins' },
+    ]
+  };
+
+  let servers = serversByCategory[params.category || 'rke'] || [];
   
+  // Modify server names based on vCenter
   if (params.vCenterId === 'vc1') {
-    servers = [
-      { id: 101, name: 'east-app-server-01', cpu: 58, memory: 62, disk: 39, status: 'online' },
-      { id: 102, name: 'east-app-server-02', cpu: 41, memory: 68, disk: 35, status: 'online' },
-      { id: 103, name: 'east-db-server-01', cpu: 82, memory: 71, disk: 73, status: 'online' },
-    ];
-    if (params.clusterId === 'cl1') {
-      servers = servers.map(s => ({...s, name: s.name.replace('east', 'prod-east')}));
-    } else if (params.clusterId === 'cl2') {
-      servers = servers.map(s => ({...s, name: s.name.replace('east', 'dev-east')}));
-    }
+    servers = servers.map(s => ({...s, name: `east-${s.name}`}));
   } else if (params.vCenterId === 'vc2') {
-    servers = [
-      { id: 201, name: 'west-app-server-01', cpu: 35, memory: 45, disk: 28, status: 'online' },
-      { id: 202, name: 'west-app-server-02', cpu: 29, memory: 51, disk: 25, status: 'online' },
-      { id: 203, name: 'west-db-server-01', cpu: 65, memory: 58, disk: 52, status: 'online' },
-      { id: 204, name: 'west-cache-server-01', cpu: 42, memory: 38, disk: 15, status: 'maintenance' },
-    ];
-    if (params.clusterId === 'cl3') {
-      servers = servers.map(s => ({...s, name: s.name.replace('west', 'test-west')}));
-    } else if (params.clusterId === 'cl4') {
-      servers = servers.map(s => ({...s, name: s.name.replace('west', 'staging-west')}));
-    }
+    servers = servers.map(s => ({...s, name: `west-${s.name}`}));
   } else if (params.vCenterId === 'vc3') {
-    servers = [
-      { id: 301, name: 'central-app-server-01', cpu: 48, memory: 53, disk: 32, status: 'online' },
-      { id: 302, name: 'central-app-server-02', cpu: 36, memory: 47, disk: 29, status: 'offline' },
-      { id: 303, name: 'central-db-server-01', cpu: 72, memory: 68, disk: 65, status: 'online' },
-    ];
-    if (params.clusterId === 'cl5') {
-      servers = servers.map(s => ({...s, name: s.name.replace('central', 'main')}));
-    } else if (params.clusterId === 'cl6') {
-      servers = servers.map(s => ({...s, name: s.name.replace('central', 'backup')}));
-    }
+    servers = servers.map(s => ({...s, name: `central-${s.name}`}));
+  }
+  
+  // Modify based on cluster
+  if (params.clusterId) {
+    const clusterPrefix = params.clusterId === 'cl1' ? 'prod-' : 
+                          params.clusterId === 'cl2' ? 'dev-' :
+                          params.clusterId === 'cl3' ? 'test-' :
+                          params.clusterId === 'cl4' ? 'staging-' :
+                          params.clusterId === 'cl5' ? 'main-' : 'backup-';
+    
+    servers = servers.map(s => ({...s, name: `${clusterPrefix}${s.name}`}));
   }
   
   return servers;
@@ -157,28 +167,28 @@ export const fetchStatsData = async (params: { vCenterId?: string, clusterId?: s
   // Simulate API delay
   await new Promise(resolve => setTimeout(resolve, 200));
   
-  // Default stats
+  // Default stats with updated titles
   let stats: StatsData[] = [
     {
-      title: "Total Servers",
+      title: "Total ESXI Hosts",
       value: "12",
       description: "Active infrastructure",
       trend: "up",
       trendValue: "+2 from last month"
     },
     {
-      title: "Databases",
+      title: "Total Routes",
       value: "8",
-      description: "Production & staging",
+      description: "Network routes",
       trend: "neutral",
       trendValue: "No change"
     },
     {
-      title: "Storage",
-      value: "4.2 TB",
-      description: "Used across all systems",
+      title: "Total Testbeds",
+      value: "25",
+      description: "Dev and test environments",
       trend: "up",
-      trendValue: "+0.8 TB from last month"
+      trendValue: "+3 from last month"
     },
     {
       title: "Users",
@@ -193,17 +203,17 @@ export const fetchStatsData = async (params: { vCenterId?: string, clusterId?: s
   if (params.vCenterId === 'vc1') {
     stats[0].value = "14";
     stats[1].value = "10";
-    stats[2].value = "5.2 TB";
+    stats[2].value = "32";
     stats[3].value = "48";
   } else if (params.vCenterId === 'vc2') {
     stats[0].value = "9";
     stats[1].value = "6";
-    stats[2].value = "3.8 TB";
+    stats[2].value = "18";
     stats[3].value = "35";
   } else if (params.vCenterId === 'vc3') {
     stats[0].value = "11";
     stats[1].value = "7";
-    stats[2].value = "4.0 TB";
+    stats[2].value = "22";
     stats[3].value = "40";
   }
   
@@ -212,8 +222,7 @@ export const fetchStatsData = async (params: { vCenterId?: string, clusterId?: s
     const clusterNum = parseInt(params.clusterId.replace('cl', ''));
     stats[0].value = (parseInt(stats[0].value) - (clusterNum % 3)).toString();
     stats[1].value = (parseInt(stats[1].value) - (clusterNum % 2)).toString();
-    const storageAdjust = (clusterNum % 5) * 0.2;
-    stats[2].value = (parseFloat(stats[2].value.replace(' TB', '')) - storageAdjust).toFixed(1) + ' TB';
+    stats[2].value = (parseInt(stats[2].value) - (clusterNum * 2)).toString();
   }
   
   return stats;

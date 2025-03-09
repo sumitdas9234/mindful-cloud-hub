@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Server, Database, HardDrive, Users } from 'lucide-react';
+import { Server, Route, LayoutGrid, Users } from 'lucide-react';
 import { StatsCard } from '@/components/dashboard/StatsCard';
 import { fetchStatsData } from '@/api/dashboardApi';
 
@@ -18,9 +18,9 @@ export const StatsSummary: React.FC<StatsSummaryProps> = ({ vCenterId, clusterId
   });
 
   const iconMap = {
-    "Total Servers": Server,
-    "Databases": Database,
-    "Storage": HardDrive,
+    "Total ESXI Hosts": Server,
+    "Total Routes": Route,
+    "Total Testbeds": LayoutGrid,
     "Users": Users
   };
 

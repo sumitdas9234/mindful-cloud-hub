@@ -6,6 +6,7 @@ export interface ServerData {
   memory: number;
   disk: number;
   status: 'online' | 'offline' | 'maintenance';
+  category?: 'rke' | 'dogfood' | 'etcd' | 'nfs' | 'jenkins';
 }
 
 export interface ResourceUsageData {
