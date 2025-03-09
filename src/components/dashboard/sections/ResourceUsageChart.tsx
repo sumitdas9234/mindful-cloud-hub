@@ -13,7 +13,7 @@ interface ResourceUsageChartProps {
 export const ResourceUsageChart: React.FC<ResourceUsageChartProps> = ({ vCenterId, clusterId, tagIds }) => {
   const { data, isLoading } = useQuery({
     queryKey: ['resourceUsage', vCenterId, clusterId, tagIds],
-    queryFn: () => fetchResourceUsageData(vCenterId, clusterId, tagIds),
+    queryFn: () => fetchResourceUsageData({ vCenterId, clusterId, tagIds }),
     refetchInterval: 60000, // Refetch every minute
   });
 

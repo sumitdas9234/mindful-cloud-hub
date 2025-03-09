@@ -27,7 +27,7 @@ interface ServerListProps {
 export const ServerList: React.FC<ServerListProps> = ({ vCenterId, clusterId, tagIds }) => {
   const { data: servers, isLoading } = useQuery({
     queryKey: ['servers', vCenterId, clusterId, tagIds],
-    queryFn: () => fetchServers(vCenterId, clusterId, tagIds),
+    queryFn: () => fetchServers({ vCenterId, clusterId, tagIds }),
     refetchInterval: 30000,
   });
 

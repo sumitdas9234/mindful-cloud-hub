@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { Monitor, Memory, HardDrive, Wifi } from 'lucide-react';
 import { ResourceCard } from '@/components/dashboard/ResourceCard';
 import { fetchSystemLoad } from '@/api/dashboardApi';
 
@@ -13,7 +14,7 @@ interface SystemLoadProps {
 export const SystemLoad: React.FC<SystemLoadProps> = ({ vCenterId, clusterId, tagIds }) => {
   const { data, isLoading } = useQuery({
     queryKey: ['systemLoad', vCenterId, clusterId, tagIds],
-    queryFn: () => fetchSystemLoad(vCenterId, clusterId, tagIds),
+    queryFn: () => fetchSystemLoad({ vCenterId, clusterId, tagIds }),
     refetchInterval: 30000, // Refetch every 30 seconds
   });
 
@@ -34,6 +35,7 @@ export const SystemLoad: React.FC<SystemLoadProps> = ({ vCenterId, clusterId, ta
             value={data?.cpu || 0}
             color="bg-blue-500"
             textColor="text-blue-500"
+            icon={Monitor}
           />
           <ResourceCard
             title="Memory"
@@ -41,6 +43,7 @@ export const SystemLoad: React.FC<SystemLoadProps> = ({ vCenterId, clusterId, ta
             subtitle={data ? `${data.memory.used} / ${data.memory.total}` : ''}
             color="bg-indigo-500"
             textColor="text-indigo-500"
+            icon={Memory}
           />
           <ResourceCard
             title="Storage"
@@ -48,6 +51,7 @@ export const SystemLoad: React.FC<SystemLoadProps> = ({ vCenterId, clusterId, ta
             subtitle={data ? `${data.storage.used} / ${data.storage.total}` : ''}
             color="bg-purple-500"
             textColor="text-purple-500"
+            icon={HardDrive}
           />
           <ResourceCard
             title="Network"
@@ -55,6 +59,7 @@ export const SystemLoad: React.FC<SystemLoadProps> = ({ vCenterId, clusterId, ta
             subtitle={data ? `${data.network.used} / ${data.network.total}` : ''}
             color="bg-green-500"
             textColor="text-green-500"
+            icon={Wifi}
           />
         </div>
       )}

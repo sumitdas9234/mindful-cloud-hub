@@ -14,7 +14,7 @@ interface StatsSummaryProps {
 export const StatsSummary: React.FC<StatsSummaryProps> = ({ vCenterId, clusterId, tagIds }) => {
   const { data: stats, isLoading } = useQuery({
     queryKey: ['dashboardStats', vCenterId, clusterId, tagIds],
-    queryFn: () => fetchStatsData(vCenterId, clusterId, tagIds)
+    queryFn: () => fetchStatsData({ vCenterId, clusterId, tagIds })
   });
 
   const iconMap = {

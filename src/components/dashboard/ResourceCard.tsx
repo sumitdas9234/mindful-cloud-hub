@@ -9,8 +9,10 @@ import { LucideIcon } from 'lucide-react';
 interface ResourceCardProps {
   title: string;
   value: number;
-  icon: LucideIcon;
+  icon?: LucideIcon;
   color?: string;
+  textColor?: string;
+  subtitle?: string;
   usageLabel?: string;
   total?: string;
   showProgress?: boolean;
@@ -23,6 +25,8 @@ export const ResourceCard: React.FC<ResourceCardProps> = ({
   value,
   icon: Icon,
   color = "hsl(var(--primary))",
+  textColor,
+  subtitle,
   usageLabel,
   total,
   showProgress = true,
@@ -42,7 +46,7 @@ export const ResourceCard: React.FC<ResourceCardProps> = ({
     <Card className={cn("overflow-hidden transition-all duration-200 hover:shadow-md", className)}>
       <CardHeader className="pb-2">
         <CardTitle className="text-base font-medium flex items-center gap-2">
-          <Icon className="h-4 w-4 text-muted-foreground" />
+          {Icon && <Icon className="h-4 w-4 text-muted-foreground" />}
           {title}
         </CardTitle>
       </CardHeader>
@@ -62,7 +66,7 @@ export const ResourceCard: React.FC<ResourceCardProps> = ({
           
           <div className={cn("space-y-1 w-full", showProgressRing && "flex-1")}>
             <div className="flex items-end justify-between">
-              <span className="text-2xl font-bold">
+              <span className={cn("text-2xl font-bold", textColor)}>
                 {usageLabel || `${currentValue}%`}
               </span>
               {total && (
@@ -71,6 +75,8 @@ export const ResourceCard: React.FC<ResourceCardProps> = ({
                 </span>
               )}
             </div>
+            
+            {subtitle && <p className="text-sm text-muted-foreground">{subtitle}</p>}
             
             {showProgress && (
               <Progress 
