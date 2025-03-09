@@ -185,9 +185,12 @@ const VolumesTab = () => (
               <Progress 
                 value={volume.usedPercentage} 
                 className="h-2" 
-                // Add warning color for high usage
-                indicator={volume.usedPercentage > 80 ? "bg-amber-500" : 
-                           volume.usedPercentage > 90 ? "bg-red-500" : undefined}
+                style={{
+                  // Use style.color to set the background color instead of indicator prop
+                  color: volume.usedPercentage > 90 ? 'hsl(var(--destructive))' : 
+                         volume.usedPercentage > 80 ? 'hsl(var(--warning))' : 
+                         'hsl(var(--primary))'
+                }}
               />
             </div>
             
@@ -248,9 +251,12 @@ const DatastoresTab = () => (
               <Progress 
                 value={ds.usedPercentage} 
                 className="h-2"
-                // Add warning color for high usage
-                indicator={ds.usedPercentage > 80 ? "bg-amber-500" : 
-                           ds.usedPercentage > 90 ? "bg-red-500" : undefined}
+                style={{
+                  // Use style.color to set the background color instead of indicator prop
+                  color: ds.usedPercentage > 90 ? 'hsl(var(--destructive))' : 
+                         ds.usedPercentage > 80 ? 'hsl(var(--warning))' : 
+                         'hsl(var(--primary))'
+                }}
               />
             </div>
             
