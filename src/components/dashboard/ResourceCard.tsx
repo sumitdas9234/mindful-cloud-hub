@@ -76,8 +76,9 @@ export const ResourceCard: React.FC<ResourceCardProps> = ({
               <Progress 
                 value={currentValue} 
                 className="h-2" 
-                indicatorClassName={cn(color !== "hsl(var(--primary))" && "bg-current")} 
-                style={{ color }}
+                style={{ 
+                  color: color !== "hsl(var(--primary))" ? color : undefined 
+                }}
               />
             )}
           </div>
