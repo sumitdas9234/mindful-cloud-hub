@@ -18,6 +18,7 @@ import { SearchBar } from '@/components/compute/SearchBar';
 import { PageHeader } from '@/components/compute/PageHeader';
 import { DataTable, Column } from '@/components/compute/DataTable';
 import { TestbedDetailSheet } from '@/components/compute/TestbedDetailSheet';
+import { TestbedActivityChart } from '@/components/compute/TestbedActivityChart';
 
 interface Testbed {
   id: string;
@@ -183,6 +184,7 @@ interface TestbedStats {
   provisioning: number;
   failed: number;
   decommissioned: number;
+  whitelisted: number;
   totalCpu: number;
   totalMemory: number;
   totalStorage: number;
@@ -196,6 +198,7 @@ const calculateStats = (testbeds: Testbed[]): TestbedStats => {
     provisioning: testbeds.filter(tb => tb.status === 'provisioning').length,
     failed: testbeds.filter(tb => tb.status === 'failed').length,
     decommissioned: testbeds.filter(tb => tb.status === 'decommissioned').length,
+    whitelisted: testbeds.filter(tb => tb.whitelisted).length,
     totalCpu: testbeds.reduce((sum, tb) => sum + tb.cpu, 0),
     totalMemory: testbeds.reduce((sum, tb) => sum + tb.memory, 0),
     totalStorage: testbeds.reduce((sum, tb) => sum + tb.storage, 0),
@@ -359,7 +362,7 @@ const TestbedsPage: React.FC = () => {
         addButtonText="Add Testbed"
       />
 
-      <div className="grid gap-4 md:grid-cols-4">
+      <div className="grid gap-4 md:grid-cols-3">
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium">Total Testbeds</CardTitle>
@@ -367,43 +370,22 @@ const TestbedsPage: React.FC = () => {
           <CardContent>
             <div className="text-2xl font-bold">{stats.total}</div>
             <p className="text-xs text-muted-foreground mt-1">
-              {stats.active} active
+              {stats.whitelisted} whitelisted
             </p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">CPU Cores</CardTitle>
+            <CardTitle className="text-sm font-medium">Total VMs</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.totalCpu}</div>
+            <div className="text-2xl font-bold">{stats.totalVMs}</div>
             <p className="text-xs text-muted-foreground mt-1">
               Across all testbeds
             </p>
           </CardContent>
         </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Memory (GB)</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.totalMemory}</div>
-            <p className="text-xs text-muted-foreground mt-1">
-              Across all testbeds
-            </p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Storage (GB)</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.totalStorage}</div>
-            <p className="text-xs text-muted-foreground mt-1">
-              Across all testbeds
-            </p>
-          </CardContent>
-        </Card>
+        <TestbedActivityChart />
       </div>
 
       <SearchBar 
