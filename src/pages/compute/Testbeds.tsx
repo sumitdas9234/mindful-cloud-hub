@@ -1,6 +1,8 @@
+
 import React, { useState } from 'react';
 import { MoreVertical } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { 
   DropdownMenu,
   DropdownMenuContent,
