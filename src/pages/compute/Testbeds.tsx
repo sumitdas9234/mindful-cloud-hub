@@ -1,12 +1,5 @@
 import React, { useState } from 'react';
-import { MoreVertical, Server } from 'lucide-react';
-import { 
-  Card, 
-  CardContent, 
-  CardDescription, 
-  CardHeader, 
-  CardTitle 
-} from '@/components/ui/card';
+import { MoreVertical } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { 
   DropdownMenu,
@@ -23,11 +16,11 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Progress } from '@/components/ui/progress';
-import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { useQuery } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
+
 import { StatusIndicator } from '@/components/compute/StatusIndicator';
 import { SearchBar } from '@/components/compute/SearchBar';
 import { PageHeader } from '@/components/compute/PageHeader';
@@ -53,6 +46,8 @@ interface Testbed {
   networks: number;
   users: number;
   deployments: number;
+  whitelisted?: boolean;
+  environment?: 'Openshift' | 'Vanilla' | 'Rancher' | 'Anthos' | 'Charmed';
 }
 
 const mockTestbeds: Testbed[] = [
@@ -74,7 +69,9 @@ const mockTestbeds: Testbed[] = [
     vms: 0,
     networks: 3,
     users: 12,
-    deployments: 8
+    deployments: 8,
+    whitelisted: true,
+    environment: 'Openshift'
   },
   {
     id: 'tb-2',
@@ -94,7 +91,9 @@ const mockTestbeds: Testbed[] = [
     vms: 24,
     networks: 4,
     users: 8,
-    deployments: 12
+    deployments: 12,
+    whitelisted: false,
+    environment: 'Vanilla'
   },
   {
     id: 'tb-3',
@@ -114,7 +113,9 @@ const mockTestbeds: Testbed[] = [
     vms: 12,
     networks: 2,
     users: 6,
-    deployments: 5
+    deployments: 5,
+    whitelisted: true,
+    environment: 'Rancher'
   },
   {
     id: 'tb-4',
@@ -134,7 +135,9 @@ const mockTestbeds: Testbed[] = [
     vms: 18,
     networks: 3,
     users: 15,
-    deployments: 0
+    deployments: 0,
+    whitelisted: false,
+    environment: 'Anthos'
   },
   {
     id: 'tb-5',
@@ -154,7 +157,9 @@ const mockTestbeds: Testbed[] = [
     vms: 0,
     networks: 1,
     users: 4,
-    deployments: 2
+    deployments: 2,
+    whitelisted: true,
+    environment: 'Charmed'
   },
   {
     id: 'tb-6',
@@ -174,7 +179,9 @@ const mockTestbeds: Testbed[] = [
     vms: 0,
     networks: 2,
     users: 0,
-    deployments: 0
+    deployments: 0,
+    whitelisted: false,
+    environment: 'Vanilla'
   }
 ];
 
@@ -252,14 +259,18 @@ const TestbedsPage: React.FC = () => {
     setDetailSheetOpen(true);
   };
 
-  const getTypeBadgeColor = (type: Testbed['type']) => {
-    switch (type) {
-      case 'hardware':
-        return 'bg-purple-500/10 text-purple-500 hover:bg-purple-500/20';
-      case 'virtual':
+  const getEnvironmentBadgeColor = (env: Testbed['environment']) => {
+    switch (env) {
+      case 'Openshift':
+        return 'bg-red-500/10 text-red-500 hover:bg-red-500/20';
+      case 'Vanilla':
         return 'bg-blue-500/10 text-blue-500 hover:bg-blue-500/20';
-      case 'hybrid':
-        return 'bg-indigo-500/10 text-indigo-500 hover:bg-indigo-500/20';
+      case 'Rancher':
+        return 'bg-teal-500/10 text-teal-500 hover:bg-teal-500/20';
+      case 'Anthos':
+        return 'bg-purple-500/10 text-purple-500 hover:bg-purple-500/20';
+      case 'Charmed':
+        return 'bg-orange-500/10 text-orange-500 hover:bg-orange-500/20';
       default:
         return 'bg-gray-500/10 text-gray-500 hover:bg-gray-500/20';
     }
@@ -347,14 +358,10 @@ const TestbedsPage: React.FC = () => {
             <TableHeader>
               <TableRow>
                 <TableHead>Name</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Type</TableHead>
-                <TableHead>Purpose</TableHead>
-                <TableHead>Location</TableHead>
-                <TableHead>Owned By</TableHead>
-                <TableHead>Resources</TableHead>
-                <TableHead>Usage</TableHead>
+                <TableHead>Owner</TableHead>
+                <TableHead>Environment</TableHead>
                 <TableHead>Created</TableHead>
+                <TableHead>Whitelisted</TableHead>
                 <TableHead className="w-[50px]"></TableHead>
               </TableRow>
             </TableHeader>
@@ -365,58 +372,25 @@ const TestbedsPage: React.FC = () => {
                   className="cursor-pointer hover:bg-muted/50"
                   onClick={() => openTestbedDetails(testbed)}
                 >
-                  <TableCell className="font-medium">
-                    <div>
-                      {testbed.name}
-                      <p className="text-xs text-muted-foreground line-clamp-1">{testbed.description}</p>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <StatusIndicator status={testbed.status} />
-                  </TableCell>
-                  <TableCell>
-                    <Badge
-                      variant="outline"
-                      className={getTypeBadgeColor(testbed.type)}
-                    >
-                      {testbed.type}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>{testbed.purpose}</TableCell>
-                  <TableCell>{testbed.location}</TableCell>
-                  <TableCell>{testbed.ownedBy}</TableCell>
-                  <TableCell>
-                    <div className="text-xs space-y-1">
-                      <div>CPU: {testbed.cpu} cores</div>
-                      <div>Memory: {testbed.memory} GB</div>
-                      <div>Storage: {testbed.storage} GB</div>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    {testbed.status === 'active' && (
-                      <div className="space-y-1">
-                        <div className="flex items-center justify-between text-xs">
-                          <span className="text-muted-foreground">Usage</span>
-                          <span>{testbed.usagePercent}%</span>
-                        </div>
-                        <Progress value={testbed.usagePercent} className="h-1" />
-                      </div>
-                    )}
-                    {testbed.status !== 'active' && (
-                      <span className="text-xs text-muted-foreground">N/A</span>
+                  <TableCell className="font-medium py-2">{testbed.name}</TableCell>
+                  <TableCell className="py-2">{testbed.ownedBy}</TableCell>
+                  <TableCell className="py-2">
+                    {testbed.environment && (
+                      <Badge
+                        variant="outline"
+                        className={getEnvironmentBadgeColor(testbed.environment)}
+                      >
+                        {testbed.environment}
+                      </Badge>
                     )}
                   </TableCell>
-                  <TableCell>
-                    <div>
-                      {new Date(testbed.createdAt).toLocaleDateString()}
-                      {testbed.expiresAt && (
-                        <p className="text-xs text-muted-foreground">
-                          Expires: {new Date(testbed.expiresAt).toLocaleDateString()}
-                        </p>
-                      )}
-                    </div>
+                  <TableCell className="py-2">
+                    {new Date(testbed.createdAt).toLocaleDateString()}
                   </TableCell>
-                  <TableCell onClick={(e) => e.stopPropagation()}>
+                  <TableCell className="py-2">
+                    {testbed.whitelisted ? 'Yes' : 'No'}
+                  </TableCell>
+                  <TableCell className="py-2" onClick={(e) => e.stopPropagation()}>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <Button variant="ghost" size="icon">

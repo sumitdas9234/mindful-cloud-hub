@@ -209,13 +209,8 @@ const VCentersPage: React.FC = () => {
             <TableHeader>
               <TableRow>
                 <TableHead>Name</TableHead>
-                <TableHead>URL</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Version</TableHead>
-                <TableHead>Datacenters</TableHead>
-                <TableHead>Clusters</TableHead>
-                <TableHead>Hosts</TableHead>
-                <TableHead>VMs</TableHead>
                 <TableHead>Last Sync</TableHead>
                 <TableHead className="w-[50px]"></TableHead>
               </TableRow>
@@ -227,18 +222,13 @@ const VCentersPage: React.FC = () => {
                   className="cursor-pointer hover:bg-muted/50"
                   onClick={() => openVCenterDetails(vcenter)}
                 >
-                  <TableCell className="font-medium">{vcenter.name}</TableCell>
-                  <TableCell>{vcenter.url}</TableCell>
-                  <TableCell>
+                  <TableCell className="font-medium py-2">{vcenter.name}</TableCell>
+                  <TableCell className="py-2">
                     <StatusIndicator status={vcenter.status} />
                   </TableCell>
-                  <TableCell>{vcenter.version}</TableCell>
-                  <TableCell>{vcenter.datacenters}</TableCell>
-                  <TableCell>{vcenter.clusters}</TableCell>
-                  <TableCell>{vcenter.hosts}</TableCell>
-                  <TableCell>{vcenter.vms}</TableCell>
-                  <TableCell>{new Date(vcenter.lastSync).toLocaleString()}</TableCell>
-                  <TableCell onClick={(e) => e.stopPropagation()}>
+                  <TableCell className="py-2">{vcenter.version}</TableCell>
+                  <TableCell className="py-2">{new Date(vcenter.lastSync).toLocaleDateString()}</TableCell>
+                  <TableCell className="py-2" onClick={(e) => e.stopPropagation()}>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <Button variant="ghost" size="icon">
