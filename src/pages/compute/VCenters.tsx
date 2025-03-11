@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { MoreVertical, Server } from 'lucide-react';
+import { MoreVertical } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { 
   DropdownMenu,
@@ -7,14 +7,6 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { useQuery } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
@@ -23,7 +15,7 @@ import { StatusIndicator } from '@/components/compute/StatusIndicator';
 import { SearchBar } from '@/components/compute/SearchBar';
 import { VCenterStatCards } from '@/components/compute/StatCards';
 import { PageHeader } from '@/components/compute/PageHeader';
-import { EmptyState } from '@/components/compute/EmptyState';
+import { DataTable, Column } from '@/components/compute/DataTable';
 import { VCenterDetailSheet } from '@/components/compute/VCenterDetailSheet';
 
 interface VCenter {
@@ -167,6 +159,53 @@ const VCentersPage: React.FC = () => {
     setDetailSheetOpen(true);
   };
 
+  const columns: Column<VCenter>[] = [
+    {
+      key: 'name',
+      header: 'Name',
+      cell: (vcenter) => <span className="font-medium">{vcenter.name}</span>
+    },
+    {
+      key: 'status',
+      header: 'Status',
+      cell: (vcenter) => <StatusIndicator status={vcenter.status} />
+    },
+    {
+      key: 'version',
+      header: 'Version',
+      cell: (vcenter) => vcenter.version
+    },
+    {
+      key: 'lastSync',
+      header: 'Last Sync',
+      cell: (vcenter) => new Date(vcenter.lastSync).toLocaleDateString()
+    }
+  ];
+
+  const actionColumn = (vcenter: VCenter) => (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="ghost" size="icon">
+          <MoreVertical className="h-4 w-4" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end">
+        <DropdownMenuItem onClick={() => handleVCenterAction('Edit', vcenter)}>
+          Edit
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => handleVCenterAction('Refresh', vcenter)}>
+          Refresh
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => handleVCenterAction('Disconnect', vcenter)}>
+          Disconnect
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => handleVCenterAction('Remove', vcenter)} className="text-red-500">
+          Remove
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+
   return (
     <div className="container mx-auto space-y-6">
       <PageHeader 
@@ -192,71 +231,17 @@ const VCentersPage: React.FC = () => {
 
       <Separator />
 
-      {isLoading ? (
-        <div className="flex items-center justify-center h-64">
-          <p className="text-muted-foreground">Loading vCenters...</p>
-        </div>
-      ) : filteredVCenters.length === 0 ? (
-        <EmptyState 
-          title="No vCenters Found"
-          description={searchQuery
-            ? "No vCenters match your search criteria."
-            : "No vCenters have been added yet."}
-        />
-      ) : (
-        <div className="rounded-md border">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Version</TableHead>
-                <TableHead>Last Sync</TableHead>
-                <TableHead className="w-[50px]"></TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredVCenters.map((vcenter) => (
-                <TableRow 
-                  key={vcenter.id} 
-                  className="cursor-pointer hover:bg-muted/50"
-                  onClick={() => openVCenterDetails(vcenter)}
-                >
-                  <TableCell className="font-medium py-2">{vcenter.name}</TableCell>
-                  <TableCell className="py-2">
-                    <StatusIndicator status={vcenter.status} />
-                  </TableCell>
-                  <TableCell className="py-2">{vcenter.version}</TableCell>
-                  <TableCell className="py-2">{new Date(vcenter.lastSync).toLocaleDateString()}</TableCell>
-                  <TableCell className="py-2" onClick={(e) => e.stopPropagation()}>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon">
-                          <MoreVertical className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => handleVCenterAction('Edit', vcenter)}>
-                          Edit
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => handleVCenterAction('Refresh', vcenter)}>
-                          Refresh
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => handleVCenterAction('Disconnect', vcenter)}>
-                          Disconnect
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => handleVCenterAction('Remove', vcenter)} className="text-red-500">
-                          Remove
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
-      )}
+      <DataTable
+        data={filteredVCenters}
+        columns={columns}
+        keyExtractor={(vcenter) => vcenter.id}
+        isLoading={isLoading}
+        emptyTitle="No vCenters Found"
+        emptyDescription="No vCenters have been added yet."
+        searchQuery={searchQuery}
+        onRowClick={openVCenterDetails}
+        actionColumn={actionColumn}
+      />
 
       <VCenterDetailSheet
         vcenter={selectedVCenter}

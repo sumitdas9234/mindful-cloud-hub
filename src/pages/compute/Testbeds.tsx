@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { MoreVertical } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
@@ -10,23 +9,14 @@ import {
   DropdownMenuTrigger,
   DropdownMenuSeparator
 } from '@/components/ui/dropdown-menu';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useQuery } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
 
-import { StatusIndicator } from '@/components/compute/StatusIndicator';
 import { SearchBar } from '@/components/compute/SearchBar';
 import { PageHeader } from '@/components/compute/PageHeader';
-import { EmptyState } from '@/components/compute/EmptyState';
+import { DataTable, Column } from '@/components/compute/DataTable';
 import { TestbedDetailSheet } from '@/components/compute/TestbedDetailSheet';
 
 interface Testbed {
@@ -278,6 +268,87 @@ const TestbedsPage: React.FC = () => {
     }
   };
 
+  const columns: Column<Testbed>[] = [
+    {
+      key: 'name',
+      header: 'Name',
+      cell: (testbed) => <span className="font-medium">{testbed.name}</span>
+    },
+    {
+      key: 'owner',
+      header: 'Owner',
+      cell: (testbed) => testbed.ownedBy
+    },
+    {
+      key: 'environment',
+      header: 'Environment',
+      cell: (testbed) => testbed.environment ? (
+        <Badge
+          variant="outline"
+          className={getEnvironmentBadgeColor(testbed.environment)}
+        >
+          {testbed.environment}
+        </Badge>
+      ) : null
+    },
+    {
+      key: 'created',
+      header: 'Created',
+      cell: (testbed) => new Date(testbed.createdAt).toLocaleDateString()
+    },
+    {
+      key: 'whitelisted',
+      header: 'Whitelisted',
+      cell: (testbed) => (testbed.whitelisted ? 'Yes' : 'No')
+    }
+  ];
+
+  const actionColumn = (testbed: Testbed) => (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="ghost" size="icon">
+          <MoreVertical className="h-4 w-4" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end">
+        <DropdownMenuItem onClick={() => handleTestbedAction('View', testbed)}>
+          View Details
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => handleTestbedAction('Edit', testbed)}>
+          Edit
+        </DropdownMenuItem>
+        <DropdownMenuSeparator />
+        {testbed.status === 'active' && (
+          <DropdownMenuItem onClick={() => handleTestbedAction('Deploy', testbed)}>
+            Deploy Workload
+          </DropdownMenuItem>
+        )}
+        {testbed.status === 'active' && (
+          <DropdownMenuItem onClick={() => handleTestbedAction('Snapshot', testbed)}>
+            Create Snapshot
+          </DropdownMenuItem>
+        )}
+        <DropdownMenuSeparator />
+        {testbed.status === 'active' && (
+          <DropdownMenuItem onClick={() => handleTestbedAction('Decommission', testbed)}>
+            Decommission
+          </DropdownMenuItem>
+        )}
+        {testbed.status !== 'active' && testbed.status !== 'decommissioned' && (
+          <DropdownMenuItem onClick={() => handleTestbedAction('Recover', testbed)}>
+            Recover
+          </DropdownMenuItem>
+        )}
+        <DropdownMenuItem 
+          onClick={() => handleTestbedAction('Delete', testbed)}
+          className="text-red-500"
+        >
+          Delete
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+
   return (
     <div className="container mx-auto space-y-6">
       <PageHeader 
@@ -343,106 +414,17 @@ const TestbedsPage: React.FC = () => {
 
       <Separator />
 
-      {isLoading ? (
-        <div className="flex items-center justify-center h-64">
-          <p className="text-muted-foreground">Loading testbeds...</p>
-        </div>
-      ) : filteredTestbeds.length === 0 ? (
-        <EmptyState 
-          title="No Testbeds Found"
-          description={searchQuery
-            ? "No testbeds match your search criteria."
-            : "No testbeds have been added yet."}
-        />
-      ) : (
-        <div className="rounded-md border">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead>Owner</TableHead>
-                <TableHead>Environment</TableHead>
-                <TableHead>Created</TableHead>
-                <TableHead>Whitelisted</TableHead>
-                <TableHead className="w-[50px]"></TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredTestbeds.map((testbed) => (
-                <TableRow 
-                  key={testbed.id} 
-                  className="cursor-pointer hover:bg-muted/50"
-                  onClick={() => openTestbedDetails(testbed)}
-                >
-                  <TableCell className="font-medium py-2">{testbed.name}</TableCell>
-                  <TableCell className="py-2">{testbed.ownedBy}</TableCell>
-                  <TableCell className="py-2">
-                    {testbed.environment && (
-                      <Badge
-                        variant="outline"
-                        className={getEnvironmentBadgeColor(testbed.environment)}
-                      >
-                        {testbed.environment}
-                      </Badge>
-                    )}
-                  </TableCell>
-                  <TableCell className="py-2">
-                    {new Date(testbed.createdAt).toLocaleDateString()}
-                  </TableCell>
-                  <TableCell className="py-2">
-                    {testbed.whitelisted ? 'Yes' : 'No'}
-                  </TableCell>
-                  <TableCell className="py-2" onClick={(e) => e.stopPropagation()}>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon">
-                          <MoreVertical className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => handleTestbedAction('View', testbed)}>
-                          View Details
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => handleTestbedAction('Edit', testbed)}>
-                          Edit
-                        </DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        {testbed.status === 'active' && (
-                          <DropdownMenuItem onClick={() => handleTestbedAction('Deploy', testbed)}>
-                            Deploy Workload
-                          </DropdownMenuItem>
-                        )}
-                        {testbed.status === 'active' && (
-                          <DropdownMenuItem onClick={() => handleTestbedAction('Snapshot', testbed)}>
-                            Create Snapshot
-                          </DropdownMenuItem>
-                        )}
-                        <DropdownMenuSeparator />
-                        {testbed.status === 'active' && (
-                          <DropdownMenuItem onClick={() => handleTestbedAction('Decommission', testbed)}>
-                            Decommission
-                          </DropdownMenuItem>
-                        )}
-                        {testbed.status !== 'active' && testbed.status !== 'decommissioned' && (
-                          <DropdownMenuItem onClick={() => handleTestbedAction('Recover', testbed)}>
-                            Recover
-                          </DropdownMenuItem>
-                        )}
-                        <DropdownMenuItem 
-                          onClick={() => handleTestbedAction('Delete', testbed)}
-                          className="text-red-500"
-                        >
-                          Delete
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
-      )}
+      <DataTable
+        data={filteredTestbeds}
+        columns={columns}
+        keyExtractor={(testbed) => testbed.id}
+        isLoading={isLoading}
+        emptyTitle="No Testbeds Found"
+        emptyDescription="No testbeds have been added yet."
+        searchQuery={searchQuery}
+        onRowClick={openTestbedDetails}
+        actionColumn={actionColumn}
+      />
 
       <TestbedDetailSheet
         testbed={selectedTestbed}
