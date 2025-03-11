@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import {
   Sheet,
@@ -248,27 +247,21 @@ export const TestbedDetailSheet: React.FC<TestbedDetailSheetProps> = ({
                 variant="default" 
                 size="sm" 
                 onClick={handleOpenExternalDashboard}
-                className="bg-[#9b87f5] hover:bg-[#7E69AB]"
               >
-                <ExternalLink className="h-4 w-4 mr-1" />
                 Dashboard
               </Button>
               <Button 
                 variant="default" 
                 size="sm" 
                 onClick={handleOpenLogs}
-                className="bg-[#8B5CF6] hover:bg-[#7E69AB]"
               >
-                <Logs className="h-4 w-4 mr-1" />
                 Logs
               </Button>
               <Button 
                 variant="default" 
                 size="sm" 
                 onClick={handleDownloadKubeconfig}
-                className="bg-[#D946EF] hover:bg-[#C026D3]"
               >
-                <Download className="h-4 w-4 mr-1" />
                 Kubeconfig
               </Button>
             </div>
@@ -279,7 +272,6 @@ export const TestbedDetailSheet: React.FC<TestbedDetailSheetProps> = ({
               <TabsTrigger value="overview">Overview</TabsTrigger>
               <TabsTrigger value="vms">Virtual Machines</TabsTrigger>
               <TabsTrigger value="infrastructure">Infrastructure</TabsTrigger>
-              <TabsTrigger value="connect">Connect</TabsTrigger>
               <TabsTrigger value="details">Additional Details</TabsTrigger>
             </TabsList>
 
@@ -322,29 +314,70 @@ export const TestbedDetailSheet: React.FC<TestbedDetailSheetProps> = ({
 
                 <Card>
                   <CardHeader className="py-2">
-                    <CardTitle className="text-sm font-medium">Expiry</CardTitle>
+                    <CardTitle className="text-sm font-medium">SSH Access</CardTitle>
                   </CardHeader>
                   <CardContent className="pb-3 pt-0">
-                    <div className="flex items-center gap-2">
-                      <Clock className="h-4 w-4 text-muted-foreground" />
-                      <span>{testbed.expiresAt ? new Date(testbed.expiresAt).toLocaleDateString() : 'No expiry'}</span>
-                    </div>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      {testbed.whitelisted ? 'Whitelisted - no automatic removal' : 'Will be removed after expiry'}
-                    </p>
-                  </CardContent>
-                </Card>
+                    <div className="space-y-4">
+                      <div>
+                        <div className="flex justify-between items-center mb-1">
+                          <h5 className="text-xs font-medium text-muted-foreground">SSH Key</h5>
+                          <Button variant="ghost" size="icon" onClick={handleCopySshKey} className="h-6 w-6">
+                            <Copy className="h-3.5 w-3.5" />
+                          </Button>
+                        </div>
+                        <div className="bg-secondary rounded-md p-3 overflow-hidden">
+                          <code className="text-xs font-mono break-all">
+                            {mockSshKey}
+                          </code>
+                        </div>
+                      </div>
+                      
+                      <div>
+                        <h5 className="text-xs font-medium text-muted-foreground mb-1">Credentials</h5>
+                        <div className="bg-secondary rounded-md p-3">
+                          <div className="flex justify-between items-center mb-1">
+                            <span className="text-xs font-medium">Username:</span>
+                            <code className="text-xs font-mono">{mockSshUsername}</code>
+                          </div>
+                          <div className="flex justify-between items-center">
+                            <span className="text-xs font-medium">Password:</span>
+                            <div className="flex items-center gap-2">
+                              <code className="text-xs font-mono">
+                                {showPassword ? mockSshPassword : '••••••••••••'}
+                              </code>
+                              <Button 
+                                variant="ghost" 
+                                size="icon" 
+                                onClick={handleTogglePassword} 
+                                className="h-6 w-6"
+                              >
+                                {showPassword ? (
+                                  <EyeOff className="h-3.5 w-3.5" />
+                                ) : (
+                                  <Eye className="h-3.5 w-3.5" />
+                                )}
+                              </Button>
+                              <Button 
+                                variant="ghost" 
+                                size="icon" 
+                                onClick={handleCopyCredentials} 
+                                className="h-6 w-6"
+                              >
+                                <Copy className="h-3.5 w-3.5" />
+                              </Button>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
 
-                <Card>
-                  <CardHeader className="py-2">
-                    <CardTitle className="text-sm font-medium">Logs</CardTitle>
-                  </CardHeader>
-                  <CardContent className="pb-3 pt-0">
-                    <div className="flex items-center gap-2">
-                      <FileText className="h-4 w-4 text-muted-foreground" />
-                      <code className="text-sm font-mono bg-secondary rounded px-1 py-0.5">
-                        {logsDirectory}
-                      </code>
+                      <Button 
+                        variant="default" 
+                        size="sm" 
+                        onClick={() => setConnectDialogOpen(true)}
+                        className="w-full"
+                      >
+                        Connect
+                      </Button>
                     </div>
                   </CardContent>
                 </Card>
@@ -429,115 +462,6 @@ export const TestbedDetailSheet: React.FC<TestbedDetailSheetProps> = ({
                       <dd className="font-medium">{vSphereNetwork}</dd>
                     </div>
                   </dl>
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            <TabsContent value="connect" className="space-y-4">
-              <Card>
-                <CardHeader className="py-3">
-                  <CardTitle className="text-sm font-medium">Kubernetes Access</CardTitle>
-                </CardHeader>
-                <CardContent className="pt-0">
-                  <div className="space-y-4">
-                    <div className="bg-secondary rounded-md p-4 overflow-x-auto">
-                      <div className="flex justify-between items-start mb-2">
-                        <h4 className="text-sm font-medium">Kubeconfig Command</h4>
-                        <Button variant="ghost" size="icon" onClick={handleCopyCommand} className="flex-shrink-0">
-                          {copiedCommand ? (
-                            <Check className="h-4 w-4" />
-                          ) : (
-                            <Copy className="h-4 w-4" />
-                          )}
-                        </Button>
-                      </div>
-                      <pre className="text-sm font-mono whitespace-pre overflow-x-auto max-w-full break-all">
-                        {kubeCtlCommand}
-                      </pre>
-                    </div>
-                    
-                    <div className="flex justify-end">
-                      <Button 
-                        variant="default" 
-                        size="sm" 
-                        onClick={() => setConnectDialogOpen(true)}
-                        className="bg-[#F97316] hover:bg-[#EA580C]"
-                      >
-                        <Terminal className="h-4 w-4 mr-1" />
-                        Show Command in Modal
-                      </Button>
-                    </div>
-
-                    <Button 
-                      variant="default" 
-                      size="sm" 
-                      onClick={handleDownloadKubeconfig}
-                      className="bg-[#0EA5E9] hover:bg-[#0284C7] mb-4"
-                    >
-                      <Download className="h-4 w-4 mr-1" />
-                      Download Kubeconfig
-                    </Button>
-                    
-                    <Separator />
-                    
-                    <div className="pt-2">
-                      <h4 className="text-sm font-medium mb-2">SSH Access</h4>
-                      
-                      <div className="space-y-4">
-                        <div>
-                          <div className="flex justify-between items-center mb-1">
-                            <h5 className="text-xs font-medium text-muted-foreground">SSH Key</h5>
-                            <Button variant="ghost" size="icon" onClick={handleCopySshKey} className="h-6 w-6">
-                              <Copy className="h-3.5 w-3.5" />
-                            </Button>
-                          </div>
-                          <div className="bg-secondary rounded-md p-3 overflow-hidden">
-                            <code className="text-xs font-mono break-all">
-                              {mockSshKey}
-                            </code>
-                          </div>
-                        </div>
-                        
-                        <div>
-                          <h5 className="text-xs font-medium text-muted-foreground mb-1">Credentials</h5>
-                          <div className="bg-secondary rounded-md p-3">
-                            <div className="flex justify-between items-center mb-1">
-                              <span className="text-xs font-medium">Username:</span>
-                              <code className="text-xs font-mono">{mockSshUsername}</code>
-                            </div>
-                            <div className="flex justify-between items-center">
-                              <span className="text-xs font-medium">Password:</span>
-                              <div className="flex items-center gap-2">
-                                <code className="text-xs font-mono">
-                                  {showPassword ? mockSshPassword : '••••••••••••'}
-                                </code>
-                                <Button 
-                                  variant="ghost" 
-                                  size="icon" 
-                                  onClick={handleTogglePassword} 
-                                  className="h-6 w-6"
-                                >
-                                  {showPassword ? (
-                                    <EyeOff className="h-3.5 w-3.5" />
-                                  ) : (
-                                    <Eye className="h-3.5 w-3.5" />
-                                  )}
-                                </Button>
-                                <Button 
-                                  variant="ghost" 
-                                  size="icon" 
-                                  onClick={handleCopyCredentials} 
-                                  className="h-6 w-6"
-                                >
-                                  <Copy className="h-3.5 w-3.5" />
-                                </Button>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
                 </CardContent>
               </Card>
             </TabsContent>
