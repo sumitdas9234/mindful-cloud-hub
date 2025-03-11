@@ -196,15 +196,17 @@ export const TestbedDetailSheet: React.FC<TestbedDetailSheetProps> = ({
                   {testbed.status}
                 </Badge>
               </SheetTitle>
-              <div className="flex gap-2">
-                <Button variant="outline" size="sm" onClick={() => setConnectDialogOpen(true)}>Connect</Button>
-                <Button variant="outline" size="sm" onClick={handleOpenExternalDashboard}>
-                  <ExternalLink className="h-4 w-4 mr-1" />
-                  Dashboard
-                </Button>
-              </div>
+              {/* Moved buttons down to avoid overlap with close button */}
             </div>
             <SheetDescription>{testbed.description}</SheetDescription>
+            {/* Added buttons here after the title and description */}
+            <div className="flex gap-2 mt-2">
+              <Button variant="outline" size="sm" onClick={() => setConnectDialogOpen(true)}>Connect</Button>
+              <Button variant="outline" size="sm" onClick={handleOpenExternalDashboard}>
+                <ExternalLink className="h-4 w-4 mr-1" />
+                Dashboard
+              </Button>
+            </div>
           </SheetHeader>
 
           <Tabs defaultValue="overview" className="mt-6">
@@ -485,16 +487,16 @@ export const TestbedDetailSheet: React.FC<TestbedDetailSheetProps> = ({
       </Sheet>
 
       <Dialog open={connectDialogOpen} onOpenChange={setConnectDialogOpen}>
-        <DialogContent>
+        <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>Connect to {testbed.name}</DialogTitle>
             <DialogDescription>
               Use the following kubectl command to connect to this testbed
             </DialogDescription>
           </DialogHeader>
-          <div className="bg-secondary rounded-md p-4 mt-4">
+          <div className="bg-secondary rounded-md p-4 mt-4 overflow-x-auto">
             <div className="flex justify-between items-start">
-              <pre className="text-sm font-mono whitespace-pre overflow-x-auto scrollbar-none">
+              <pre className="text-sm font-mono whitespace-pre overflow-x-auto max-w-[300px] break-all">
                 {kubeCtlCommand}
               </pre>
               <Button variant="ghost" size="icon" onClick={handleCopyCommand} className="ml-2 self-start flex-shrink-0">
