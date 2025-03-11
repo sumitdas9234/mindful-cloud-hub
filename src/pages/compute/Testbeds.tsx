@@ -358,12 +358,10 @@ const TestbedsPage: React.FC = () => {
         title="Testbed Management"
         description="Manage your testing environments and infrastructure."
         onRefresh={handleRefresh}
-        onAdd={handleAddTestbed}
-        addButtonText="Add Testbed"
       />
 
-      <div className="grid gap-4 md:grid-cols-3">
-        <Card>
+      <div className="grid gap-4 md:grid-cols-4">
+        <Card className="md:col-span-1">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium">Total Testbeds</CardTitle>
           </CardHeader>
@@ -374,7 +372,7 @@ const TestbedsPage: React.FC = () => {
             </p>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="md:col-span-1">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium">Total VMs</CardTitle>
           </CardHeader>

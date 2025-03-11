@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { LineChart, Line, ResponsiveContainer, Tooltip } from 'recharts';
 
 // Mock data for testbed activity over 24 hours
 const generateActivityData = () => {
@@ -33,44 +33,35 @@ export const TestbedActivityChart: React.FC<TestbedActivityChartProps> = ({
   const activityData = generateActivityData();
   
   return (
-    <Card>
+    <Card className="col-span-2">
       <CardHeader className="pb-2">
         <CardTitle className="text-sm font-medium">{title}</CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="h-[120px] w-full">
+        <div className="h-[140px] w-full">
           <ResponsiveContainer width="100%" height="100%">
-            <AreaChart
+            <LineChart
               data={activityData}
-              margin={{ top: 5, right: 10, left: 0, bottom: 5 }}
+              margin={{ top: 10, right: 10, left: 10, bottom: 10 }}
             >
-              <defs>
-                <linearGradient id="colorCount" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.8}/>
-                  <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0}/>
-                </linearGradient>
-              </defs>
-              <CartesianGrid strokeDasharray="3 3" vertical={false} opacity={0.3} />
-              <XAxis 
-                dataKey="hour" 
-                tick={{ fontSize: 10 }} 
-                tickFormatter={(value) => value.split(':')[0]}
-                interval="preserveStartEnd"
-              />
-              <YAxis hide />
               <Tooltip 
                 formatter={(value) => [`${value} testbeds`, 'Count']}
                 labelFormatter={(label) => `${label}`}
+                contentStyle={{ 
+                  backgroundColor: 'hsl(var(--card))',
+                  borderColor: 'hsl(var(--border))',
+                  borderRadius: 'var(--radius)',
+                  fontSize: '0.875rem'
+                }}
               />
-              <Area 
+              <Line 
                 type="monotone" 
                 dataKey="count" 
                 stroke="hsl(var(--primary))" 
-                fillOpacity={1} 
-                fill="url(#colorCount)" 
                 strokeWidth={2}
+                dot={false}
               />
-            </AreaChart>
+            </LineChart>
           </ResponsiveContainer>
         </div>
       </CardContent>

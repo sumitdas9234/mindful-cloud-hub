@@ -7,8 +7,8 @@ interface PageHeaderProps {
   title: string;
   description: string;
   onRefresh: () => void;
-  onAdd: () => void;
-  addButtonText: string;
+  onAdd?: () => void;
+  addButtonText?: string;
 }
 
 export const PageHeader: React.FC<PageHeaderProps> = ({
@@ -29,10 +29,12 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
           <RefreshCw className="mr-2 h-4 w-4" />
           Refresh
         </Button>
-        <Button onClick={onAdd} size="sm">
-          <Plus className="mr-2 h-4 w-4" />
-          {addButtonText}
-        </Button>
+        {onAdd && addButtonText && (
+          <Button onClick={onAdd} size="sm">
+            <Plus className="mr-2 h-4 w-4" />
+            {addButtonText}
+          </Button>
+        )}
       </div>
     </div>
   );
