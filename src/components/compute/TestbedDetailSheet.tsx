@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import {
   Sheet,
@@ -230,7 +231,7 @@ export const TestbedDetailSheet: React.FC<TestbedDetailSheetProps> = ({
   return (
     <>
       <Sheet open={open} onOpenChange={onOpenChange}>
-        <SheetContent className="w-full overflow-y-auto">
+        <SheetContent className="w-[70%] overflow-y-auto">
           <SheetHeader className="pb-4">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
               <SheetTitle className="text-2xl flex items-center gap-2">
@@ -240,35 +241,21 @@ export const TestbedDetailSheet: React.FC<TestbedDetailSheetProps> = ({
                   {testbed.status}
                 </Badge>
               </SheetTitle>
+              <div className="mt-4">
+                <Button 
+                  variant="default" 
+                  size="sm" 
+                  onClick={handleOpenExternalDashboard}
+                >
+                  Dashboard
+                </Button>
+              </div>
             </div>
             <SheetDescription>{testbed.description}</SheetDescription>
-            <div className="flex flex-wrap gap-2 mt-3">
-              <Button 
-                variant="default" 
-                size="sm" 
-                onClick={handleOpenExternalDashboard}
-              >
-                Dashboard
-              </Button>
-              <Button 
-                variant="default" 
-                size="sm" 
-                onClick={handleOpenLogs}
-              >
-                Logs
-              </Button>
-              <Button 
-                variant="default" 
-                size="sm" 
-                onClick={handleDownloadKubeconfig}
-              >
-                Kubeconfig
-              </Button>
-            </div>
           </SheetHeader>
 
           <Tabs defaultValue="overview" className="mt-6">
-            <TabsList className="mb-4 w-full overflow-x-auto flex-nowrap">
+            <TabsList className="mb-4 w-auto mx-auto">
               <TabsTrigger value="overview">Overview</TabsTrigger>
               <TabsTrigger value="vms">Virtual Machines</TabsTrigger>
               <TabsTrigger value="infrastructure">Infrastructure</TabsTrigger>
@@ -276,7 +263,7 @@ export const TestbedDetailSheet: React.FC<TestbedDetailSheetProps> = ({
             </TabsList>
 
             <TabsContent value="overview" className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 gap-4">
                 <Card>
                   <CardHeader className="py-2">
                     <CardTitle className="text-sm font-medium">Environment</CardTitle>
@@ -317,7 +304,7 @@ export const TestbedDetailSheet: React.FC<TestbedDetailSheetProps> = ({
                     <CardTitle className="text-sm font-medium">SSH Access</CardTitle>
                   </CardHeader>
                   <CardContent className="pb-3 pt-0">
-                    <div className="space-y-4">
+                    <div className="space-y-4 w-full">
                       <div>
                         <div className="flex justify-between items-center mb-1">
                           <h5 className="text-xs font-medium text-muted-foreground">SSH Key</h5>
@@ -370,14 +357,36 @@ export const TestbedDetailSheet: React.FC<TestbedDetailSheetProps> = ({
                         </div>
                       </div>
 
-                      <Button 
-                        variant="default" 
-                        size="sm" 
-                        onClick={() => setConnectDialogOpen(true)}
-                        className="w-full"
-                      >
-                        Connect
-                      </Button>
+                      <div className="flex justify-between">
+                        <div className="flex flex-col gap-2 w-full">
+                          <Button 
+                            variant="default" 
+                            size="sm" 
+                            onClick={() => setConnectDialogOpen(true)}
+                            className="ml-auto w-1/2"
+                          >
+                            Connect
+                          </Button>
+                          <div className="flex gap-2">
+                            <Button 
+                              variant="default" 
+                              size="sm" 
+                              onClick={handleOpenLogs}
+                              className="w-1/2"
+                            >
+                              Logs
+                            </Button>
+                            <Button 
+                              variant="default" 
+                              size="sm" 
+                              onClick={handleDownloadKubeconfig}
+                              className="w-1/2"
+                            >
+                              Kubeconfig
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
                     </div>
                   </CardContent>
                 </Card>
