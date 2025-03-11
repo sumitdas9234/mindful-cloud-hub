@@ -362,10 +362,10 @@ const TestbedsPage: React.FC = () => {
 
       <div className="grid gap-4 md:grid-cols-4">
         <Card className="md:col-span-1">
-          <CardHeader className="pb-2">
+          <CardHeader className="py-2">
             <CardTitle className="text-sm font-medium">Total Testbeds</CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="pt-0 pb-2">
             <div className="text-2xl font-bold">{stats.total}</div>
             <p className="text-xs text-muted-foreground mt-1">
               {stats.whitelisted} whitelisted
@@ -373,10 +373,10 @@ const TestbedsPage: React.FC = () => {
           </CardContent>
         </Card>
         <Card className="md:col-span-1">
-          <CardHeader className="pb-2">
+          <CardHeader className="py-2">
             <CardTitle className="text-sm font-medium">Total VMs</CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="pt-0 pb-2">
             <div className="text-2xl font-bold">{stats.totalVMs}</div>
             <p className="text-xs text-muted-foreground mt-1">
               Across all testbeds

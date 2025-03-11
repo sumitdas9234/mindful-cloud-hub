@@ -7,63 +7,52 @@ import {
   SheetTitle,
   SheetDescription,
 } from "@/components/ui/sheet";
+import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
-  Dialog, 
-  DialogContent, 
-  DialogHeader, 
+  Card, 
+  CardContent, 
+  CardHeader, 
+  CardTitle 
+} from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
   DialogTitle,
-  DialogTrigger,
-  DialogDescription
 } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { 
-  CheckCircle2, 
-  AlertCircle, 
-  XCircle, 
-  Cpu, 
+  Server, 
+  CpuIcon, 
   HardDrive, 
-  MemoryStick, 
-  Server,
+  Network, 
   Database,
-  Network,
+  Clock,
   User,
-  Calendar,
   FileText,
   ExternalLink,
-  Terminal,
   Copy,
-  Globe
+  Check
 } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
-
-interface VirtualMachine {
-  id: string;
-  name: string;
-  status: "running" | "stopped" | "error";
-  cpu: number;
-  memory: number;
-  disks: Disk[];
-}
-
-interface Disk {
-  id: string;
-  name: string;
-  sizeGB: number;
-  type: "ssd" | "hdd";
-}
 
 interface Testbed {
   id: string;
   name: string;
   description: string;
   purpose: string;
-  status: "active" | "provisioning" | "failed" | "decommissioned";
-  type: "hardware" | "virtual" | "hybrid";
+  status: 'active' | 'provisioning' | 'failed' | 'decommissioned';
+  type: 'hardware' | 'virtual' | 'hybrid';
   location: string;
   ownedBy: string;
   createdAt: string;
@@ -76,18 +65,63 @@ interface Testbed {
   networks: number;
   users: number;
   deployments: number;
-  virtualMachines?: VirtualMachine[];
-  vcenterName?: string;
-  vsphereDatacenter?: string;
-  vsphereCluster?: string;
-  vsphereDatastore?: string;
-  vsphereNetwork?: string;
-  logsDirectory?: string;
-  kubeConfig?: string;
-  externalDashboardUrl?: string;
   whitelisted?: boolean;
-  environment?: string;
+  environment?: 'Openshift' | 'Vanilla' | 'Rancher' | 'Anthos' | 'Charmed';
+  // Additional fields for details
+  vCenterName?: string;
+  vSphereDatacenter?: string;
+  vSphereCluster?: string;
+  vSphereDatastore?: string;
+  vSphereNetwork?: string;
+  logsDirectory?: string;
+  externalDashboardUrl?: string;
+  virtualMachines?: VirtualMachine[];
 }
+
+interface VirtualMachine {
+  id: string;
+  name: string;
+  status: 'running' | 'stopped' | 'suspended';
+  cpu: number;
+  memory: number; // in GB
+  storage: number; // in GB
+  ip?: string;
+  os?: string;
+}
+
+// Mock data for VMs - in a real app this would come from the API
+const mockVMs: VirtualMachine[] = [
+  {
+    id: 'vm-001',
+    name: 'master-node-1',
+    status: 'running',
+    cpu: 4,
+    memory: 16,
+    storage: 120,
+    ip: '10.0.0.1',
+    os: 'Ubuntu 20.04 LTS'
+  },
+  {
+    id: 'vm-002',
+    name: 'worker-node-1',
+    status: 'running',
+    cpu: 8,
+    memory: 32,
+    storage: 250,
+    ip: '10.0.0.2',
+    os: 'Ubuntu 20.04 LTS'
+  },
+  {
+    id: 'vm-003',
+    name: 'worker-node-2',
+    status: 'running',
+    cpu: 8,
+    memory: 32,
+    storage: 250,
+    ip: '10.0.0.3',
+    os: 'Ubuntu 20.04 LTS'
+  }
+];
 
 interface TestbedDetailSheetProps {
   testbed: Testbed | null;
@@ -95,458 +129,385 @@ interface TestbedDetailSheetProps {
   onOpenChange: (open: boolean) => void;
 }
 
-export const TestbedDetailSheet: React.FC<TestbedDetailSheetProps> = ({
-  testbed,
-  open,
-  onOpenChange,
+export const TestbedDetailSheet: React.FC<TestbedDetailSheetProps> = ({ 
+  testbed, 
+  open, 
+  onOpenChange 
 }) => {
-  const [activeTab, setActiveTab] = useState("overview");
-  const { toast } = useToast();
+  const [connectDialogOpen, setConnectDialogOpen] = useState(false);
+  const [copiedCommand, setCopiedCommand] = useState(false);
 
-  const getStatusIcon = (status: Testbed["status"]) => {
+  if (!testbed) return null;
+
+  // Generate a mock kubectl command
+  const kubeCtlCommand = `kubectl config use-context ${testbed.name.toLowerCase().replace(/\s+/g, '-')}-context\nkubectl get pods -n default`;
+
+  // Mock values for vSphere infrastructure - in a real app these would come from the testbed
+  const vCenterName = testbed.vCenterName || "vcenter-01.datacenter.local";
+  const vSphereDatacenter = testbed.vSphereDatacenter || "Datacenter-East";
+  const vSphereCluster = testbed.vSphereCluster || "Cluster-01";
+  const vSphereDatastore = testbed.vSphereDatastore || "SAN-Volume-01";
+  const vSphereNetwork = testbed.vSphereNetwork || "VLAN-Production-10";
+  const logsDirectory = testbed.logsDirectory || "/var/log/testbeds/" + testbed.id;
+  const externalDashboardUrl = testbed.externalDashboardUrl || "https://dashboard.example.com/testbeds/" + testbed.id;
+
+  // In a real application, VMs would be loaded from an API
+  const virtualMachines = testbed.virtualMachines || mockVMs;
+
+  const getStatusColor = (status: Testbed['status']) => {
     switch (status) {
-      case "active":
-        return <CheckCircle2 className="h-4 w-4 text-green-500" />;
-      case "provisioning":
-        return <AlertCircle className="h-4 w-4 text-blue-500" />;
-      case "failed":
-        return <AlertCircle className="h-4 w-4 text-red-500" />;
-      case "decommissioned":
-        return <XCircle className="h-4 w-4 text-gray-500" />;
-      default:
-        return null;
+      case 'active': return 'bg-green-500 text-green-500';
+      case 'provisioning': return 'bg-blue-500 text-blue-500';
+      case 'failed': return 'bg-red-500 text-red-500';
+      case 'decommissioned': return 'bg-gray-500 text-gray-500';
+      default: return 'bg-gray-500 text-gray-500';
     }
   };
 
-  const getUsageColor = (usage: number) => {
-    if (usage >= 80) return "text-red-500";
-    if (usage >= 60) return "text-yellow-500";
-    return "text-green-500";
-  };
-
-  const getProgressColor = (usage: number) => {
-    if (usage >= 80) return "bg-red-500";
-    if (usage >= 60) return "bg-yellow-500";
-    return "bg-green-500";
-  };
-
-  const getVmStatusColor = (status: VirtualMachine["status"]) => {
+  const getVMStatusColor = (status: VirtualMachine['status']) => {
     switch (status) {
-      case "running": return "text-green-500 border-green-500";
-      case "stopped": return "text-yellow-500 border-yellow-500";
-      case "error": return "text-red-500 border-red-500";
-      default: return "text-gray-500 border-gray-500";
+      case 'running': return 'bg-green-500 text-green-500';
+      case 'stopped': return 'bg-red-500 text-red-500';
+      case 'suspended': return 'bg-yellow-500 text-yellow-500';
+      default: return 'bg-gray-500 text-gray-500';
     }
   };
 
-  const getVmStatusBg = (status: VirtualMachine["status"]) => {
-    switch (status) {
-      case "running": return "bg-green-500";
-      case "stopped": return "bg-yellow-500";
-      case "error": return "bg-red-500";
-      default: return "bg-gray-500";
-    }
+  const handleCopyCommand = () => {
+    navigator.clipboard.writeText(kubeCtlCommand);
+    setCopiedCommand(true);
+    setTimeout(() => setCopiedCommand(false), 2000);
   };
 
-  const copyToClipboard = (text: string, message: string) => {
-    navigator.clipboard.writeText(text);
-    toast({
-      title: "Copied!",
-      description: message,
-    });
+  const handleOpenExternalDashboard = () => {
+    window.open(externalDashboardUrl, '_blank');
   };
-
-  // Mock data for virtual machines
-  const mockVirtualMachines: VirtualMachine[] = [
-    {
-      id: "vm-1",
-      name: "worker-node-1",
-      status: "running",
-      cpu: 4,
-      memory: 16,
-      disks: [
-        { id: "disk-1", name: "os-disk", sizeGB: 120, type: "ssd" },
-        { id: "disk-2", name: "data-disk", sizeGB: 500, type: "hdd" }
-      ]
-    },
-    {
-      id: "vm-2",
-      name: "worker-node-2",
-      status: "running",
-      cpu: 4,
-      memory: 16,
-      disks: [
-        { id: "disk-3", name: "os-disk", sizeGB: 120, type: "ssd" },
-        { id: "disk-4", name: "data-disk", sizeGB: 500, type: "hdd" }
-      ]
-    },
-    {
-      id: "vm-3",
-      name: "control-plane",
-      status: "running",
-      cpu: 8,
-      memory: 32,
-      disks: [
-        { id: "disk-5", name: "os-disk", sizeGB: 240, type: "ssd" },
-        { id: "disk-6", name: "etcd-disk", sizeGB: 100, type: "ssd" }
-      ]
-    }
-  ];
-
-  // Enhance the testbed with mock data
-  const enhancedTestbed = testbed ? {
-    ...testbed,
-    virtualMachines: mockVirtualMachines,
-    vcenterName: "vcenter-east-01.example.com",
-    vsphereDatacenter: "DC-East",
-    vsphereCluster: "Cluster-Production",
-    vsphereDatastore: "SAN-East-SSD-01",
-    vsphereNetwork: "VLAN-200-Dev",
-    logsDirectory: "/var/log/testbeds/tb-" + testbed.id,
-    kubeConfig: "kubectl config use-context testbed-" + testbed.id,
-    externalDashboardUrl: "https://dashboard.example.com/testbeds/" + testbed.id
-  } : null;
-
-  if (!enhancedTestbed) return null;
 
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="w-[400px] sm:w-[700px] overflow-y-auto">
-        <SheetHeader className="pb-4">
-          <SheetTitle className="text-2xl flex items-center gap-2">
-            <span className="font-medium">{enhancedTestbed.name}</span>
-            <Badge
-              variant="outline"
-              className={`ml-2 capitalize ${
-                enhancedTestbed.status === "active"
-                  ? "text-green-500 border-green-500"
-                  : enhancedTestbed.status === "provisioning"
-                  ? "text-blue-500 border-blue-500"
-                  : enhancedTestbed.status === "failed"
-                  ? "text-red-500 border-red-500"
-                  : "text-gray-500 border-gray-500"
-              }`}
-            >
-              <span
-                className={`mr-1.5 h-2 w-2 rounded-full inline-block ${
-                  enhancedTestbed.status === "active"
-                    ? "bg-green-500"
-                    : enhancedTestbed.status === "provisioning"
-                    ? "bg-blue-500"
-                    : enhancedTestbed.status === "failed"
-                    ? "bg-red-500"
-                    : "bg-gray-500"
-                }`}
-              ></span>
-              {enhancedTestbed.status}
-            </Badge>
-          </SheetTitle>
-          <SheetDescription>
-            {enhancedTestbed.description}
-          </SheetDescription>
-        </SheetHeader>
-
-        <div className="flex flex-wrap gap-2 mb-4">
-          <Badge variant="secondary">{enhancedTestbed.type}</Badge>
-          <Badge variant="secondary">{enhancedTestbed.purpose}</Badge>
-          {enhancedTestbed.environment && (
-            <Badge variant="secondary">{enhancedTestbed.environment}</Badge>
-          )}
-          {enhancedTestbed.whitelisted && (
-            <Badge variant="outline" className="border-green-500 text-green-500">Whitelisted</Badge>
-          )}
-        </div>
-
-        <div className="flex justify-between mb-4">
-          <Button
-            variant="outline" 
-            size="sm" 
-            className="text-xs"
-            onClick={() => window.open(enhancedTestbed.externalDashboardUrl, '_blank')}
-          >
-            <ExternalLink className="mr-1 h-3 w-3" />
-            Dashboard
-          </Button>
-
-          <Dialog>
-            <DialogTrigger asChild>
-              <Button variant="outline" size="sm" className="text-xs">
-                <Terminal className="mr-1 h-3 w-3" />
-                Connect
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Connect to {enhancedTestbed.name}</DialogTitle>
-                <DialogDescription>
-                  Use the following command to connect to this testbed:
-                </DialogDescription>
-              </DialogHeader>
-              <div className="bg-slate-950 text-slate-100 p-3 rounded-md relative">
-                <pre className="font-mono text-sm overflow-x-auto">
-                  {enhancedTestbed.kubeConfig}
-                </pre>
-                <Button 
-                  size="icon" 
-                  variant="ghost" 
-                  className="absolute top-2 right-2 h-6 w-6 text-slate-100 hover:text-white hover:bg-slate-800"
-                  onClick={() => copyToClipboard(enhancedTestbed.kubeConfig || "", "Command copied to clipboard")}
-                >
-                  <Copy className="h-3 w-3" />
+    <>
+      <Sheet open={open} onOpenChange={onOpenChange}>
+        <SheetContent className="w-full sm:max-w-xl md:max-w-2xl lg:max-w-3xl overflow-y-auto">
+          <SheetHeader className="pb-4">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+              <SheetTitle className="text-2xl flex items-center gap-2">
+                {testbed.name}
+                <Badge variant="outline" className={`ml-2 capitalize border-${getStatusColor(testbed.status)}`}>
+                  <span className={`mr-1.5 h-2 w-2 rounded-full inline-block ${getStatusColor(testbed.status)}`}></span>
+                  {testbed.status}
+                </Badge>
+              </SheetTitle>
+              <div className="flex gap-2">
+                <Button variant="outline" size="sm" onClick={() => setConnectDialogOpen(true)}>Connect</Button>
+                <Button variant="outline" size="sm" onClick={handleOpenExternalDashboard}>
+                  <ExternalLink className="h-4 w-4 mr-1" />
+                  Dashboard
                 </Button>
               </div>
-            </DialogContent>
-          </Dialog>
+            </div>
+            <SheetDescription>{testbed.description}</SheetDescription>
+          </SheetHeader>
 
-          <Button 
-            variant="outline" 
-            size="sm" 
-            className="text-xs"
-            onClick={() => copyToClipboard(enhancedTestbed.logsDirectory || "", "Logs directory copied to clipboard")}
-          >
-            <FileText className="mr-1 h-3 w-3" />
-            Logs
-          </Button>
-        </div>
+          <Tabs defaultValue="overview" className="mt-6">
+            <TabsList className="mb-4 w-full overflow-x-auto flex-nowrap">
+              <TabsTrigger value="overview">Overview</TabsTrigger>
+              <TabsTrigger value="vms">Virtual Machines</TabsTrigger>
+              <TabsTrigger value="infrastructure">Infrastructure</TabsTrigger>
+              <TabsTrigger value="details">Additional Details</TabsTrigger>
+            </TabsList>
 
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="mt-4">
-          <TabsList className="w-full justify-start">
-            <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="vms">Virtual Machines</TabsTrigger>
-            <TabsTrigger value="infrastructure">Infrastructure</TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="overview" className="mt-4 space-y-4">
-            <Card>
-              <CardHeader className="py-3">
-                <CardTitle className="text-base">Resource Allocation</CardTitle>
-              </CardHeader>
-              <CardContent className="py-0 space-y-3">
-                <div className="space-y-1">
-                  <div className="flex justify-between items-center">
-                    <div className="flex items-center gap-2">
-                      <Cpu className="h-4 w-4 text-blue-500" />
-                      <span>CPU Cores</span>
-                    </div>
-                    <span className="font-mono text-sm">{enhancedTestbed.cpu}</span>
-                  </div>
-                </div>
-
-                <div className="space-y-1">
-                  <div className="flex justify-between items-center">
-                    <div className="flex items-center gap-2">
-                      <MemoryStick className="h-4 w-4 text-indigo-500" />
-                      <span>Memory (GB)</span>
-                    </div>
-                    <span className="font-mono text-sm">{enhancedTestbed.memory}</span>
-                  </div>
-                </div>
-
-                <div className="space-y-1">
-                  <div className="flex justify-between items-center">
-                    <div className="flex items-center gap-2">
-                      <HardDrive className="h-4 w-4 text-purple-500" />
-                      <span>Storage (GB)</span>
-                    </div>
-                    <span className="font-mono text-sm">{enhancedTestbed.storage}</span>
-                  </div>
-                </div>
-
-                <div className="space-y-1 pt-1">
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm font-medium">Overall Usage</span>
-                    <span className={`font-mono text-sm ${getUsageColor(enhancedTestbed.usagePercent)}`}>
-                      {enhancedTestbed.usagePercent}%
-                    </span>
-                  </div>
-                  <Progress value={enhancedTestbed.usagePercent} className={getProgressColor(enhancedTestbed.usagePercent)} />
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader className="py-3">
-                <CardTitle className="text-base">Testbed Details</CardTitle>
-              </CardHeader>
-              <CardContent className="py-0">
-                <dl className="grid grid-cols-2 gap-1 text-sm">
-                  <dt className="text-muted-foreground">ID:</dt>
-                  <dd className="font-mono">{enhancedTestbed.id}</dd>
-                  
-                  <dt className="text-muted-foreground">Type:</dt>
-                  <dd className="capitalize">{enhancedTestbed.type}</dd>
-                  
-                  <dt className="text-muted-foreground">Location:</dt>
-                  <dd>{enhancedTestbed.location}</dd>
-                  
-                  <dt className="text-muted-foreground">Owned By:</dt>
-                  <dd>{enhancedTestbed.ownedBy}</dd>
-                  
-                  <dt className="text-muted-foreground">Virtual Machines:</dt>
-                  <dd>{enhancedTestbed.vms}</dd>
-                  
-                  <dt className="text-muted-foreground">Networks:</dt>
-                  <dd>{enhancedTestbed.networks}</dd>
-                  
-                  <dt className="text-muted-foreground">Users:</dt>
-                  <dd>{enhancedTestbed.users}</dd>
-                  
-                  <dt className="text-muted-foreground">Deployments:</dt>
-                  <dd>{enhancedTestbed.deployments}</dd>
-                  
-                  <dt className="text-muted-foreground">Created:</dt>
-                  <dd>{new Date(enhancedTestbed.createdAt).toLocaleString()}</dd>
-                  
-                  {enhancedTestbed.expiresAt && (
-                    <>
-                      <dt className="text-muted-foreground">Expires:</dt>
-                      <dd>{new Date(enhancedTestbed.expiresAt).toLocaleString()}</dd>
-                    </>
-                  )}
-                </dl>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="vms" className="mt-4">
-            <div className="space-y-4">
-              {enhancedTestbed.virtualMachines?.map((vm) => (
-                <Card key={vm.id} className="overflow-hidden">
-                  <CardHeader className="py-3 flex flex-row items-center justify-between">
-                    <div className="flex items-center space-x-2">
-                      <Server className="h-4 w-4 text-blue-500" />
-                      <CardTitle className="text-base">{vm.name}</CardTitle>
-                    </div>
-                    <Badge
-                      variant="outline"
-                      className={getVmStatusColor(vm.status)}
-                    >
-                      <span
-                        className={`mr-1.5 h-2 w-2 rounded-full inline-block ${getVmStatusBg(vm.status)}`}
-                      ></span>
-                      {vm.status}
-                    </Badge>
+            <TabsContent value="overview" className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <Card>
+                  <CardHeader className="py-2">
+                    <CardTitle className="text-sm font-medium">Purpose</CardTitle>
                   </CardHeader>
-                  <CardContent className="py-0 pb-3">
-                    <div className="grid grid-cols-2 gap-3">
+                  <CardContent className="pb-3 pt-0">
+                    <p className="text-sm">{testbed.purpose}</p>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader className="py-2">
+                    <CardTitle className="text-sm font-medium">Status</CardTitle>
+                  </CardHeader>
+                  <CardContent className="pb-3 pt-0">
+                    <div className="flex items-center gap-2">
+                      <div className={`h-2.5 w-2.5 rounded-full ${getStatusColor(testbed.status)}`}></div>
+                      <span className="capitalize font-medium">{testbed.status}</span>
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {testbed.status === 'active' ? 'Fully operational' : 
+                       testbed.status === 'provisioning' ? 'Setting up resources' :
+                       testbed.status === 'failed' ? 'There was an error' : 'No longer in use'}
+                    </p>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader className="py-2">
+                    <CardTitle className="text-sm font-medium">Environment</CardTitle>
+                  </CardHeader>
+                  <CardContent className="pb-3 pt-0">
+                    <div className="flex items-center">
+                      <Badge variant="outline" className={`
+                        ${testbed.environment === 'Openshift' ? 'text-red-500 border-red-500' :
+                          testbed.environment === 'Vanilla' ? 'text-blue-500 border-blue-500' :
+                          testbed.environment === 'Rancher' ? 'text-teal-500 border-teal-500' :
+                          testbed.environment === 'Anthos' ? 'text-purple-500 border-purple-500' :
+                          testbed.environment === 'Charmed' ? 'text-orange-500 border-orange-500' :
+                          'text-gray-500 border-gray-500'}
+                      `}>
+                        {testbed.environment || 'Not specified'}
+                      </Badge>
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-1">Type: {testbed.type}</p>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader className="py-2">
+                    <CardTitle className="text-sm font-medium">Owner</CardTitle>
+                  </CardHeader>
+                  <CardContent className="pb-3 pt-0">
+                    <div className="flex items-center gap-2">
+                      <User className="h-4 w-4 text-muted-foreground" />
+                      <span>{testbed.ownedBy}</span>
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Created: {new Date(testbed.createdAt).toLocaleDateString()}
+                    </p>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader className="py-2">
+                    <CardTitle className="text-sm font-medium">Expiry</CardTitle>
+                  </CardHeader>
+                  <CardContent className="pb-3 pt-0">
+                    <div className="flex items-center gap-2">
+                      <Clock className="h-4 w-4 text-muted-foreground" />
+                      <span>{testbed.expiresAt ? new Date(testbed.expiresAt).toLocaleDateString() : 'No expiry'}</span>
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {testbed.whitelisted ? 'Whitelisted - no automatic removal' : 'Will be removed after expiry'}
+                    </p>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader className="py-2">
+                    <CardTitle className="text-sm font-medium">Resources</CardTitle>
+                  </CardHeader>
+                  <CardContent className="pb-3 pt-0">
+                    <div className="grid grid-cols-2 gap-2 text-sm">
                       <div>
-                        <div className="flex items-center text-sm mb-1">
-                          <Cpu className="h-3 w-3 mr-1 text-blue-500" />
-                          <span>CPU Cores: </span>
-                          <span className="font-mono ml-1">{vm.cpu}</span>
+                        <div className="flex items-center gap-1">
+                          <CpuIcon className="h-3 w-3 text-muted-foreground" />
+                          <span className="text-muted-foreground">CPU:</span>
                         </div>
-                        <div className="flex items-center text-sm">
-                          <MemoryStick className="h-3 w-3 mr-1 text-indigo-500" />
-                          <span>Memory (GB): </span>
-                          <span className="font-mono ml-1">{vm.memory}</span>
-                        </div>
+                        <div className="font-medium">{testbed.cpu} cores</div>
                       </div>
                       <div>
-                        <p className="text-sm font-medium mb-1">Disks:</p>
-                        <div className="space-y-1">
-                          {vm.disks.map((disk) => (
-                            <div key={disk.id} className="flex items-center text-xs">
-                              <HardDrive className="h-3 w-3 mr-1 text-purple-500" />
-                              <span>{disk.name}:</span>
-                              <span className="font-mono ml-1">{disk.sizeGB} GB ({disk.type.toUpperCase()})</span>
-                            </div>
-                          ))}
+                        <div className="flex items-center gap-1">
+                          <HardDrive className="h-3 w-3 text-muted-foreground" />
+                          <span className="text-muted-foreground">Memory:</span>
                         </div>
+                        <div className="font-medium">{testbed.memory} GB</div>
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-1">
+                          <Database className="h-3 w-3 text-muted-foreground" />
+                          <span className="text-muted-foreground">Storage:</span>
+                        </div>
+                        <div className="font-medium">{testbed.storage} GB</div>
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-1">
+                          <Network className="h-3 w-3 text-muted-foreground" />
+                          <span className="text-muted-foreground">Networks:</span>
+                        </div>
+                        <div className="font-medium">{testbed.networks}</div>
                       </div>
                     </div>
                   </CardContent>
                 </Card>
-              ))}
-            </div>
-          </TabsContent>
+              </div>
 
-          <TabsContent value="infrastructure" className="mt-4">
-            <Card>
-              <CardHeader className="py-3">
-                <CardTitle className="text-base">vSphere Infrastructure</CardTitle>
-              </CardHeader>
-              <CardContent className="py-0">
-                <dl className="grid grid-cols-1 gap-2 text-sm">
-                  <div className="flex items-start py-1">
-                    <dt className="w-1/3 flex items-center text-muted-foreground">
-                      <Database className="h-3 w-3 mr-2" />
-                      vCenter
-                    </dt>
-                    <dd className="w-2/3">{enhancedTestbed.vcenterName}</dd>
+              <Card>
+                <CardHeader className="py-2">
+                  <CardTitle className="text-sm font-medium">Logs</CardTitle>
+                </CardHeader>
+                <CardContent className="pb-3 pt-0">
+                  <div className="flex items-center gap-2">
+                    <FileText className="h-4 w-4 text-muted-foreground" />
+                    <code className="text-sm font-mono bg-secondary rounded px-1 py-0.5">
+                      {logsDirectory}
+                    </code>
                   </div>
-                  <Separator />
-                  
-                  <div className="flex items-start py-1">
-                    <dt className="w-1/3 flex items-center text-muted-foreground">
-                      <Globe className="h-3 w-3 mr-2" />
-                      Datacenter
-                    </dt>
-                    <dd className="w-2/3">{enhancedTestbed.vsphereDatacenter}</dd>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="vms" className="space-y-4">
+              <Card>
+                <CardHeader className="py-3">
+                  <CardTitle className="text-sm font-medium">Virtual Machines ({virtualMachines.length})</CardTitle>
+                </CardHeader>
+                <CardContent className="pt-0">
+                  <div className="rounded-md border overflow-auto max-h-[500px]">
+                    <Table>
+                      <TableHeader className="bg-secondary/50 sticky top-0">
+                        <TableRow>
+                          <TableHead>Name</TableHead>
+                          <TableHead>Status</TableHead>
+                          <TableHead>CPU</TableHead>
+                          <TableHead>Memory</TableHead>
+                          <TableHead>Storage</TableHead>
+                          <TableHead>IP</TableHead>
+                          <TableHead>OS</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {virtualMachines.map((vm) => (
+                          <TableRow key={vm.id}>
+                            <TableCell className="font-medium">{vm.name}</TableCell>
+                            <TableCell>
+                              <div className="flex items-center gap-2">
+                                <div className={`h-2 w-2 rounded-full ${getVMStatusColor(vm.status)}`}></div>
+                                <span className="capitalize">{vm.status}</span>
+                              </div>
+                            </TableCell>
+                            <TableCell>{vm.cpu} cores</TableCell>
+                            <TableCell>{vm.memory} GB</TableCell>
+                            <TableCell>{vm.storage} GB</TableCell>
+                            <TableCell>{vm.ip || 'N/A'}</TableCell>
+                            <TableCell>{vm.os || 'N/A'}</TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
                   </div>
-                  <Separator />
-                  
-                  <div className="flex items-start py-1">
-                    <dt className="w-1/3 flex items-center text-muted-foreground">
-                      <Server className="h-3 w-3 mr-2" />
-                      Cluster
-                    </dt>
-                    <dd className="w-2/3">{enhancedTestbed.vsphereCluster}</dd>
-                  </div>
-                  <Separator />
-                  
-                  <div className="flex items-start py-1">
-                    <dt className="w-1/3 flex items-center text-muted-foreground">
-                      <HardDrive className="h-3 w-3 mr-2" />
-                      Datastore
-                    </dt>
-                    <dd className="w-2/3">{enhancedTestbed.vsphereDatastore}</dd>
-                  </div>
-                  <Separator />
-                  
-                  <div className="flex items-start py-1">
-                    <dt className="w-1/3 flex items-center text-muted-foreground">
-                      <Network className="h-3 w-3 mr-2" />
-                      Network
-                    </dt>
-                    <dd className="w-2/3">{enhancedTestbed.vsphereNetwork}</dd>
-                  </div>
-                  <Separator />
-                  
-                  <div className="flex items-start py-1">
-                    <dt className="w-1/3 flex items-center text-muted-foreground">
-                      <User className="h-3 w-3 mr-2" />
-                      Owner
-                    </dt>
-                    <dd className="w-2/3">{enhancedTestbed.ownedBy}</dd>
-                  </div>
-                  <Separator />
-                  
-                  <div className="flex items-start py-1">
-                    <dt className="w-1/3 flex items-center text-muted-foreground">
-                      <Calendar className="h-3 w-3 mr-2" />
-                      Created
-                    </dt>
-                    <dd className="w-2/3">{new Date(enhancedTestbed.createdAt).toLocaleString()}</dd>
-                  </div>
-                  
-                  {enhancedTestbed.expiresAt && (
-                    <>
-                      <Separator />
-                      <div className="flex items-start py-1">
-                        <dt className="w-1/3 flex items-center text-muted-foreground">
-                          <Calendar className="h-3 w-3 mr-2" />
-                          Expires
-                        </dt>
-                        <dd className="w-2/3">{new Date(enhancedTestbed.expiresAt).toLocaleString()}</dd>
-                      </div>
-                    </>
-                  )}
-                </dl>
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
-      </SheetContent>
-    </Sheet>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="infrastructure" className="space-y-4">
+              <Card>
+                <CardHeader className="py-3">
+                  <CardTitle className="text-sm font-medium">vSphere Infrastructure</CardTitle>
+                </CardHeader>
+                <CardContent className="pt-0">
+                  <dl className="space-y-2">
+                    <div className="flex justify-between items-center py-1">
+                      <dt className="text-muted-foreground flex items-center gap-1">
+                        <Server className="h-4 w-4" />
+                        vCenter:
+                      </dt>
+                      <dd className="font-medium">{vCenterName}</dd>
+                    </div>
+                    <Separator />
+                    <div className="flex justify-between items-center py-1">
+                      <dt className="text-muted-foreground">Datacenter:</dt>
+                      <dd className="font-medium">{vSphereDatacenter}</dd>
+                    </div>
+                    <Separator />
+                    <div className="flex justify-between items-center py-1">
+                      <dt className="text-muted-foreground">Cluster:</dt>
+                      <dd className="font-medium">{vSphereCluster}</dd>
+                    </div>
+                    <Separator />
+                    <div className="flex justify-between items-center py-1">
+                      <dt className="text-muted-foreground">Datastore:</dt>
+                      <dd className="font-medium">{vSphereDatastore}</dd>
+                    </div>
+                    <Separator />
+                    <div className="flex justify-between items-center py-1">
+                      <dt className="text-muted-foreground">Network:</dt>
+                      <dd className="font-medium">{vSphereNetwork}</dd>
+                    </div>
+                  </dl>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="details" className="space-y-4">
+              <Card>
+                <CardHeader className="py-3">
+                  <CardTitle className="text-sm font-medium">Testbed Details</CardTitle>
+                </CardHeader>
+                <CardContent className="pt-0">
+                  <dl className="space-y-2">
+                    <div className="flex justify-between items-center py-1">
+                      <dt className="text-muted-foreground">ID:</dt>
+                      <dd className="font-mono text-sm">{testbed.id}</dd>
+                    </div>
+                    <Separator />
+                    <div className="flex justify-between items-center py-1">
+                      <dt className="text-muted-foreground">Type:</dt>
+                      <dd className="capitalize">{testbed.type}</dd>
+                    </div>
+                    <Separator />
+                    <div className="flex justify-between items-center py-1">
+                      <dt className="text-muted-foreground">Location:</dt>
+                      <dd>{testbed.location}</dd>
+                    </div>
+                    <Separator />
+                    <div className="flex justify-between items-center py-1">
+                      <dt className="text-muted-foreground">Created At:</dt>
+                      <dd>{new Date(testbed.createdAt).toLocaleString()}</dd>
+                    </div>
+                    <Separator />
+                    <div className="flex justify-between items-center py-1">
+                      <dt className="text-muted-foreground">Expires At:</dt>
+                      <dd>{testbed.expiresAt ? new Date(testbed.expiresAt).toLocaleString() : 'Never'}</dd>
+                    </div>
+                    <Separator />
+                    <div className="flex justify-between items-center py-1">
+                      <dt className="text-muted-foreground">Whitelisted:</dt>
+                      <dd>{testbed.whitelisted ? 'Yes' : 'No'}</dd>
+                    </div>
+                    <Separator />
+                    <div className="flex justify-between items-center py-1">
+                      <dt className="text-muted-foreground">Deployments:</dt>
+                      <dd>{testbed.deployments}</dd>
+                    </div>
+                    <Separator />
+                    <div className="flex justify-between items-center py-1">
+                      <dt className="text-muted-foreground">Users:</dt>
+                      <dd>{testbed.users}</dd>
+                    </div>
+                  </dl>
+                </CardContent>
+              </Card>
+            </TabsContent>
+          </Tabs>
+        </SheetContent>
+      </Sheet>
+
+      <Dialog open={connectDialogOpen} onOpenChange={setConnectDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Connect to {testbed.name}</DialogTitle>
+            <DialogDescription>
+              Use the following kubectl command to connect to this testbed
+            </DialogDescription>
+          </DialogHeader>
+          <div className="bg-secondary rounded-md p-4 mt-4">
+            <div className="flex justify-between items-start">
+              <pre className="text-sm font-mono whitespace-pre overflow-x-auto scrollbar-none">
+                {kubeCtlCommand}
+              </pre>
+              <Button variant="ghost" size="icon" onClick={handleCopyCommand} className="ml-2 self-start flex-shrink-0">
+                {copiedCommand ? (
+                  <Check className="h-4 w-4" />
+                ) : (
+                  <Copy className="h-4 w-4" />
+                )}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 };

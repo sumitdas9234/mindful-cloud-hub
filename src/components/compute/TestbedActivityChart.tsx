@@ -34,11 +34,11 @@ export const TestbedActivityChart: React.FC<TestbedActivityChartProps> = ({
   
   return (
     <Card className="col-span-2">
-      <CardHeader className="py-3">
+      <CardHeader className="py-2">
         <CardTitle className="text-sm font-medium">{title}</CardTitle>
       </CardHeader>
-      <CardContent className="pt-0 pb-3">
-        <div className="h-[120px] w-full">
+      <CardContent className="pt-0 pb-2">
+        <div className="h-[90px] w-full">
           <ResponsiveContainer width="100%" height="100%">
             <LineChart
               data={activityData}
@@ -64,6 +64,7 @@ export const TestbedActivityChart: React.FC<TestbedActivityChartProps> = ({
             </LineChart>
           </ResponsiveContainer>
         </div>
+        <p className="text-xs text-muted-foreground mt-1">Activity over last 24 hours</p>
       </CardContent>
     </Card>
   );
