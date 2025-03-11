@@ -19,7 +19,7 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
   addButtonText
 }) => {
   return (
-    <div className="flex flex-col space-y-4 md:flex-row md:items-center md:justify-between md:space-y-0">
+    <div className="flex flex-col space-y-2 md:flex-row md:items-center md:justify-between md:space-y-0">
       <div>
         <h1 className="text-2xl font-bold tracking-tight">{title}</h1>
         <p className="text-muted-foreground">{description}</p>

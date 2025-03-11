@@ -34,15 +34,15 @@ export const TestbedActivityChart: React.FC<TestbedActivityChartProps> = ({
   
   return (
     <Card className="col-span-2">
-      <CardHeader className="pb-2">
+      <CardHeader className="py-3">
         <CardTitle className="text-sm font-medium">{title}</CardTitle>
       </CardHeader>
-      <CardContent>
-        <div className="h-[140px] w-full">
+      <CardContent className="pt-0 pb-3">
+        <div className="h-[120px] w-full">
           <ResponsiveContainer width="100%" height="100%">
             <LineChart
               data={activityData}
-              margin={{ top: 10, right: 10, left: 10, bottom: 10 }}
+              margin={{ top: 5, right: 5, left: 5, bottom: 5 }}
             >
               <Tooltip 
                 formatter={(value) => [`${value} testbeds`, 'Count']}
