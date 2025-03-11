@@ -43,7 +43,14 @@ import {
   FileText,
   ExternalLink,
   Copy,
-  Check
+  Check,
+  Terminal,
+  Key,
+  Lock,
+  Eye,
+  EyeOff,
+  Download,
+  Logs
 } from "lucide-react";
 
 interface Testbed {
@@ -136,11 +143,17 @@ export const TestbedDetailSheet: React.FC<TestbedDetailSheetProps> = ({
 }) => {
   const [connectDialogOpen, setConnectDialogOpen] = useState(false);
   const [copiedCommand, setCopiedCommand] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   if (!testbed) return null;
 
   // Generate a mock kubectl command
   const kubeCtlCommand = `kubectl config use-context ${testbed.name.toLowerCase().replace(/\s+/g, '-')}-context\nkubectl get pods -n default`;
+  
+  // Mock values for connect tab
+  const mockSshKey = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC6vSUlP66dFJH+/xj9VRkO5z9I9dP...";
+  const mockSshUsername = "testbed-admin";
+  const mockSshPassword = "Str0ngP@ssw0rd!";
 
   // Mock values for vSphere infrastructure - in a real app these would come from the testbed
   const vCenterName = testbed.vCenterName || "vcenter-01.datacenter.local";
@@ -179,14 +192,46 @@ export const TestbedDetailSheet: React.FC<TestbedDetailSheetProps> = ({
     setTimeout(() => setCopiedCommand(false), 2000);
   };
 
+  const handleCopySshKey = () => {
+    navigator.clipboard.writeText(mockSshKey);
+    setCopiedCommand(true);
+    setTimeout(() => setCopiedCommand(false), 2000);
+  };
+
+  const handleCopyCredentials = () => {
+    navigator.clipboard.writeText(`Username: ${mockSshUsername}\nPassword: ${mockSshPassword}`);
+    setCopiedCommand(true);
+    setTimeout(() => setCopiedCommand(false), 2000);
+  };
+
+  const handleTogglePassword = () => {
+    setShowPassword(!showPassword);
+  };
+
   const handleOpenExternalDashboard = () => {
     window.open(externalDashboardUrl, '_blank');
+  };
+
+  const handleOpenLogs = () => {
+    // This would typically open a logs viewer or download logs in a real application
+    alert(`Accessing logs at: ${logsDirectory}`);
+  };
+
+  const handleDownloadKubeconfig = () => {
+    // In a real app, this would trigger a download for the kubeconfig file
+    const element = document.createElement("a");
+    const file = new Blob([kubeCtlCommand], {type: 'text/plain'});
+    element.href = URL.createObjectURL(file);
+    element.download = `${testbed.name.toLowerCase().replace(/\s+/g, '-')}-kubeconfig.txt`;
+    document.body.appendChild(element);
+    element.click();
+    document.body.removeChild(element);
   };
 
   return (
     <>
       <Sheet open={open} onOpenChange={onOpenChange}>
-        <SheetContent className="w-full sm:max-w-xl md:max-w-2xl lg:max-w-3xl overflow-y-auto">
+        <SheetContent className="w-full overflow-y-auto">
           <SheetHeader className="pb-4">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
               <SheetTitle className="text-2xl flex items-center gap-2">
@@ -196,15 +241,35 @@ export const TestbedDetailSheet: React.FC<TestbedDetailSheetProps> = ({
                   {testbed.status}
                 </Badge>
               </SheetTitle>
-              {/* Moved buttons down to avoid overlap with close button */}
             </div>
             <SheetDescription>{testbed.description}</SheetDescription>
-            {/* Added buttons here after the title and description */}
-            <div className="flex gap-2 mt-2">
-              <Button variant="outline" size="sm" onClick={() => setConnectDialogOpen(true)}>Connect</Button>
-              <Button variant="outline" size="sm" onClick={handleOpenExternalDashboard}>
+            <div className="flex flex-wrap gap-2 mt-3">
+              <Button 
+                variant="default" 
+                size="sm" 
+                onClick={handleOpenExternalDashboard}
+                className="bg-[#9b87f5] hover:bg-[#7E69AB]"
+              >
                 <ExternalLink className="h-4 w-4 mr-1" />
                 Dashboard
+              </Button>
+              <Button 
+                variant="default" 
+                size="sm" 
+                onClick={handleOpenLogs}
+                className="bg-[#8B5CF6] hover:bg-[#7E69AB]"
+              >
+                <Logs className="h-4 w-4 mr-1" />
+                Logs
+              </Button>
+              <Button 
+                variant="default" 
+                size="sm" 
+                onClick={handleDownloadKubeconfig}
+                className="bg-[#D946EF] hover:bg-[#C026D3]"
+              >
+                <Download className="h-4 w-4 mr-1" />
+                Kubeconfig
               </Button>
             </div>
           </SheetHeader>
@@ -214,37 +279,12 @@ export const TestbedDetailSheet: React.FC<TestbedDetailSheetProps> = ({
               <TabsTrigger value="overview">Overview</TabsTrigger>
               <TabsTrigger value="vms">Virtual Machines</TabsTrigger>
               <TabsTrigger value="infrastructure">Infrastructure</TabsTrigger>
+              <TabsTrigger value="connect">Connect</TabsTrigger>
               <TabsTrigger value="details">Additional Details</TabsTrigger>
             </TabsList>
 
             <TabsContent value="overview" className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <Card>
-                  <CardHeader className="py-2">
-                    <CardTitle className="text-sm font-medium">Purpose</CardTitle>
-                  </CardHeader>
-                  <CardContent className="pb-3 pt-0">
-                    <p className="text-sm">{testbed.purpose}</p>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardHeader className="py-2">
-                    <CardTitle className="text-sm font-medium">Status</CardTitle>
-                  </CardHeader>
-                  <CardContent className="pb-3 pt-0">
-                    <div className="flex items-center gap-2">
-                      <div className={`h-2.5 w-2.5 rounded-full ${getStatusColor(testbed.status)}`}></div>
-                      <span className="capitalize font-medium">{testbed.status}</span>
-                    </div>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      {testbed.status === 'active' ? 'Fully operational' : 
-                       testbed.status === 'provisioning' ? 'Setting up resources' :
-                       testbed.status === 'failed' ? 'There was an error' : 'No longer in use'}
-                    </p>
-                  </CardContent>
-                </Card>
-
                 <Card>
                   <CardHeader className="py-2">
                     <CardTitle className="text-sm font-medium">Environment</CardTitle>
@@ -262,7 +302,6 @@ export const TestbedDetailSheet: React.FC<TestbedDetailSheetProps> = ({
                         {testbed.environment || 'Not specified'}
                       </Badge>
                     </div>
-                    <p className="text-xs text-muted-foreground mt-1">Type: {testbed.type}</p>
                   </CardContent>
                 </Card>
 
@@ -298,56 +337,18 @@ export const TestbedDetailSheet: React.FC<TestbedDetailSheetProps> = ({
 
                 <Card>
                   <CardHeader className="py-2">
-                    <CardTitle className="text-sm font-medium">Resources</CardTitle>
+                    <CardTitle className="text-sm font-medium">Logs</CardTitle>
                   </CardHeader>
                   <CardContent className="pb-3 pt-0">
-                    <div className="grid grid-cols-2 gap-2 text-sm">
-                      <div>
-                        <div className="flex items-center gap-1">
-                          <CpuIcon className="h-3 w-3 text-muted-foreground" />
-                          <span className="text-muted-foreground">CPU:</span>
-                        </div>
-                        <div className="font-medium">{testbed.cpu} cores</div>
-                      </div>
-                      <div>
-                        <div className="flex items-center gap-1">
-                          <HardDrive className="h-3 w-3 text-muted-foreground" />
-                          <span className="text-muted-foreground">Memory:</span>
-                        </div>
-                        <div className="font-medium">{testbed.memory} GB</div>
-                      </div>
-                      <div>
-                        <div className="flex items-center gap-1">
-                          <Database className="h-3 w-3 text-muted-foreground" />
-                          <span className="text-muted-foreground">Storage:</span>
-                        </div>
-                        <div className="font-medium">{testbed.storage} GB</div>
-                      </div>
-                      <div>
-                        <div className="flex items-center gap-1">
-                          <Network className="h-3 w-3 text-muted-foreground" />
-                          <span className="text-muted-foreground">Networks:</span>
-                        </div>
-                        <div className="font-medium">{testbed.networks}</div>
-                      </div>
+                    <div className="flex items-center gap-2">
+                      <FileText className="h-4 w-4 text-muted-foreground" />
+                      <code className="text-sm font-mono bg-secondary rounded px-1 py-0.5">
+                        {logsDirectory}
+                      </code>
                     </div>
                   </CardContent>
                 </Card>
               </div>
-
-              <Card>
-                <CardHeader className="py-2">
-                  <CardTitle className="text-sm font-medium">Logs</CardTitle>
-                </CardHeader>
-                <CardContent className="pb-3 pt-0">
-                  <div className="flex items-center gap-2">
-                    <FileText className="h-4 w-4 text-muted-foreground" />
-                    <code className="text-sm font-mono bg-secondary rounded px-1 py-0.5">
-                      {logsDirectory}
-                    </code>
-                  </div>
-                </CardContent>
-              </Card>
             </TabsContent>
 
             <TabsContent value="vms" className="space-y-4">
@@ -432,6 +433,115 @@ export const TestbedDetailSheet: React.FC<TestbedDetailSheetProps> = ({
               </Card>
             </TabsContent>
 
+            <TabsContent value="connect" className="space-y-4">
+              <Card>
+                <CardHeader className="py-3">
+                  <CardTitle className="text-sm font-medium">Kubernetes Access</CardTitle>
+                </CardHeader>
+                <CardContent className="pt-0">
+                  <div className="space-y-4">
+                    <div className="bg-secondary rounded-md p-4 overflow-x-auto">
+                      <div className="flex justify-between items-start mb-2">
+                        <h4 className="text-sm font-medium">Kubeconfig Command</h4>
+                        <Button variant="ghost" size="icon" onClick={handleCopyCommand} className="flex-shrink-0">
+                          {copiedCommand ? (
+                            <Check className="h-4 w-4" />
+                          ) : (
+                            <Copy className="h-4 w-4" />
+                          )}
+                        </Button>
+                      </div>
+                      <pre className="text-sm font-mono whitespace-pre overflow-x-auto max-w-full break-all">
+                        {kubeCtlCommand}
+                      </pre>
+                    </div>
+                    
+                    <div className="flex justify-end">
+                      <Button 
+                        variant="default" 
+                        size="sm" 
+                        onClick={() => setConnectDialogOpen(true)}
+                        className="bg-[#F97316] hover:bg-[#EA580C]"
+                      >
+                        <Terminal className="h-4 w-4 mr-1" />
+                        Show Command in Modal
+                      </Button>
+                    </div>
+
+                    <Button 
+                      variant="default" 
+                      size="sm" 
+                      onClick={handleDownloadKubeconfig}
+                      className="bg-[#0EA5E9] hover:bg-[#0284C7] mb-4"
+                    >
+                      <Download className="h-4 w-4 mr-1" />
+                      Download Kubeconfig
+                    </Button>
+                    
+                    <Separator />
+                    
+                    <div className="pt-2">
+                      <h4 className="text-sm font-medium mb-2">SSH Access</h4>
+                      
+                      <div className="space-y-4">
+                        <div>
+                          <div className="flex justify-between items-center mb-1">
+                            <h5 className="text-xs font-medium text-muted-foreground">SSH Key</h5>
+                            <Button variant="ghost" size="icon" onClick={handleCopySshKey} className="h-6 w-6">
+                              <Copy className="h-3.5 w-3.5" />
+                            </Button>
+                          </div>
+                          <div className="bg-secondary rounded-md p-3 overflow-hidden">
+                            <code className="text-xs font-mono break-all">
+                              {mockSshKey}
+                            </code>
+                          </div>
+                        </div>
+                        
+                        <div>
+                          <h5 className="text-xs font-medium text-muted-foreground mb-1">Credentials</h5>
+                          <div className="bg-secondary rounded-md p-3">
+                            <div className="flex justify-between items-center mb-1">
+                              <span className="text-xs font-medium">Username:</span>
+                              <code className="text-xs font-mono">{mockSshUsername}</code>
+                            </div>
+                            <div className="flex justify-between items-center">
+                              <span className="text-xs font-medium">Password:</span>
+                              <div className="flex items-center gap-2">
+                                <code className="text-xs font-mono">
+                                  {showPassword ? mockSshPassword : '••••••••••••'}
+                                </code>
+                                <Button 
+                                  variant="ghost" 
+                                  size="icon" 
+                                  onClick={handleTogglePassword} 
+                                  className="h-6 w-6"
+                                >
+                                  {showPassword ? (
+                                    <EyeOff className="h-3.5 w-3.5" />
+                                  ) : (
+                                    <Eye className="h-3.5 w-3.5" />
+                                  )}
+                                </Button>
+                                <Button 
+                                  variant="ghost" 
+                                  size="icon" 
+                                  onClick={handleCopyCredentials} 
+                                  className="h-6 w-6"
+                                >
+                                  <Copy className="h-3.5 w-3.5" />
+                                </Button>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
             <TabsContent value="details" className="space-y-4">
               <Card>
                 <CardHeader className="py-3">
@@ -487,7 +597,7 @@ export const TestbedDetailSheet: React.FC<TestbedDetailSheetProps> = ({
       </Sheet>
 
       <Dialog open={connectDialogOpen} onOpenChange={setConnectDialogOpen}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-[70%]">
           <DialogHeader>
             <DialogTitle>Connect to {testbed.name}</DialogTitle>
             <DialogDescription>
@@ -496,7 +606,7 @@ export const TestbedDetailSheet: React.FC<TestbedDetailSheetProps> = ({
           </DialogHeader>
           <div className="bg-secondary rounded-md p-4 mt-4 overflow-x-auto">
             <div className="flex justify-between items-start">
-              <pre className="text-sm font-mono whitespace-pre overflow-x-auto max-w-[300px] break-all">
+              <pre className="text-sm font-mono whitespace-pre overflow-x-auto max-w-full break-all">
                 {kubeCtlCommand}
               </pre>
               <Button variant="ghost" size="icon" onClick={handleCopyCommand} className="ml-2 self-start flex-shrink-0">
