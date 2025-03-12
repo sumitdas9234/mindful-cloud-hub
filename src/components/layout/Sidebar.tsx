@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
@@ -133,7 +132,24 @@ export const Sidebar = () => {
           />
         </SidebarSection>
         
-        <SidebarSection title="Compute" collapsed={collapsed}>
+        <SidebarSection title="Managed Services" collapsed={collapsed}>
+          <SidebarItem 
+            icon={Cloud} 
+            label="Kubernetes" 
+            path="/kubernetes"
+            collapsed={collapsed}
+            active={location.pathname === '/kubernetes'}
+          />
+          <SidebarItem 
+            icon={Cpu} 
+            label="Apps and Services" 
+            path="/apps"
+            collapsed={collapsed}
+            active={location.pathname === '/apps'}
+          />
+        </SidebarSection>
+        
+        <SidebarSection title="Infrastructure" collapsed={collapsed}>
           <SidebarItem 
             icon={Server} 
             label="vCenters" 
@@ -148,16 +164,6 @@ export const Sidebar = () => {
             collapsed={collapsed}
             active={location.pathname === '/testbeds'}
           />
-          <SidebarItem 
-            icon={Cloud} 
-            label="Kubernetes" 
-            path="/kubernetes"
-            collapsed={collapsed}
-            active={location.pathname === '/kubernetes'}
-          />
-        </SidebarSection>
-        
-        <SidebarSection title="Infrastructure" collapsed={collapsed}>
           <SidebarItem 
             icon={Network} 
             label="Networking" 
@@ -176,7 +182,7 @@ export const Sidebar = () => {
         
         <SidebarSection title="Observability" collapsed={collapsed}>
           <SidebarItem 
-            icon={Cpu} 
+            icon={Database} 
             label="Monitoring" 
             path="/monitoring"
             collapsed={collapsed}
