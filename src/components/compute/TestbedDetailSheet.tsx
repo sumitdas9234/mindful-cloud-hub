@@ -237,27 +237,27 @@ export const TestbedDetailSheet: React.FC<TestbedDetailSheetProps> = ({
                   {testbed.status}
                 </Badge>
               </SheetTitle>
-              <div className="mt-4">
-                <Button 
-                  variant="default" 
-                  size="sm" 
-                  onClick={handleOpenExternalDashboard}
-                >
-                  Dashboard
-                </Button>
-              </div>
             </div>
             <SheetDescription>{testbed.description}</SheetDescription>
           </SheetHeader>
 
-          <Tabs defaultValue="overview" className="mt-6">
-            <TabsList className="mb-4 w-auto mx-auto">
+          <div className="flex items-center justify-between mt-6 mb-4">
+            <TabsList className="w-auto">
               <TabsTrigger value="overview">Overview</TabsTrigger>
               <TabsTrigger value="vms">Virtual Machines</TabsTrigger>
               <TabsTrigger value="infrastructure">Infrastructure</TabsTrigger>
               <TabsTrigger value="details">Additional Details</TabsTrigger>
             </TabsList>
+            <Button 
+              variant="default" 
+              size="sm" 
+              onClick={handleOpenExternalDashboard}
+            >
+              Dashboard
+            </Button>
+          </div>
 
+          <Tabs defaultValue="overview">
             <TabsContent value="overview" className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <Card>
@@ -265,22 +265,30 @@ export const TestbedDetailSheet: React.FC<TestbedDetailSheetProps> = ({
                     <CardTitle className="text-sm font-medium">Environment</CardTitle>
                   </CardHeader>
                   <CardContent className="pb-3 pt-0">
-                    <div className="flex items-center mb-2">
-                      <Badge variant="outline" className={`
-                        ${testbed.environment === 'Openshift' ? 'text-red-500 border-red-500' :
-                          testbed.environment === 'Vanilla' ? 'text-blue-500 border-blue-500' :
-                          testbed.environment === 'Rancher' ? 'text-teal-500 border-teal-500' :
-                          testbed.environment === 'Anthos' ? 'text-purple-500 border-purple-500' :
-                          testbed.environment === 'Charmed' ? 'text-orange-500 border-orange-500' :
-                          'text-gray-500 border-gray-500'}
-                      `}>
-                        {testbed.environment || 'Not specified'}
-                      </Badge>
-                      <span className="ml-2 text-sm">{environmentVersion}</span>
-                    </div>
-                    <div className="flex items-center">
-                      <span className="text-sm font-medium text-muted-foreground">Kubernetes:</span>
-                      <span className="ml-2 text-sm">{kubernetesVersion}</span>
+                    <div className="space-y-2">
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm text-muted-foreground">Provisioner:</span>
+                        <Badge variant="outline" className={`
+                          ${testbed.environment === 'Openshift' ? 'text-red-500 border-red-500' :
+                            testbed.environment === 'Vanilla' ? 'text-blue-500 border-blue-500' :
+                            testbed.environment === 'Rancher' ? 'text-teal-500 border-teal-500' :
+                            testbed.environment === 'Anthos' ? 'text-purple-500 border-purple-500' :
+                            testbed.environment === 'Charmed' ? 'text-orange-500 border-orange-500' :
+                            'text-gray-500 border-gray-500'}
+                        `}>
+                          {testbed.environment || 'Not specified'}
+                        </Badge>
+                      </div>
+                      <Separator />
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm text-muted-foreground">Version:</span>
+                        <span className="text-sm font-medium">{environmentVersion}</span>
+                      </div>
+                      <Separator />
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm text-muted-foreground">Kubernetes:</span>
+                        <span className="text-sm font-medium">v{kubernetesVersion}</span>
+                      </div>
                     </div>
                   </CardContent>
                 </Card>
@@ -300,7 +308,7 @@ export const TestbedDetailSheet: React.FC<TestbedDetailSheetProps> = ({
                   </CardContent>
                 </Card>
 
-                <Card>
+                <Card className="md:col-span-2">
                   <CardHeader className="py-2">
                     <CardTitle className="text-sm font-medium">SSH Access</CardTitle>
                   </CardHeader>
@@ -358,43 +366,36 @@ export const TestbedDetailSheet: React.FC<TestbedDetailSheetProps> = ({
                         </div>
                       </div>
 
-                      <Button 
-                        variant="default" 
-                        size="sm" 
-                        onClick={() => setConnectDialogOpen(true)}
-                        className="w-1/3"
-                      >
-                        Connect
-                      </Button>
+                      <div className="flex justify-between items-center">
+                        <Button 
+                          variant="default" 
+                          size="sm" 
+                          onClick={() => setConnectDialogOpen(true)}
+                          className="w-1/3"
+                        >
+                          Connect
+                        </Button>
+                      </div>
                     </div>
                   </CardContent>
                 </Card>
+              </div>
 
-                <Card>
-                  <CardHeader className="py-2">
-                    <CardTitle className="text-sm font-medium">Actions</CardTitle>
-                  </CardHeader>
-                  <CardContent className="pb-3 pt-0">
-                    <div className="flex gap-2">
-                      <Button 
-                        variant="default" 
-                        size="sm" 
-                        onClick={handleOpenLogs}
-                        className="w-1/2"
-                      >
-                        Logs
-                      </Button>
-                      <Button 
-                        variant="default" 
-                        size="sm" 
-                        onClick={handleDownloadKubeconfig}
-                        className="w-1/2"
-                      >
-                        Kubeconfig
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
+              <div className="flex gap-2 justify-end mt-4">
+                <Button 
+                  variant="default" 
+                  size="sm" 
+                  onClick={handleOpenLogs}
+                >
+                  Logs
+                </Button>
+                <Button 
+                  variant="default" 
+                  size="sm" 
+                  onClick={handleDownloadKubeconfig}
+                >
+                  Kubeconfig
+                </Button>
               </div>
             </TabsContent>
 
