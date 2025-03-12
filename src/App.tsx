@@ -11,6 +11,8 @@ import NotFound from "./pages/NotFound";
 import VCenters from "./pages/compute/VCenters";
 import Testbeds from "./pages/compute/Testbeds";
 import Kubernetes from "./pages/compute/Kubernetes";
+import AppsAndServices from "./pages/compute/AppsAndServices";
+import Networking from "./pages/infrastructure/Networking";
 
 const queryClient = new QueryClient();
 
@@ -52,7 +54,25 @@ const App = () => (
             } 
           />
           
-          {/* Compute Routes */}
+          {/* Managed Services Routes */}
+          <Route 
+            path="/kubernetes" 
+            element={
+              <Layout title="Kubernetes Management">
+                <Kubernetes />
+              </Layout>
+            } 
+          />
+          <Route 
+            path="/apps" 
+            element={
+              <Layout title="Apps and Services">
+                <AppsAndServices />
+              </Layout>
+            } 
+          />
+          
+          {/* Infrastructure Routes */}
           <Route 
             path="/vcenters" 
             element={
@@ -70,20 +90,10 @@ const App = () => (
             } 
           />
           <Route 
-            path="/kubernetes" 
-            element={
-              <Layout title="Kubernetes Management">
-                <Kubernetes />
-              </Layout>
-            } 
-          />
-          
-          {/* Infrastructure Routes */}
-          <Route 
             path="/networking" 
             element={
               <Layout title="Network Management">
-                <ComingSoon feature="Network" />
+                <Networking />
               </Layout>
             } 
           />
