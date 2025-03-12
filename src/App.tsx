@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -14,7 +13,7 @@ import Kubernetes from "./pages/compute/Kubernetes";
 import AppsAndServices from "./pages/compute/AppsAndServices";
 import Networking from "./pages/infrastructure/Networking";
 import Subnets from "./pages/infrastructure/Subnets";
-import Routes from "./pages/infrastructure/Routes";
+import RoutesPage from "./pages/infrastructure/Routes";
 
 const queryClient = new QueryClient();
 
@@ -32,7 +31,6 @@ const Layout = ({ children, title }: { children: React.ReactNode; title: string 
   );
 };
 
-// Placeholder component for unimplemented routes
 const ComingSoon = ({ feature }: { feature: string }) => (
   <div className="flex flex-col items-center justify-center h-full">
     <h2 className="text-2xl font-bold mb-2">{feature} Management</h2>
@@ -56,7 +54,6 @@ const App = () => (
             } 
           />
           
-          {/* Managed Services Routes */}
           <Route 
             path="/kubernetes" 
             element={
@@ -74,7 +71,6 @@ const App = () => (
             } 
           />
           
-          {/* Infrastructure Routes */}
           <Route 
             path="/vcenters" 
             element={
@@ -111,7 +107,7 @@ const App = () => (
             path="/networking/routes" 
             element={
               <Layout title="Route Management">
-                <Routes />
+                <RoutesPage />
               </Layout>
             } 
           />
@@ -124,7 +120,6 @@ const App = () => (
             } 
           />
           
-          {/* Observability Routes */}
           <Route 
             path="/monitoring" 
             element={
@@ -142,7 +137,6 @@ const App = () => (
             } 
           />
           
-          {/* Administration Routes */}
           <Route 
             path="/users" 
             element={
@@ -152,7 +146,6 @@ const App = () => (
             } 
           />
           
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
