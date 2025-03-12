@@ -10,7 +10,6 @@ import {
   Server,
   Database,
   HardDrive,
-  Network,
   Users,
   AlertTriangle,
   Cloud,
@@ -170,34 +169,19 @@ export const Sidebar = () => {
             active={location.pathname === '/testbeds'}
           />
           <SidebarItem 
-            icon={Network} 
-            label="Networking" 
-            path="/networking"
+            icon={Globe} 
+            label="Subnets" 
+            path="/networking/subnets"
             collapsed={collapsed}
-            active={location.pathname === '/networking' || 
-                   location.pathname === '/networking/subnets' || 
-                   location.pathname === '/networking/routes'}
+            active={location.pathname === '/networking/subnets'}
           />
-          {!collapsed && (
-            <>
-              <SidebarItem 
-                icon={Globe} 
-                label="Subnets" 
-                path="/networking/subnets"
-                collapsed={collapsed}
-                active={location.pathname === '/networking/subnets'}
-                indent={true}
-              />
-              <SidebarItem 
-                icon={GitBranch} 
-                label="Routes" 
-                path="/networking/routes"
-                collapsed={collapsed}
-                active={location.pathname === '/networking/routes'}
-                indent={true}
-              />
-            </>
-          )}
+          <SidebarItem 
+            icon={GitBranch} 
+            label="Routes" 
+            path="/networking/routes"
+            collapsed={collapsed}
+            active={location.pathname === '/networking/routes'}
+          />
           <SidebarItem 
             icon={HardDrive} 
             label="Storage" 
