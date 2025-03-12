@@ -135,7 +135,7 @@ interface TestbedDetailSheetProps {
   onOpenChange: (open: boolean) => void;
 }
 
-export const TestbedDetailSheet: React.FC<TestbedDetailSheetProps> = ({ 
+const TestbedDetailSheet: React.FC<TestbedDetailSheetProps> = ({ 
   testbed, 
   open, 
   onOpenChange 
@@ -242,296 +242,298 @@ export const TestbedDetailSheet: React.FC<TestbedDetailSheetProps> = ({
           </SheetHeader>
 
           <div className="flex items-center justify-between mt-6 mb-4">
-            <TabsList className="w-auto">
-              <TabsTrigger value="overview">Overview</TabsTrigger>
-              <TabsTrigger value="vms">Virtual Machines</TabsTrigger>
-              <TabsTrigger value="infrastructure">Infrastructure</TabsTrigger>
-              <TabsTrigger value="details">Additional Details</TabsTrigger>
-            </TabsList>
-            <Button 
-              variant="default" 
-              size="sm" 
-              onClick={handleOpenExternalDashboard}
-            >
-              Dashboard
-            </Button>
-          </div>
+            <Tabs defaultValue="overview" className="w-full">
+              <div className="flex justify-between items-center">
+                <TabsList className="w-auto">
+                  <TabsTrigger value="overview">Overview</TabsTrigger>
+                  <TabsTrigger value="vms">Virtual Machines</TabsTrigger>
+                  <TabsTrigger value="infrastructure">Infrastructure</TabsTrigger>
+                  <TabsTrigger value="details">Additional Details</TabsTrigger>
+                </TabsList>
+                <Button 
+                  variant="default" 
+                  size="sm" 
+                  onClick={handleOpenExternalDashboard}
+                >
+                  Dashboard
+                </Button>
+              </div>
 
-          <Tabs defaultValue="overview">
-            <TabsContent value="overview" className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <Card>
-                  <CardHeader className="py-2">
-                    <CardTitle className="text-sm font-medium">Environment</CardTitle>
-                  </CardHeader>
-                  <CardContent className="pb-3 pt-0">
-                    <div className="space-y-2">
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm text-muted-foreground">Provisioner:</span>
-                        <Badge variant="outline" className={`
-                          ${testbed.environment === 'Openshift' ? 'text-red-500 border-red-500' :
-                            testbed.environment === 'Vanilla' ? 'text-blue-500 border-blue-500' :
-                            testbed.environment === 'Rancher' ? 'text-teal-500 border-teal-500' :
-                            testbed.environment === 'Anthos' ? 'text-purple-500 border-purple-500' :
-                            testbed.environment === 'Charmed' ? 'text-orange-500 border-orange-500' :
-                            'text-gray-500 border-gray-500'}
-                        `}>
-                          {testbed.environment || 'Not specified'}
-                        </Badge>
-                      </div>
-                      <Separator />
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm text-muted-foreground">Version:</span>
-                        <span className="text-sm font-medium">{environmentVersion}</span>
-                      </div>
-                      <Separator />
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm text-muted-foreground">Kubernetes:</span>
-                        <span className="text-sm font-medium">v{kubernetesVersion}</span>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardHeader className="py-2">
-                    <CardTitle className="text-sm font-medium">Owner</CardTitle>
-                  </CardHeader>
-                  <CardContent className="pb-3 pt-0">
-                    <div className="flex items-center gap-2">
-                      <User className="h-4 w-4 text-muted-foreground" />
-                      <span>{testbed.ownedBy}</span>
-                    </div>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      Created: {new Date(testbed.createdAt).toLocaleDateString()}
-                    </p>
-                  </CardContent>
-                </Card>
-
-                <Card className="md:col-span-2">
-                  <CardHeader className="py-2">
-                    <CardTitle className="text-sm font-medium">SSH Access</CardTitle>
-                  </CardHeader>
-                  <CardContent className="pb-3 pt-0">
-                    <div className="space-y-4 w-full">
-                      <div>
-                        <div className="flex justify-between items-center mb-1">
-                          <h5 className="text-xs font-medium text-muted-foreground">SSH Key</h5>
-                          <Button variant="ghost" size="icon" onClick={handleCopySshKey} className="h-6 w-6">
-                            <Copy className="h-3.5 w-3.5" />
-                          </Button>
+              <TabsContent value="overview" className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <Card>
+                    <CardHeader className="py-2">
+                      <CardTitle className="text-sm font-medium">Environment</CardTitle>
+                    </CardHeader>
+                    <CardContent className="pb-3 pt-0">
+                      <div className="space-y-2">
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm text-muted-foreground">Provisioner:</span>
+                          <Badge variant="outline" className={`
+                            ${testbed.environment === 'Openshift' ? 'text-red-500 border-red-500' :
+                              testbed.environment === 'Vanilla' ? 'text-blue-500 border-blue-500' :
+                              testbed.environment === 'Rancher' ? 'text-teal-500 border-teal-500' :
+                              testbed.environment === 'Anthos' ? 'text-purple-500 border-purple-500' :
+                              testbed.environment === 'Charmed' ? 'text-orange-500 border-orange-500' :
+                              'text-gray-500 border-gray-500'}
+                          `}>
+                            {testbed.environment || 'Not specified'}
+                          </Badge>
                         </div>
-                        <div className="bg-secondary rounded-md p-3 overflow-hidden">
-                          <code className="text-xs font-mono break-all">
-                            {mockSshKey}
-                          </code>
+                        <Separator />
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm text-muted-foreground">Version:</span>
+                          <span className="text-sm font-medium">{environmentVersion}</span>
+                        </div>
+                        <Separator />
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm text-muted-foreground">Kubernetes:</span>
+                          <span className="text-sm font-medium">v{kubernetesVersion}</span>
                         </div>
                       </div>
-                      
-                      <div>
-                        <h5 className="text-xs font-medium text-muted-foreground mb-1">Credentials</h5>
-                        <div className="bg-secondary rounded-md p-3">
+                    </CardContent>
+                  </Card>
+
+                  <Card>
+                    <CardHeader className="py-2">
+                      <CardTitle className="text-sm font-medium">Owner</CardTitle>
+                    </CardHeader>
+                    <CardContent className="pb-3 pt-0">
+                      <div className="flex items-center gap-2">
+                        <User className="h-4 w-4 text-muted-foreground" />
+                        <span>{testbed.ownedBy}</span>
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Created: {new Date(testbed.createdAt).toLocaleDateString()}
+                      </p>
+                    </CardContent>
+                  </Card>
+
+                  <Card className="md:col-span-2">
+                    <CardHeader className="py-2">
+                      <CardTitle className="text-sm font-medium">SSH Access</CardTitle>
+                    </CardHeader>
+                    <CardContent className="pb-3 pt-0">
+                      <div className="space-y-4 w-full">
+                        <div>
                           <div className="flex justify-between items-center mb-1">
-                            <span className="text-xs font-medium">Username:</span>
-                            <code className="text-xs font-mono">{mockSshUsername}</code>
+                            <h5 className="text-xs font-medium text-muted-foreground">SSH Key</h5>
+                            <Button variant="ghost" size="icon" onClick={handleCopySshKey} className="h-6 w-6">
+                              <Copy className="h-3.5 w-3.5" />
+                            </Button>
                           </div>
-                          <div className="flex justify-between items-center">
-                            <span className="text-xs font-medium">Password:</span>
-                            <div className="flex items-center gap-2">
-                              <code className="text-xs font-mono">
-                                {showPassword ? mockSshPassword : '••••••••••••'}
-                              </code>
-                              <Button 
-                                variant="ghost" 
-                                size="icon" 
-                                onClick={handleTogglePassword} 
-                                className="h-6 w-6"
-                              >
-                                {showPassword ? (
-                                  <EyeOff className="h-3.5 w-3.5" />
-                                ) : (
-                                  <Eye className="h-3.5 w-3.5" />
-                                )}
-                              </Button>
-                              <Button 
-                                variant="ghost" 
-                                size="icon" 
-                                onClick={handleCopyCredentials} 
-                                className="h-6 w-6"
-                              >
-                                <Copy className="h-3.5 w-3.5" />
-                              </Button>
+                          <div className="bg-secondary rounded-md p-3 overflow-hidden">
+                            <code className="text-xs font-mono break-all">
+                              {mockSshKey}
+                            </code>
+                          </div>
+                        </div>
+                        
+                        <div>
+                          <h5 className="text-xs font-medium text-muted-foreground mb-1">Credentials</h5>
+                          <div className="bg-secondary rounded-md p-3">
+                            <div className="flex justify-between items-center mb-1">
+                              <span className="text-xs font-medium">Username:</span>
+                              <code className="text-xs font-mono">{mockSshUsername}</code>
+                            </div>
+                            <div className="flex justify-between items-center">
+                              <span className="text-xs font-medium">Password:</span>
+                              <div className="flex items-center gap-2">
+                                <code className="text-xs font-mono">
+                                  {showPassword ? mockSshPassword : '••••••••••••'}
+                                </code>
+                                <Button 
+                                  variant="ghost" 
+                                  size="icon" 
+                                  onClick={handleTogglePassword} 
+                                  className="h-6 w-6"
+                                >
+                                  {showPassword ? (
+                                    <EyeOff className="h-3.5 w-3.5" />
+                                  ) : (
+                                    <Eye className="h-3.5 w-3.5" />
+                                  )}
+                                </Button>
+                                <Button 
+                                  variant="ghost" 
+                                  size="icon" 
+                                  onClick={handleCopyCredentials} 
+                                  className="h-6 w-6"
+                                >
+                                  <Copy className="h-3.5 w-3.5" />
+                                </Button>
+                              </div>
                             </div>
                           </div>
                         </div>
-                      </div>
 
-                      <div className="flex justify-between items-center">
-                        <Button 
-                          variant="default" 
-                          size="sm" 
-                          onClick={() => setConnectDialogOpen(true)}
-                          className="w-1/3"
-                        >
-                          Connect
-                        </Button>
+                        <div className="flex justify-start items-center">
+                          <Button 
+                            variant="default" 
+                            size="sm" 
+                            onClick={() => setConnectDialogOpen(true)}
+                            className="w-1/4"
+                          >
+                            Connect
+                          </Button>
+                        </div>
                       </div>
+                    </CardContent>
+                  </Card>
+                </div>
+
+                <div className="flex gap-2 justify-end mt-4">
+                  <Button 
+                    variant="default" 
+                    size="sm" 
+                    onClick={handleOpenLogs}
+                  >
+                    Logs
+                  </Button>
+                  <Button 
+                    variant="default" 
+                    size="sm" 
+                    onClick={handleDownloadKubeconfig}
+                  >
+                    Kubeconfig
+                  </Button>
+                </div>
+              </TabsContent>
+
+              <TabsContent value="vms" className="space-y-4">
+                <Card>
+                  <CardHeader className="py-3">
+                    <CardTitle className="text-sm font-medium">Virtual Machines ({virtualMachines.length})</CardTitle>
+                  </CardHeader>
+                  <CardContent className="pt-0">
+                    <div className="rounded-md border overflow-auto max-h-[500px]">
+                      <Table>
+                        <TableHeader className="bg-secondary/50 sticky top-0">
+                          <TableRow>
+                            <TableHead>Name</TableHead>
+                            <TableHead>Status</TableHead>
+                            <TableHead>CPU</TableHead>
+                            <TableHead>Memory</TableHead>
+                            <TableHead>Storage</TableHead>
+                            <TableHead>IP</TableHead>
+                            <TableHead>OS</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {virtualMachines.map((vm) => (
+                            <TableRow key={vm.id}>
+                              <TableCell className="font-medium">{vm.name}</TableCell>
+                              <TableCell>
+                                <div className="flex items-center gap-2">
+                                  <div className={`h-2 w-2 rounded-full ${getVMStatusColor(vm.status)}`}></div>
+                                  <span className="capitalize">{vm.status}</span>
+                                </div>
+                              </TableCell>
+                              <TableCell>{vm.cpu} cores</TableCell>
+                              <TableCell>{vm.memory} GB</TableCell>
+                              <TableCell>{vm.storage} GB</TableCell>
+                              <TableCell>{vm.ip || 'N/A'}</TableCell>
+                              <TableCell>{vm.os || 'N/A'}</TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
                     </div>
                   </CardContent>
                 </Card>
-              </div>
+              </TabsContent>
 
-              <div className="flex gap-2 justify-end mt-4">
-                <Button 
-                  variant="default" 
-                  size="sm" 
-                  onClick={handleOpenLogs}
-                >
-                  Logs
-                </Button>
-                <Button 
-                  variant="default" 
-                  size="sm" 
-                  onClick={handleDownloadKubeconfig}
-                >
-                  Kubeconfig
-                </Button>
-              </div>
-            </TabsContent>
+              <TabsContent value="infrastructure" className="space-y-4">
+                <Card>
+                  <CardHeader className="py-3">
+                    <CardTitle className="text-sm font-medium">vSphere Infrastructure</CardTitle>
+                  </CardHeader>
+                  <CardContent className="pt-0">
+                    <dl className="space-y-2">
+                      <div className="flex justify-between items-center py-1">
+                        <dt className="text-muted-foreground flex items-center gap-1">
+                          <Server className="h-4 w-4" />
+                          vCenter:
+                        </dt>
+                        <dd className="font-medium">{vCenterName}</dd>
+                      </div>
+                      <Separator />
+                      <div className="flex justify-between items-center py-1">
+                        <dt className="text-muted-foreground">Datacenter:</dt>
+                        <dd className="font-medium">{vSphereDatacenter}</dd>
+                      </div>
+                      <Separator />
+                      <div className="flex justify-between items-center py-1">
+                        <dt className="text-muted-foreground">Cluster:</dt>
+                        <dd className="font-medium">{vSphereCluster}</dd>
+                      </div>
+                      <Separator />
+                      <div className="flex justify-between items-center py-1">
+                        <dt className="text-muted-foreground">Datastore:</dt>
+                        <dd className="font-medium">{vSphereDatastore}</dd>
+                      </div>
+                      <Separator />
+                      <div className="flex justify-between items-center py-1">
+                        <dt className="text-muted-foreground">Network:</dt>
+                        <dd className="font-medium">{vSphereNetwork}</dd>
+                      </div>
+                    </dl>
+                  </CardContent>
+                </Card>
+              </TabsContent>
 
-            <TabsContent value="vms" className="space-y-4">
-              <Card>
-                <CardHeader className="py-3">
-                  <CardTitle className="text-sm font-medium">Virtual Machines ({virtualMachines.length})</CardTitle>
-                </CardHeader>
-                <CardContent className="pt-0">
-                  <div className="rounded-md border overflow-auto max-h-[500px]">
-                    <Table>
-                      <TableHeader className="bg-secondary/50 sticky top-0">
-                        <TableRow>
-                          <TableHead>Name</TableHead>
-                          <TableHead>Status</TableHead>
-                          <TableHead>CPU</TableHead>
-                          <TableHead>Memory</TableHead>
-                          <TableHead>Storage</TableHead>
-                          <TableHead>IP</TableHead>
-                          <TableHead>OS</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {virtualMachines.map((vm) => (
-                          <TableRow key={vm.id}>
-                            <TableCell className="font-medium">{vm.name}</TableCell>
-                            <TableCell>
-                              <div className="flex items-center gap-2">
-                                <div className={`h-2 w-2 rounded-full ${getVMStatusColor(vm.status)}`}></div>
-                                <span className="capitalize">{vm.status}</span>
-                              </div>
-                            </TableCell>
-                            <TableCell>{vm.cpu} cores</TableCell>
-                            <TableCell>{vm.memory} GB</TableCell>
-                            <TableCell>{vm.storage} GB</TableCell>
-                            <TableCell>{vm.ip || 'N/A'}</TableCell>
-                            <TableCell>{vm.os || 'N/A'}</TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            <TabsContent value="infrastructure" className="space-y-4">
-              <Card>
-                <CardHeader className="py-3">
-                  <CardTitle className="text-sm font-medium">vSphere Infrastructure</CardTitle>
-                </CardHeader>
-                <CardContent className="pt-0">
-                  <dl className="space-y-2">
-                    <div className="flex justify-between items-center py-1">
-                      <dt className="text-muted-foreground flex items-center gap-1">
-                        <Server className="h-4 w-4" />
-                        vCenter:
-                      </dt>
-                      <dd className="font-medium">{vCenterName}</dd>
-                    </div>
-                    <Separator />
-                    <div className="flex justify-between items-center py-1">
-                      <dt className="text-muted-foreground">Datacenter:</dt>
-                      <dd className="font-medium">{vSphereDatacenter}</dd>
-                    </div>
-                    <Separator />
-                    <div className="flex justify-between items-center py-1">
-                      <dt className="text-muted-foreground">Cluster:</dt>
-                      <dd className="font-medium">{vSphereCluster}</dd>
-                    </div>
-                    <Separator />
-                    <div className="flex justify-between items-center py-1">
-                      <dt className="text-muted-foreground">Datastore:</dt>
-                      <dd className="font-medium">{vSphereDatastore}</dd>
-                    </div>
-                    <Separator />
-                    <div className="flex justify-between items-center py-1">
-                      <dt className="text-muted-foreground">Network:</dt>
-                      <dd className="font-medium">{vSphereNetwork}</dd>
-                    </div>
-                  </dl>
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            <TabsContent value="details" className="space-y-4">
-              <Card>
-                <CardHeader className="py-3">
-                  <CardTitle className="text-sm font-medium">Testbed Details</CardTitle>
-                </CardHeader>
-                <CardContent className="pt-0">
-                  <dl className="space-y-2">
-                    <div className="flex justify-between items-center py-1">
-                      <dt className="text-muted-foreground">ID:</dt>
-                      <dd className="font-mono text-sm">{testbed.id}</dd>
-                    </div>
-                    <Separator />
-                    <div className="flex justify-between items-center py-1">
-                      <dt className="text-muted-foreground">Type:</dt>
-                      <dd className="capitalize">{testbed.type}</dd>
-                    </div>
-                    <Separator />
-                    <div className="flex justify-between items-center py-1">
-                      <dt className="text-muted-foreground">Location:</dt>
-                      <dd>{testbed.location}</dd>
-                    </div>
-                    <Separator />
-                    <div className="flex justify-between items-center py-1">
-                      <dt className="text-muted-foreground">Created At:</dt>
-                      <dd>{new Date(testbed.createdAt).toLocaleString()}</dd>
-                    </div>
-                    <Separator />
-                    <div className="flex justify-between items-center py-1">
-                      <dt className="text-muted-foreground">Expires At:</dt>
-                      <dd>{testbed.expiresAt ? new Date(testbed.expiresAt).toLocaleString() : 'Never'}</dd>
-                    </div>
-                    <Separator />
-                    <div className="flex justify-between items-center py-1">
-                      <dt className="text-muted-foreground">Whitelisted:</dt>
-                      <dd>{testbed.whitelisted ? 'Yes' : 'No'}</dd>
-                    </div>
-                    <Separator />
-                    <div className="flex justify-between items-center py-1">
-                      <dt className="text-muted-foreground">Deployments:</dt>
-                      <dd>{testbed.deployments}</dd>
-                    </div>
-                    <Separator />
-                    <div className="flex justify-between items-center py-1">
-                      <dt className="text-muted-foreground">Users:</dt>
-                      <dd>{testbed.users}</dd>
-                    </div>
-                  </dl>
-                </CardContent>
-              </Card>
-            </TabsContent>
-          </Tabs>
+              <TabsContent value="details" className="space-y-4">
+                <Card>
+                  <CardHeader className="py-3">
+                    <CardTitle className="text-sm font-medium">Testbed Details</CardTitle>
+                  </CardHeader>
+                  <CardContent className="pt-0">
+                    <dl className="space-y-2">
+                      <div className="flex justify-between items-center py-1">
+                        <dt className="text-muted-foreground">ID:</dt>
+                        <dd className="font-mono text-sm">{testbed.id}</dd>
+                      </div>
+                      <Separator />
+                      <div className="flex justify-between items-center py-1">
+                        <dt className="text-muted-foreground">Type:</dt>
+                        <dd className="capitalize">{testbed.type}</dd>
+                      </div>
+                      <Separator />
+                      <div className="flex justify-between items-center py-1">
+                        <dt className="text-muted-foreground">Location:</dt>
+                        <dd>{testbed.location}</dd>
+                      </div>
+                      <Separator />
+                      <div className="flex justify-between items-center py-1">
+                        <dt className="text-muted-foreground">Created At:</dt>
+                        <dd>{new Date(testbed.createdAt).toLocaleString()}</dd>
+                      </div>
+                      <Separator />
+                      <div className="flex justify-between items-center py-1">
+                        <dt className="text-muted-foreground">Expires At:</dt>
+                        <dd>{testbed.expiresAt ? new Date(testbed.expiresAt).toLocaleString() : 'Never'}</dd>
+                      </div>
+                      <Separator />
+                      <div className="flex justify-between items-center py-1">
+                        <dt className="text-muted-foreground">Whitelisted:</dt>
+                        <dd>{testbed.whitelisted ? 'Yes' : 'No'}</dd>
+                      </div>
+                      <Separator />
+                      <div className="flex justify-between items-center py-1">
+                        <dt className="text-muted-foreground">Deployments:</dt>
+                        <dd>{testbed.deployments}</dd>
+                      </div>
+                      <Separator />
+                      <div className="flex justify-between items-center py-1">
+                        <dt className="text-muted-foreground">Users:</dt>
+                        <dd>{testbed.users}</dd>
+                      </div>
+                    </dl>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+            </Tabs>
+          </div>
         </SheetContent>
       </Sheet>
 
@@ -562,3 +564,5 @@ export const TestbedDetailSheet: React.FC<TestbedDetailSheetProps> = ({
     </>
   );
 };
+
+export { TestbedDetailSheet };
