@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
@@ -15,7 +16,9 @@ import {
   Cloud,
   Cpu,
   MemoryStick,
-  Folder
+  Folder,
+  GitBranch,
+  Globe
 } from 'lucide-react';
 
 interface SidebarItemProps {
@@ -24,9 +27,10 @@ interface SidebarItemProps {
   path: string;
   collapsed: boolean;
   active: boolean;
+  indent?: boolean;
 }
 
-const SidebarItem = ({ icon: Icon, label, path, collapsed, active }: SidebarItemProps) => {
+const SidebarItem = ({ icon: Icon, label, path, collapsed, active, indent = false }: SidebarItemProps) => {
   return (
     <Link
       to={path}
@@ -34,7 +38,8 @@ const SidebarItem = ({ icon: Icon, label, path, collapsed, active }: SidebarItem
         "flex items-center px-4 py-3 my-1 rounded-lg transition-all duration-200 group",
         active 
           ? "bg-primary/10 text-primary" 
-          : "text-foreground/70 hover:bg-secondary hover:text-foreground"
+          : "text-foreground/70 hover:bg-secondary hover:text-foreground",
+        indent && !collapsed && "pl-8"
       )}
     >
       <Icon 
@@ -169,8 +174,30 @@ export const Sidebar = () => {
             label="Networking" 
             path="/networking"
             collapsed={collapsed}
-            active={location.pathname === '/networking'}
+            active={location.pathname === '/networking' || 
+                   location.pathname === '/networking/subnets' || 
+                   location.pathname === '/networking/routes'}
           />
+          {!collapsed && (
+            <>
+              <SidebarItem 
+                icon={Globe} 
+                label="Subnets" 
+                path="/networking/subnets"
+                collapsed={collapsed}
+                active={location.pathname === '/networking/subnets'}
+                indent={true}
+              />
+              <SidebarItem 
+                icon={GitBranch} 
+                label="Routes" 
+                path="/networking/routes"
+                collapsed={collapsed}
+                active={location.pathname === '/networking/routes'}
+                indent={true}
+              />
+            </>
+          )}
           <SidebarItem 
             icon={HardDrive} 
             label="Storage" 

@@ -13,6 +13,8 @@ import Testbeds from "./pages/compute/Testbeds";
 import Kubernetes from "./pages/compute/Kubernetes";
 import AppsAndServices from "./pages/compute/AppsAndServices";
 import Networking from "./pages/infrastructure/Networking";
+import Subnets from "./pages/infrastructure/Subnets";
+import Routes from "./pages/infrastructure/Routes";
 
 const queryClient = new QueryClient();
 
@@ -92,8 +94,24 @@ const App = () => (
           <Route 
             path="/networking" 
             element={
-              <Layout title="Network Management">
+              <Layout title="Network Overview">
                 <Networking />
+              </Layout>
+            } 
+          />
+          <Route 
+            path="/networking/subnets" 
+            element={
+              <Layout title="Subnet Management">
+                <Subnets />
+              </Layout>
+            } 
+          />
+          <Route 
+            path="/networking/routes" 
+            element={
+              <Layout title="Route Management">
+                <Routes />
               </Layout>
             } 
           />

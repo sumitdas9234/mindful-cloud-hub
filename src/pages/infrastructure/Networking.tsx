@@ -1,14 +1,24 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Separator } from '@/components/ui/separator';
 import { PageHeader } from '@/components/compute/PageHeader';
 import { useToast } from '@/hooks/use-toast';
-import { SubnetsSection } from '@/components/networking/SubnetsSection';
-import { RoutesSection } from '@/components/networking/RoutesSection';
-import { SubnetData } from '@/api/types/networking';
+import { Link } from 'react-router-dom';
+import { 
+  Card, 
+  CardContent, 
+  CardDescription, 
+  CardFooter, 
+  CardHeader, 
+  CardTitle 
+} from '@/components/ui/card';
+import { Network, GitBranch, Globe, ArrowRight } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { SubnetData, RouteData } from '@/api/types/networking';
 
-// Mock data for subnets - same as in SubnetsSection for consistency
+// Mock data
 const mockSubnets: SubnetData[] = [
   {
     id: "subnet-1",
@@ -36,59 +46,51 @@ const mockSubnets: SubnetData[] = [
     location: "US-West",
     environment: "Development"
   },
+];
+
+const mockRoutes: RouteData[] = [
   {
-    id: "subnet-3",
-    name: "Management Network",
-    cidr: "192.168.0.0/24",
-    description: "Management and control plane traffic",
+    id: "route-1",
+    name: "Default Gateway",
+    subnetId: "subnet-1",
+    subnetName: "Production Network",
+    destination: "0.0.0.0/0",
+    nextHop: "10.0.0.1",
+    type: "static",
     status: "active",
-    vlanId: 300,
-    gatewayIp: "192.168.0.1",
-    routesCount: 5,
-    createdAt: "2023-03-05T09:15:00Z",
-    location: "EU-Central",
-    environment: "Infrastructure"
+    priority: 100,
+    createdAt: "2023-01-15T10:30:00Z",
+    updatedAt: "2023-01-15T10:30:00Z",
+    description: "Default route to internet gateway"
   },
   {
-    id: "subnet-4",
-    name: "Backup Network",
-    cidr: "10.10.0.0/16",
-    description: "Subnet for backup operations",
-    status: "inactive",
-    vlanId: 400,
-    gatewayIp: "10.10.0.1",
-    routesCount: 3,
-    createdAt: "2023-04-10T16:45:00Z",
-    location: "APAC",
-    environment: "Backup"
+    id: "route-3",
+    name: "Pod Network",
+    subnetId: "subnet-1",
+    subnetName: "Production Network",
+    destination: "172.17.0.0/16",
+    nextHop: "10.0.0.100",
+    type: "openshift",
+    status: "active",
+    priority: 300,
+    createdAt: "2023-02-10T14:20:00Z",
+    updatedAt: "2023-02-10T14:20:00Z",
+    description: "Route to Kubernetes pod network"
   },
-  {
-    id: "subnet-5",
-    name: "Staging Network",
-    cidr: "192.168.10.0/24",
-    description: "Pre-production staging environment",
-    status: "pending",
-    vlanId: 500,
-    gatewayIp: "192.168.10.1",
-    routesCount: 6,
-    createdAt: "2023-05-20T11:20:00Z",
-    location: "US-East",
-    environment: "Staging"
-  }
 ];
 
 const NetworkingPage: React.FC = () => {
-  const [selectedSubnetId, setSelectedSubnetId] = useState<string | null>(null);
   const { toast } = useToast();
 
   const { data: subnets = [] } = useQuery({
-    queryKey: ['subnets'],
-    queryFn: () => Promise.resolve(mockSubnets),
+    queryKey: ['subnets-summary'],
+    queryFn: () => Promise.resolve(mockSubnets.slice(0, 2)),
   });
 
-  const selectedSubnet = selectedSubnetId 
-    ? subnets.find(subnet => subnet.id === selectedSubnetId) || null
-    : null;
+  const { data: routes = [] } = useQuery({
+    queryKey: ['routes-summary'],
+    queryFn: () => Promise.resolve(mockRoutes.slice(0, 2)),
+  });
 
   const handleRefresh = () => {
     toast({
@@ -97,45 +99,128 @@ const NetworkingPage: React.FC = () => {
     });
   };
 
-  const handleAddResource = () => {
-    toast({
-      title: "Add Network Resource",
-      description: "This would open a dialog to add a new network resource.",
-    });
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'active': return 'bg-green-500/10 text-green-500 hover:bg-green-500/20';
+      case 'inactive': return 'bg-gray-500/10 text-gray-500 hover:bg-gray-500/20';
+      case 'pending': return 'bg-yellow-500/10 text-yellow-500 hover:bg-yellow-500/20';
+      default: return 'bg-gray-500/10 text-gray-500 hover:bg-gray-500/20';
+    }
   };
 
-  const handleSubnetSelect = (subnetId: string) => {
-    setSelectedSubnetId(subnetId);
-  };
-
-  const handleBackToSubnets = () => {
-    setSelectedSubnetId(null);
+  const getTypeColor = (type: string) => {
+    switch (type) {
+      case 'static': return 'bg-blue-500/10 text-blue-500 hover:bg-blue-500/20';
+      case 'openshift': return 'bg-red-500/10 text-red-500 hover:bg-red-500/20';
+      default: return 'bg-gray-500/10 text-gray-500 hover:bg-gray-500/20';
+    }
   };
 
   return (
     <div className="container mx-auto space-y-6">
       <PageHeader 
         title="Network Management"
-        description="Manage your network resources, subnets, and routes."
+        description="An overview of your network resources, subnets, and routes."
         onRefresh={handleRefresh}
-        onAdd={handleAddResource}
-        addButtonText="Add Resource"
       />
 
       <Separator className="my-6" />
 
-      {selectedSubnetId ? (
-        <RoutesSection 
-          subnetId={selectedSubnetId}
-          subnet={selectedSubnet}
-          onBack={handleBackToSubnets}
-        />
-      ) : (
-        <SubnetsSection 
-          onSubnetSelect={handleSubnetSelect}
-          selectedSubnetId={selectedSubnetId}
-        />
-      )}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <Card>
+          <CardHeader className="pb-2">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center">
+                <Globe className="h-5 w-5 text-primary mr-2" />
+                <CardTitle>Subnets</CardTitle>
+              </div>
+              <Badge variant="outline" className="bg-blue-500/10 text-blue-500">
+                {mockSubnets.length} total
+              </Badge>
+            </div>
+            <CardDescription>
+              Manage and organize your network address space
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {subnets.map(subnet => (
+                <div key={subnet.id} className="flex items-center justify-between border-b pb-3">
+                  <div>
+                    <div className="font-medium">{subnet.name}</div>
+                    <div className="text-sm text-muted-foreground">{subnet.cidr}</div>
+                  </div>
+                  <Badge
+                    variant="outline"
+                    className={getStatusColor(subnet.status)}
+                  >
+                    {subnet.status}
+                  </Badge>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+          <CardFooter>
+            <Link to="/networking/subnets" className="w-full">
+              <Button variant="outline" className="w-full">
+                View All Subnets <ArrowRight className="ml-2 h-4 w-4" />
+              </Button>
+            </Link>
+          </CardFooter>
+        </Card>
+
+        <Card>
+          <CardHeader className="pb-2">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center">
+                <GitBranch className="h-5 w-5 text-primary mr-2" />
+                <CardTitle>Routes</CardTitle>
+              </div>
+              <Badge variant="outline" className="bg-blue-500/10 text-blue-500">
+                {mockRoutes.length} total
+              </Badge>
+            </div>
+            <CardDescription>
+              Manage traffic paths between networks
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {routes.map(route => (
+                <div key={route.id} className="flex items-center justify-between border-b pb-3">
+                  <div>
+                    <div className="font-medium">{route.name}</div>
+                    <div className="text-sm text-muted-foreground">
+                      {route.destination} → {route.nextHop}
+                    </div>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Badge
+                      variant="outline"
+                      className={getTypeColor(route.type)}
+                    >
+                      {route.type}
+                    </Badge>
+                    <Badge
+                      variant="outline"
+                      className={getStatusColor(route.status)}
+                    >
+                      {route.status}
+                    </Badge>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+          <CardFooter>
+            <Link to="/networking/routes" className="w-full">
+              <Button variant="outline" className="w-full">
+                View All Routes <ArrowRight className="ml-2 h-4 w-4" />
+              </Button>
+            </Link>
+          </CardFooter>
+        </Card>
+      </div>
     </div>
   );
 };
