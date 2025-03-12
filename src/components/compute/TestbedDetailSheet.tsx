@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import {
   Sheet,
@@ -74,7 +73,8 @@ interface Testbed {
   deployments: number;
   whitelisted?: boolean;
   environment?: 'Openshift' | 'Vanilla' | 'Rancher' | 'Anthos' | 'Charmed';
-  // Additional fields for details
+  environmentVersion?: string;
+  kubernetesVersion?: string;
   vCenterName?: string;
   vSphereDatacenter?: string;
   vSphereCluster?: string;
@@ -96,7 +96,6 @@ interface VirtualMachine {
   os?: string;
 }
 
-// Mock data for VMs - in a real app this would come from the API
 const mockVMs: VirtualMachine[] = [
   {
     id: 'vm-001',
@@ -147,15 +146,12 @@ export const TestbedDetailSheet: React.FC<TestbedDetailSheetProps> = ({
 
   if (!testbed) return null;
 
-  // Generate a mock kubectl command
   const kubeCtlCommand = `kubectl config use-context ${testbed.name.toLowerCase().replace(/\s+/g, '-')}-context\nkubectl get pods -n default`;
-  
-  // Mock values for connect tab
+
   const mockSshKey = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC6vSUlP66dFJH+/xj9VRkO5z9I9dP...";
   const mockSshUsername = "testbed-admin";
   const mockSshPassword = "Str0ngP@ssw0rd!";
 
-  // Mock values for vSphere infrastructure - in a real app these would come from the testbed
   const vCenterName = testbed.vCenterName || "vcenter-01.datacenter.local";
   const vSphereDatacenter = testbed.vSphereDatacenter || "Datacenter-East";
   const vSphereCluster = testbed.vSphereCluster || "Cluster-01";
@@ -164,7 +160,6 @@ export const TestbedDetailSheet: React.FC<TestbedDetailSheetProps> = ({
   const logsDirectory = testbed.logsDirectory || "/var/log/testbeds/" + testbed.id;
   const externalDashboardUrl = testbed.externalDashboardUrl || "https://dashboard.example.com/testbeds/" + testbed.id;
 
-  // In a real application, VMs would be loaded from an API
   const virtualMachines = testbed.virtualMachines || mockVMs;
 
   const getStatusColor = (status: Testbed['status']) => {
@@ -213,12 +208,10 @@ export const TestbedDetailSheet: React.FC<TestbedDetailSheetProps> = ({
   };
 
   const handleOpenLogs = () => {
-    // This would typically open a logs viewer or download logs in a real application
     alert(`Accessing logs at: ${logsDirectory}`);
   };
 
   const handleDownloadKubeconfig = () => {
-    // In a real app, this would trigger a download for the kubeconfig file
     const element = document.createElement("a");
     const file = new Blob([kubeCtlCommand], {type: 'text/plain'});
     element.href = URL.createObjectURL(file);
@@ -227,6 +220,9 @@ export const TestbedDetailSheet: React.FC<TestbedDetailSheetProps> = ({
     element.click();
     document.body.removeChild(element);
   };
+
+  const environmentVersion = testbed?.environmentVersion || "4.17";
+  const kubernetesVersion = testbed?.kubernetesVersion || "1.29";
 
   return (
     <>
@@ -263,13 +259,13 @@ export const TestbedDetailSheet: React.FC<TestbedDetailSheetProps> = ({
             </TabsList>
 
             <TabsContent value="overview" className="space-y-4">
-              <div className="grid grid-cols-1 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <Card>
                   <CardHeader className="py-2">
                     <CardTitle className="text-sm font-medium">Environment</CardTitle>
                   </CardHeader>
                   <CardContent className="pb-3 pt-0">
-                    <div className="flex items-center">
+                    <div className="flex items-center mb-2">
                       <Badge variant="outline" className={`
                         ${testbed.environment === 'Openshift' ? 'text-red-500 border-red-500' :
                           testbed.environment === 'Vanilla' ? 'text-blue-500 border-blue-500' :
@@ -280,6 +276,11 @@ export const TestbedDetailSheet: React.FC<TestbedDetailSheetProps> = ({
                       `}>
                         {testbed.environment || 'Not specified'}
                       </Badge>
+                      <span className="ml-2 text-sm">{environmentVersion}</span>
+                    </div>
+                    <div className="flex items-center">
+                      <span className="text-sm font-medium text-muted-foreground">Kubernetes:</span>
+                      <span className="ml-2 text-sm">{kubernetesVersion}</span>
                     </div>
                   </CardContent>
                 </Card>
@@ -357,36 +358,40 @@ export const TestbedDetailSheet: React.FC<TestbedDetailSheetProps> = ({
                         </div>
                       </div>
 
-                      <div className="flex justify-between">
-                        <div className="flex flex-col gap-2 w-full">
-                          <Button 
-                            variant="default" 
-                            size="sm" 
-                            onClick={() => setConnectDialogOpen(true)}
-                            className="ml-auto w-1/2"
-                          >
-                            Connect
-                          </Button>
-                          <div className="flex gap-2">
-                            <Button 
-                              variant="default" 
-                              size="sm" 
-                              onClick={handleOpenLogs}
-                              className="w-1/2"
-                            >
-                              Logs
-                            </Button>
-                            <Button 
-                              variant="default" 
-                              size="sm" 
-                              onClick={handleDownloadKubeconfig}
-                              className="w-1/2"
-                            >
-                              Kubeconfig
-                            </Button>
-                          </div>
-                        </div>
-                      </div>
+                      <Button 
+                        variant="default" 
+                        size="sm" 
+                        onClick={() => setConnectDialogOpen(true)}
+                        className="w-1/3"
+                      >
+                        Connect
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader className="py-2">
+                    <CardTitle className="text-sm font-medium">Actions</CardTitle>
+                  </CardHeader>
+                  <CardContent className="pb-3 pt-0">
+                    <div className="flex gap-2">
+                      <Button 
+                        variant="default" 
+                        size="sm" 
+                        onClick={handleOpenLogs}
+                        className="w-1/2"
+                      >
+                        Logs
+                      </Button>
+                      <Button 
+                        variant="default" 
+                        size="sm" 
+                        onClick={handleDownloadKubeconfig}
+                        className="w-1/2"
+                      >
+                        Kubeconfig
+                      </Button>
                     </div>
                   </CardContent>
                 </Card>
