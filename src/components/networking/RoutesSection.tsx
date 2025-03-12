@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { 
@@ -9,12 +8,14 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { 
   MoreVertical, RotateCw, Router, 
-  ChevronLeft, GitBranch 
+  ChevronRight, GitBranch, Home, Network
 } from 'lucide-react';
 import { RouteData, RouteFilter, SubnetData } from '@/api/types/networking';
 import { DataTable, Column } from '@/components/compute/DataTable';
 import { SearchBar } from '@/components/compute/SearchBar';
 import { useToast } from '@/hooks/use-toast';
+import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 // Mock data for routes
 const mockRoutes: RouteData[] = [
@@ -144,7 +145,7 @@ export const RoutesSection: React.FC<RoutesSectionProps> = ({
   onBack
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
-  const [typeFilter, setTypeFilter] = useState<RouteFilter['type']>('all');
+  const [activeTab, setActiveTab] = useState<RouteFilter['type']>('all');
   const { toast } = useToast();
 
   const { data: routes = [], isLoading, refetch } = useQuery({
@@ -163,7 +164,7 @@ export const RoutesSection: React.FC<RoutesSectionProps> = ({
       route.nextHop.toLowerCase().includes(searchQuery.toLowerCase()) ||
       (route.description && route.description.toLowerCase().includes(searchQuery.toLowerCase()));
     
-    const matchesType = typeFilter === 'all' || route.type === typeFilter;
+    const matchesType = activeTab === 'all' || route.type === activeTab;
     
     return matchesSearch && matchesType;
   });
@@ -273,25 +274,49 @@ export const RoutesSection: React.FC<RoutesSectionProps> = ({
 
   return (
     <div className="space-y-4">
+      <Breadcrumb className="mb-6">
+        <BreadcrumbList>
+          <BreadcrumbItem>
+            <BreadcrumbLink href="/">
+              <Home className="h-4 w-4 mr-1" />
+              Dashboard
+            </BreadcrumbLink>
+          </BreadcrumbItem>
+          <BreadcrumbSeparator />
+          <BreadcrumbItem>
+            <BreadcrumbLink href="/networking">
+              <Network className="h-4 w-4 mr-1" />
+              Networking
+            </BreadcrumbLink>
+          </BreadcrumbItem>
+          <BreadcrumbSeparator />
+          <BreadcrumbItem>
+            <BreadcrumbLink onClick={onBack} className="cursor-pointer">
+              Subnets
+            </BreadcrumbLink>
+          </BreadcrumbItem>
+          <BreadcrumbSeparator />
+          <BreadcrumbItem>
+            <BreadcrumbPage>{subnet?.name || 'Routes'}</BreadcrumbPage>
+          </BreadcrumbItem>
+        </BreadcrumbList>
+      </Breadcrumb>
+
       <div className="flex items-center justify-between">
-        <div className="flex items-center">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={onBack}
-            className="mr-4"
-          >
-            <ChevronLeft className="mr-2 h-4 w-4" />
-            Back to Subnets
-          </Button>
-          <div>
-            <h2 className="text-2xl font-bold">{subnet?.name || 'All Routes'}</h2>
-            <p className="text-sm text-muted-foreground">
-              {subnet 
-                ? `CIDR: ${subnet.cidr} | Gateway: ${subnet.gatewayIp}`
-                : 'Viewing all network routes'}
-            </p>
+        <div className="flex flex-col">
+          <div className="flex items-center">
+            <h2 className="text-xl font-semibold mr-3">{subnet?.name || 'All Routes'}</h2>
+            {subnet && (
+              <Badge variant="outline" className="bg-blue-500/10 text-blue-500">
+                {subnet.cidr}
+              </Badge>
+            )}
           </div>
+          {subnet && (
+            <p className="text-sm text-muted-foreground mt-1">
+              Gateway: {subnet.gatewayIp} · {subnet.routesCount} routes · {subnet.environment}
+            </p>
+          )}
         </div>
         <div className="flex space-x-2">
           <Button onClick={handleRefresh} variant="outline" size="sm">
@@ -301,38 +326,29 @@ export const RoutesSection: React.FC<RoutesSectionProps> = ({
         </div>
       </div>
       
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between mt-6">
         <SearchBar 
           searchQuery={searchQuery}
           setSearchQuery={setSearchQuery}
           placeholder="Search routes..."
         />
-        <div className="flex items-center space-x-2">
-          <Button
-            variant={typeFilter === 'all' ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => setTypeFilter('all')}
-          >
-            <Router className="mr-2 h-4 w-4" />
-            All
-          </Button>
-          <Button
-            variant={typeFilter === 'static' ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => setTypeFilter('static')}
-          >
-            <Router className="mr-2 h-4 w-4" />
-            Static
-          </Button>
-          <Button
-            variant={typeFilter === 'openshift' ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => setTypeFilter('openshift')}
-          >
-            <GitBranch className="mr-2 h-4 w-4" />
-            OpenShift
-          </Button>
-        </div>
+        
+        <Tabs defaultValue="all" className="w-auto" onValueChange={(value) => setActiveTab(value as RouteFilter['type'])}>
+          <TabsList>
+            <TabsTrigger value="all">
+              <Router className="mr-1.5 h-4 w-4" />
+              All
+            </TabsTrigger>
+            <TabsTrigger value="static">
+              <Router className="mr-1.5 h-4 w-4" />
+              Static
+            </TabsTrigger>
+            <TabsTrigger value="openshift">
+              <GitBranch className="mr-1.5 h-4 w-4" />
+              OpenShift
+            </TabsTrigger>
+          </TabsList>
+        </Tabs>
       </div>
 
       <DataTable

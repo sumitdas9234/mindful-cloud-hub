@@ -122,7 +122,7 @@ const NetworkingPage: React.FC = () => {
         addButtonText="Add Resource"
       />
 
-      <Separator />
+      <Separator className="my-6" />
 
       {selectedSubnetId ? (
         <RoutesSection 
