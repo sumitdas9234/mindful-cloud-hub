@@ -1,18 +1,13 @@
-
-import React from 'react';
+import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { 
-  Table, TableBody, TableCell, TableHead, 
-  TableHeader, TableRow 
-} from '@/components/ui/table';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Network, ChevronRight } from 'lucide-react';
+import { Network } from 'lucide-react';
 import { SubnetData } from '@/api/types/networking';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { EmptyState } from '@/components/compute/EmptyState';
+import { SubnetDetailSheet } from './SubnetDetailSheet';
 
-// Mock data for subnets
 const mockSubnets: SubnetData[] = [
   {
     id: "subnet-1",
@@ -82,18 +77,23 @@ const mockSubnets: SubnetData[] = [
 ];
 
 interface SubnetsSectionProps {
-  onSubnetSelect: (subnetId: string) => void;
-  selectedSubnetId: string | null;
+  onSubnetSelect?: (subnetId: string) => void;
+  selectedSubnetId?: string | null;
 }
 
-export const SubnetsSection: React.FC<SubnetsSectionProps> = ({ 
-  onSubnetSelect,
-  selectedSubnetId
-}) => {
+export const SubnetsSection: React.FC<SubnetsSectionProps> = () => {
+  const [selectedSubnet, setSelectedSubnet] = useState<SubnetData | null>(null);
+  const [isDetailOpen, setIsDetailOpen] = useState(false);
+
   const { data: subnets = [], isLoading } = useQuery({
     queryKey: ['subnets'],
     queryFn: () => Promise.resolve(mockSubnets),
   });
+
+  const handleRowClick = (subnet: SubnetData) => {
+    setSelectedSubnet(subnet);
+    setIsDetailOpen(true);
+  };
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -145,14 +145,14 @@ export const SubnetsSection: React.FC<SubnetsSectionProps> = ({
               <TableHead>Gateway</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Routes</TableHead>
-              <TableHead className="w-[50px]"></TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {subnets.map((subnet) => (
               <TableRow 
                 key={subnet.id}
-                className={selectedSubnetId === subnet.id ? "bg-muted/50" : ""}
+                className="cursor-pointer hover:bg-muted/50"
+                onClick={() => handleRowClick(subnet)}
               >
                 <TableCell className="font-medium">{subnet.name}</TableCell>
                 <TableCell>{subnet.cidr}</TableCell>
@@ -163,19 +163,16 @@ export const SubnetsSection: React.FC<SubnetsSectionProps> = ({
                   </Badge>
                 </TableCell>
                 <TableCell>{subnet.routesCount}</TableCell>
-                <TableCell>
-                  <Button 
-                    variant="ghost" 
-                    size="icon"
-                    onClick={() => onSubnetSelect(subnet.id)}
-                  >
-                    <ChevronRight className="h-4 w-4" />
-                  </Button>
-                </TableCell>
               </TableRow>
             ))}
           </TableBody>
         </Table>
+
+        <SubnetDetailSheet
+          subnet={selectedSubnet}
+          open={isDetailOpen}
+          onOpenChange={setIsDetailOpen}
+        />
       </CardContent>
     </Card>
   );

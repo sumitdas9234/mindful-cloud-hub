@@ -8,16 +8,15 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { 
   MoreVertical, RotateCw, Router, 
-  ChevronRight, GitBranch, Home, Network
+  GitBranch
 } from 'lucide-react';
 import { RouteData, RouteFilter, SubnetData } from '@/api/types/networking';
 import { DataTable, Column } from '@/components/compute/DataTable';
 import { SearchBar } from '@/components/compute/SearchBar';
 import { useToast } from '@/hooks/use-toast';
-import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { RouteDetailSheet } from './RouteDetailSheet';
 
-// Mock data for routes
 const mockRoutes: RouteData[] = [
   {
     id: "route-1",
@@ -136,16 +135,17 @@ const mockRoutes: RouteData[] = [
 interface RoutesSectionProps {
   subnetId: string | null;
   subnet: SubnetData | null;
-  onBack: () => void;
+  onBack?: () => void;
 }
 
 export const RoutesSection: React.FC<RoutesSectionProps> = ({ 
   subnetId,
-  subnet,
-  onBack
+  subnet
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState<RouteFilter['type']>('all');
+  const [selectedRoute, setSelectedRoute] = useState<RouteData | null>(null);
+  const [isDetailOpen, setIsDetailOpen] = useState(false);
   const { toast } = useToast();
 
   const { data: routes = [], isLoading, refetch } = useQuery({
@@ -199,6 +199,11 @@ export const RoutesSection: React.FC<RoutesSectionProps> = ({
       case 'openshift': return 'bg-red-500/10 text-red-500 hover:bg-red-500/20';
       default: return 'bg-gray-500/10 text-gray-500 hover:bg-gray-500/20';
     }
+  };
+
+  const handleRowClick = (route: RouteData) => {
+    setSelectedRoute(route);
+    setIsDetailOpen(true);
   };
 
   const columns: Column<RouteData>[] = [
@@ -274,34 +279,6 @@ export const RoutesSection: React.FC<RoutesSectionProps> = ({
 
   return (
     <div className="space-y-4">
-      <Breadcrumb className="mb-6">
-        <BreadcrumbList>
-          <BreadcrumbItem>
-            <BreadcrumbLink href="/">
-              <Home className="h-4 w-4 mr-1" />
-              Dashboard
-            </BreadcrumbLink>
-          </BreadcrumbItem>
-          <BreadcrumbSeparator />
-          <BreadcrumbItem>
-            <BreadcrumbLink href="/networking">
-              <Network className="h-4 w-4 mr-1" />
-              Networking
-            </BreadcrumbLink>
-          </BreadcrumbItem>
-          <BreadcrumbSeparator />
-          <BreadcrumbItem>
-            <BreadcrumbLink onClick={onBack} className="cursor-pointer">
-              Subnets
-            </BreadcrumbLink>
-          </BreadcrumbItem>
-          <BreadcrumbSeparator />
-          <BreadcrumbItem>
-            <BreadcrumbPage>{subnet?.name || 'Routes'}</BreadcrumbPage>
-          </BreadcrumbItem>
-        </BreadcrumbList>
-      </Breadcrumb>
-
       <div className="flex items-center justify-between">
         <div className="flex flex-col">
           <div className="flex items-center">
@@ -359,8 +336,16 @@ export const RoutesSection: React.FC<RoutesSectionProps> = ({
         emptyTitle="No Routes Found"
         emptyDescription={searchQuery ? "No routes match your search criteria." : "No routes have been added yet."}
         searchQuery={searchQuery}
+        onRowClick={handleRowClick}
         actionColumn={actionColumn}
+      />
+
+      <RouteDetailSheet
+        route={selectedRoute}
+        open={isDetailOpen}
+        onOpenChange={setIsDetailOpen}
       />
     </div>
   );
 };
+
