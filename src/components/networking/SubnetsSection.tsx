@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { 
@@ -8,7 +7,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { 
-  MoreVertical, Network 
+  MoreVertical
 } from 'lucide-react';
 import { SubnetData } from '@/api/types/networking';
 import { DataTable, Column } from '@/components/compute/DataTable';
@@ -199,11 +198,6 @@ export const SubnetsSection: React.FC<SubnetsSectionProps> = () => {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-semibold">Subnets</h2>
-        <div className="flex space-x-2">
-          <Button onClick={handleRefresh} variant="outline" size="sm">
-            Refresh
-          </Button>
-        </div>
       </div>
       
       <SearchBar 

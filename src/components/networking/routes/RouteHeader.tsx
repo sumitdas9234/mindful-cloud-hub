@@ -1,8 +1,6 @@
 
 import React from 'react';
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { RotateCw } from 'lucide-react';
 import { SubnetData } from '@/api/types/networking';
 
 interface RouteHeaderProps {
@@ -10,7 +8,7 @@ interface RouteHeaderProps {
   handleRefresh: () => void;
 }
 
-export const RouteHeader: React.FC<RouteHeaderProps> = ({ subnet, handleRefresh }) => {
+export const RouteHeader: React.FC<RouteHeaderProps> = ({ subnet }) => {
   return (
     <div className="flex items-center justify-between">
       <div className="flex flex-col">
@@ -27,12 +25,6 @@ export const RouteHeader: React.FC<RouteHeaderProps> = ({ subnet, handleRefresh 
             Gateway: {subnet.gatewayIp} · {subnet.routesCount} routes · {subnet.environment}
           </p>
         )}
-      </div>
-      <div className="flex space-x-2">
-        <Button onClick={handleRefresh} variant="outline" size="sm">
-          <RotateCw className="mr-2 h-4 w-4" />
-          Refresh
-        </Button>
       </div>
     </div>
   );
