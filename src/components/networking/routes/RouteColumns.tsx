@@ -54,7 +54,12 @@ export const getRouteColumns = (): Column<RouteData & { routeStatus?: string }>[
       route.routeStatus ? (
         <Badge
           variant="outline"
-          className={getRouteStatusBadgeColor(route.routeStatus)}
+          className={`
+            ${route.routeStatus === 'attached' ? 'bg-blue-500/10 text-blue-500 hover:bg-blue-500/20' : ''}
+            ${route.routeStatus === 'reserved' ? 'bg-yellow-500/10 text-yellow-500 hover:bg-yellow-500/20' : ''}
+            ${route.routeStatus === 'orphaned' ? 'bg-red-500/10 text-red-500 hover:bg-red-500/20' : ''}
+            ${route.routeStatus === 'available' ? 'bg-green-500/10 text-green-500 hover:bg-green-500/20' : ''}
+          `}
         >
           {route.routeStatus}
         </Badge>

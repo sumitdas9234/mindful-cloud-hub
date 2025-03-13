@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { 
   Search, 
@@ -8,8 +9,8 @@ import {
   CheckCircle2, 
   AlertCircle,
   XCircle,
-  CpuIcon,
-  Database
+  Clock,
+  Shield
 } from 'lucide-react';
 import { 
   Card, 
@@ -37,7 +38,6 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Progress } from "@/components/ui/progress";
 import { useQuery } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
 import { ClusterDetailSheet } from '@/components/compute/ClusterDetailSheet';
@@ -51,13 +51,10 @@ interface KubernetesCluster {
   provider: 'on-premise' | 'aws' | 'azure' | 'gcp';
   location: string;
   nodeCount: number;
-  cpuUsage: number;
-  memoryUsage: number;
-  storageUsage: number;
-  namespaceCount: number;
-  podCount: number;
-  deploymentCount: number;
-  serviceCount: number;
+  portworxInstalled: boolean;
+  portworxVersion?: string;
+  needsUpgrade: boolean;
+  certificates: number;
   createdAt: string;
   lastUpdatedAt: string;
 }
@@ -72,13 +69,10 @@ const mockKubernetesClusters: KubernetesCluster[] = [
     provider: 'on-premise',
     location: 'East Datacenter',
     nodeCount: 8,
-    cpuUsage: 65,
-    memoryUsage: 72,
-    storageUsage: 45,
-    namespaceCount: 12,
-    podCount: 86,
-    deploymentCount: 24,
-    serviceCount: 36,
+    portworxInstalled: true,
+    portworxVersion: '2.11.5',
+    needsUpgrade: false,
+    certificates: 12,
     createdAt: '2023-01-15T10:30:00Z',
     lastUpdatedAt: '2023-08-10T15:45:00Z'
   },
@@ -90,13 +84,10 @@ const mockKubernetesClusters: KubernetesCluster[] = [
     provider: 'aws',
     location: 'us-east-1',
     nodeCount: 5,
-    cpuUsage: 42,
-    memoryUsage: 50,
-    storageUsage: 35,
-    namespaceCount: 8,
-    podCount: 48,
-    deploymentCount: 16,
-    serviceCount: 20,
+    portworxInstalled: true,
+    portworxVersion: '2.10.2',
+    needsUpgrade: true,
+    certificates: 8,
     createdAt: '2023-03-20T09:15:00Z',
     lastUpdatedAt: '2023-08-05T11:30:00Z'
   },
@@ -108,13 +99,9 @@ const mockKubernetesClusters: KubernetesCluster[] = [
     provider: 'azure',
     location: 'East US',
     nodeCount: 4,
-    cpuUsage: 78,
-    memoryUsage: 85,
-    storageUsage: 60,
-    namespaceCount: 6,
-    podCount: 52,
-    deploymentCount: 18,
-    serviceCount: 22,
+    portworxInstalled: false,
+    needsUpgrade: true,
+    certificates: 6,
     createdAt: '2023-02-05T14:20:00Z',
     lastUpdatedAt: '2023-08-12T08:45:00Z'
   },
@@ -126,13 +113,9 @@ const mockKubernetesClusters: KubernetesCluster[] = [
     provider: 'gcp',
     location: 'us-central1',
     nodeCount: 3,
-    cpuUsage: 10,
-    memoryUsage: 15,
-    storageUsage: 8,
-    namespaceCount: 4,
-    podCount: 12,
-    deploymentCount: 6,
-    serviceCount: 8,
+    portworxInstalled: false,
+    needsUpgrade: false,
+    certificates: 4,
     createdAt: '2023-08-01T16:40:00Z',
     lastUpdatedAt: '2023-08-01T16:40:00Z'
   },
@@ -144,13 +127,10 @@ const mockKubernetesClusters: KubernetesCluster[] = [
     provider: 'on-premise',
     location: 'West Datacenter',
     nodeCount: 6,
-    cpuUsage: 0,
-    memoryUsage: 0,
-    storageUsage: 25,
-    namespaceCount: 10,
-    podCount: 0,
-    deploymentCount: 22,
-    serviceCount: 28,
+    portworxInstalled: true,
+    portworxVersion: '2.9.1',
+    needsUpgrade: true,
+    certificates: 10,
     createdAt: '2022-11-10T11:05:00Z',
     lastUpdatedAt: '2023-07-25T09:30:00Z'
   }
@@ -164,16 +144,11 @@ interface KubernetesStats {
   provisioning: number;
   stopped: number;
   totalNodes: number;
-  totalPods: number;
-  totalDeployments: number;
-  avgCpuUsage: number;
-  avgMemoryUsage: number;
-  avgStorageUsage: number;
+  totalCertificates: number;
+  needsUpgrade: number;
 }
 
 const calculateStats = (clusters: KubernetesCluster[]): KubernetesStats => {
-  const activeClusters = clusters.filter(c => c.status === 'running' || c.status === 'degraded');
-  
   return {
     total: clusters.length,
     running: clusters.filter(c => c.status === 'running').length,
@@ -181,11 +156,8 @@ const calculateStats = (clusters: KubernetesCluster[]): KubernetesStats => {
     provisioning: clusters.filter(c => c.status === 'provisioning').length,
     stopped: clusters.filter(c => c.status === 'stopped').length,
     totalNodes: clusters.reduce((sum, c) => sum + c.nodeCount, 0),
-    totalPods: clusters.reduce((sum, c) => sum + c.podCount, 0),
-    totalDeployments: clusters.reduce((sum, c) => sum + c.deploymentCount, 0),
-    avgCpuUsage: activeClusters.length ? Math.round(activeClusters.reduce((sum, c) => sum + c.cpuUsage, 0) / activeClusters.length) : 0,
-    avgMemoryUsage: activeClusters.length ? Math.round(activeClusters.reduce((sum, c) => sum + c.memoryUsage, 0) / activeClusters.length) : 0,
-    avgStorageUsage: activeClusters.length ? Math.round(activeClusters.reduce((sum, c) => sum + c.storageUsage, 0) / activeClusters.length) : 0
+    totalCertificates: clusters.reduce((sum, c) => sum + c.certificates, 0),
+    needsUpgrade: clusters.filter(c => c.needsUpgrade).length
   };
 };
 
@@ -213,20 +185,20 @@ const KubernetesPage: React.FC = () => {
     refetch();
     toast({
       title: "Refreshing clusters",
-      description: "The Kubernetes cluster list has been refreshed.",
+      description: "The production cluster list has been refreshed.",
     });
   };
 
   const handleAddCluster = () => {
     toast({
-      title: "Add Kubernetes Cluster",
-      description: "This would open a dialog to add a new Kubernetes cluster.",
+      title: "Add Production Cluster",
+      description: "This would open a dialog to add a new production cluster.",
     });
   };
 
   const handleClusterAction = (action: string, cluster: KubernetesCluster) => {
     toast({
-      title: `${action} Kubernetes Cluster`,
+      title: `${action} Production Cluster`,
       description: `Action "${action}" has been triggered for cluster "${cluster.name}".`,
     });
   };
@@ -281,24 +253,30 @@ const KubernetesPage: React.FC = () => {
     }
   };
 
-  const getResourceColor = (usage: number) => {
-    if (usage >= 80) return 'text-red-500';
-    if (usage >= 60) return 'text-yellow-500';
-    return 'text-green-500';
+  const getUpgradeStatus = (needsUpgrade: boolean) => {
+    return needsUpgrade 
+      ? <Badge variant="outline" className="bg-yellow-500/10 text-yellow-500">Needs upgrade</Badge>
+      : <Badge variant="outline" className="bg-green-500/10 text-green-500">Up to date</Badge>;
   };
 
-  const getProgressColor = (usage: number) => {
-    if (usage >= 80) return 'bg-red-500';
-    if (usage >= 60) return 'bg-yellow-500';
-    return 'bg-green-500';
+  const getPortworxStatus = (installed: boolean, version?: string) => {
+    return installed
+      ? <div className="flex items-center">
+          <CheckCircle2 className="h-3 w-3 text-green-500 mr-1.5" />
+          <span>{version || 'Installed'}</span>
+        </div>
+      : <div className="flex items-center">
+          <XCircle className="h-3 w-3 text-red-500 mr-1.5" />
+          <span>Not installed</span>
+        </div>;
   };
 
   return (
     <div className="container mx-auto space-y-6">
       <div className="flex flex-col space-y-4 md:flex-row md:items-center md:justify-between md:space-y-0">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Kubernetes Management</h1>
-          <p className="text-muted-foreground">Manage your Kubernetes infrastructure and workloads.</p>
+          <h1 className="text-2xl font-bold tracking-tight">Production Clusters</h1>
+          <p className="text-muted-foreground">Manage your production Kubernetes infrastructure.</p>
         </div>
         <div className="flex items-center space-x-2">
           <Button onClick={handleRefresh} variant="outline" size="sm">
@@ -331,16 +309,16 @@ const KubernetesPage: React.FC = () => {
           <CardContent>
             <div className="text-2xl font-bold">{stats.totalNodes}</div>
             <p className="text-xs text-muted-foreground mt-1">
-              {stats.totalPods} pods running
+              Across all clusters
             </p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Deployments</CardTitle>
+            <CardTitle className="text-sm font-medium">Certificates</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.totalDeployments}</div>
+            <div className="text-2xl font-bold">{stats.totalCertificates}</div>
             <p className="text-xs text-muted-foreground mt-1">
               Across all clusters
             </p>
@@ -348,32 +326,16 @@ const KubernetesPage: React.FC = () => {
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Resource Usage</CardTitle>
+            <CardTitle className="text-sm font-medium">Upgrade Status</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center">
-                  <CpuIcon className="h-4 w-4 mr-1" />
-                  <span className="text-xs text-muted-foreground">CPU</span>
-                </div>
-                <span className={`text-xs font-medium ${getResourceColor(stats.avgCpuUsage)}`}>
-                  {stats.avgCpuUsage}%
-                </span>
-              </div>
-              <Progress value={stats.avgCpuUsage} className={getProgressColor(stats.avgCpuUsage)} />
-              
-              <div className="flex items-center justify-between">
-                <div className="flex items-center">
-                  <div className="h-4 w-4 mr-1">📊</div>
-                  <span className="text-xs text-muted-foreground">Memory</span>
-                </div>
-                <span className={`text-xs font-medium ${getResourceColor(stats.avgMemoryUsage)}`}>
-                  {stats.avgMemoryUsage}%
-                </span>
-              </div>
-              <Progress value={stats.avgMemoryUsage} className={getProgressColor(stats.avgMemoryUsage)} />
+            <div className="flex items-center">
+              <Shield className="h-5 w-5 mr-2 text-yellow-500" />
+              <div className="text-2xl font-bold">{stats.needsUpgrade}</div>
             </div>
+            <p className="text-xs text-muted-foreground mt-1">
+              Clusters need upgrade
+            </p>
           </CardContent>
         </Card>
       </div>
@@ -393,16 +355,16 @@ const KubernetesPage: React.FC = () => {
 
       {isLoading ? (
         <div className="flex items-center justify-center h-64">
-          <p className="text-muted-foreground">Loading Kubernetes clusters...</p>
+          <p className="text-muted-foreground">Loading production clusters...</p>
         </div>
       ) : filteredClusters.length === 0 ? (
         <div className="flex flex-col items-center justify-center h-64">
           <Cloud className="h-12 w-12 text-muted-foreground mb-4" />
-          <h3 className="text-lg font-medium">No Kubernetes Clusters Found</h3>
+          <h3 className="text-lg font-medium">No Production Clusters Found</h3>
           <p className="text-muted-foreground">
             {searchQuery
               ? "No clusters match your search criteria."
-              : "No Kubernetes clusters have been added yet."}
+              : "No production clusters have been added yet."}
           </p>
         </div>
       ) : (
@@ -415,9 +377,9 @@ const KubernetesPage: React.FC = () => {
                 <TableHead>Provider</TableHead>
                 <TableHead>Version</TableHead>
                 <TableHead>Nodes</TableHead>
-                <TableHead>Resources</TableHead>
-                <TableHead>Workloads</TableHead>
-                <TableHead>Last Updated</TableHead>
+                <TableHead>Portworx</TableHead>
+                <TableHead>Certificates</TableHead>
+                <TableHead>Upgrade</TableHead>
                 <TableHead className="w-[50px]"></TableHead>
               </TableRow>
             </TableHeader>
@@ -428,19 +390,16 @@ const KubernetesPage: React.FC = () => {
                   className="cursor-pointer"
                   onClick={() => openClusterDetails(cluster)}
                 >
-                  <TableCell className="font-medium">
-                    <div>
-                      {cluster.name}
-                      <p className="text-xs text-muted-foreground">{cluster.location}</p>
-                    </div>
+                  <TableCell className="font-medium py-2">
+                    {cluster.name}
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="py-2">
                     <div className="flex items-center">
                       {getStatusIcon(cluster.status)}
                       <span className="ml-1 capitalize">{cluster.status}</span>
                     </div>
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="py-2">
                     <Badge
                       variant="outline"
                       className={getProviderBadgeColor(cluster.provider)}
@@ -448,31 +407,21 @@ const KubernetesPage: React.FC = () => {
                       {cluster.provider}
                     </Badge>
                   </TableCell>
-                  <TableCell>v{cluster.version}</TableCell>
-                  <TableCell>{cluster.nodeCount}</TableCell>
-                  <TableCell>
-                    <div className="space-y-1">
-                      <div className="flex items-center justify-between text-xs">
-                        <span>CPU</span>
-                        <span className={getResourceColor(cluster.cpuUsage)}>{cluster.cpuUsage}%</span>
-                      </div>
-                      <Progress value={cluster.cpuUsage} className={`h-1 ${getProgressColor(cluster.cpuUsage)}`} />
-                      <div className="flex items-center justify-between text-xs">
-                        <span>Mem</span>
-                        <span className={getResourceColor(cluster.memoryUsage)}>{cluster.memoryUsage}%</span>
-                      </div>
-                      <Progress value={cluster.memoryUsage} className={`h-1 ${getProgressColor(cluster.memoryUsage)}`} />
+                  <TableCell className="py-2">v{cluster.version}</TableCell>
+                  <TableCell className="py-2">{cluster.nodeCount}</TableCell>
+                  <TableCell className="py-2">
+                    {getPortworxStatus(cluster.portworxInstalled, cluster.portworxVersion)}
+                  </TableCell>
+                  <TableCell className="py-2">
+                    <div className="flex items-center">
+                      <Shield className="h-3.5 w-3.5 text-blue-500 mr-1.5" />
+                      <span>{cluster.certificates}</span>
                     </div>
                   </TableCell>
-                  <TableCell>
-                    <div className="text-xs">
-                      <div>{cluster.namespaceCount} namespaces</div>
-                      <div>{cluster.podCount} pods</div>
-                      <div>{cluster.deploymentCount} deployments</div>
-                    </div>
+                  <TableCell className="py-2">
+                    {getUpgradeStatus(cluster.needsUpgrade)}
                   </TableCell>
-                  <TableCell>{new Date(cluster.lastUpdatedAt).toLocaleString()}</TableCell>
-                  <TableCell onClick={(e) => e.stopPropagation()}>
+                  <TableCell className="py-2" onClick={(e) => e.stopPropagation()}>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <Button variant="ghost" size="icon">

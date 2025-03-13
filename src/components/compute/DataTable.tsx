@@ -95,13 +95,13 @@ export function DataTable<T>({
                 {columns.map((column) => (
                   <TableCell 
                     key={`${keyExtractor(item)}-${column.key}`} 
-                    className="py-2.5"
+                    className={`py-2 ${column.className || ""}`}
                   >
                     {column.cell(item)}
                   </TableCell>
                 ))}
                 {actionColumn && (
-                  <TableCell className="py-2.5" onClick={(e) => e.stopPropagation()}>
+                  <TableCell className="py-2" onClick={(e) => e.stopPropagation()}>
                     {actionColumn(item)}
                   </TableCell>
                 )}
