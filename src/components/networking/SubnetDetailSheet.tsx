@@ -43,8 +43,7 @@ import {
 } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
-import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
+import { Progress } from '@/components/ui/progress';
 
 interface SubnetDetailSheetProps {
   subnet: TransformedSubnetData | null;
@@ -84,60 +83,38 @@ export const SubnetDetailSheet: React.FC<SubnetDetailSheetProps> = ({
     setUpdateDialogOpen(false);
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'active': return 'bg-green-500/10 text-green-500 hover:bg-green-500/20';
-      case 'inactive': 
-      default: return 'bg-gray-500/10 text-gray-500 hover:bg-gray-500/20';
-    }
-  };
-
   const formattedCreatedAt = subnet.createdAt ? new Date(subnet.createdAt).toLocaleString() : 'N/A';
 
-  // Prepare route distribution data for chart
-  const routeDistributionData = subnet.metadata ? [
-    { name: 'attached', value: subnet.metadata.attached, color: '#10b981' }, // green
-    { name: 'available', value: subnet.metadata.available, color: '#3b82f6' }, // blue
-    { name: 'reserved', value: subnet.metadata.reserved, color: '#f59e0b' }, // amber
-    { name: 'orphaned', value: subnet.metadata.orphaned, color: '#ef4444' }  // red
-  ] : [];
+  // For the progress bars, we need to calculate percentages
+  const routeTotal = subnet.metadata?.total || 0;
+  const routeStatuses = [
+    { name: 'attached', value: subnet.metadata?.attached || 0, color: 'bg-green-500', icon: <PackageCheck className="h-4 w-4 text-green-500" /> },
+    { name: 'available', value: subnet.metadata?.available || 0, color: 'bg-blue-500', icon: <PackagePlus className="h-4 w-4 text-blue-500" /> },
+    { name: 'reserved', value: subnet.metadata?.reserved || 0, color: 'bg-amber-500', icon: <Package className="h-4 w-4 text-amber-500" /> },
+    { name: 'orphaned', value: subnet.metadata?.orphaned || 0, color: 'bg-red-500', icon: <PackageX className="h-4 w-4 text-red-500" /> }
+  ];
 
-  // Prepare route type data for chart
-  const routeTypeData = subnet.metadata ? [
-    { name: 'openshift', value: subnet.metadata.openshift, color: '#8b5cf6' }, // purple
-    { name: 'static', value: subnet.metadata.static, color: '#6b7280' }  // gray
-  ] : [];
-
-  const getRouteIcon = (type: string) => {
-    switch (type) {
-      case 'attached': return <PackageCheck className="h-4 w-4 text-green-500" />;
-      case 'available': return <PackagePlus className="h-4 w-4 text-blue-500" />;
-      case 'reserved': return <Package className="h-4 w-4 text-amber-500" />;
-      case 'orphaned': return <PackageX className="h-4 w-4 text-red-500" />;
-      case 'openshift': return <GitBranch className="h-4 w-4 text-purple-500" />;
-      case 'static': return <Package className="h-4 w-4 text-gray-500" />;
-      default: return <Package className="h-4 w-4" />;
-    }
-  };
+  const routeTypes = [
+    { name: 'openshift', value: subnet.metadata?.openshift || 0, color: 'bg-purple-500', icon: <GitBranch className="h-4 w-4 text-purple-500" /> },
+    { name: 'static', value: subnet.metadata?.static || 0, color: 'bg-gray-500', icon: <Package className="h-4 w-4 text-gray-500" /> }
+  ];
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent className="overflow-y-auto w-[35%] max-w-none">
         <SheetHeader>
-          <div className="flex flex-col gap-2">
-            <div className="flex items-center gap-2">
-              <Network className="h-5 w-5 text-primary" />
-              <SheetTitle>{subnet.name}</SheetTitle>
-            </div>
-            <Badge
-              variant="outline"
-              className={getStatusColor(subnet.status)}
-            >
-              {subnet.status}
-            </Badge>
+          <div className="flex items-center gap-2">
+            <Network className="h-5 w-5 text-primary" />
+            <SheetTitle>{subnet.name}</SheetTitle>
           </div>
+          <Badge 
+            variant="outline"
+            className="w-16 justify-center bg-green-500/10 text-green-500 hover:bg-green-500/20"
+          >
+            active
+          </Badge>
           <SheetDescription>
-            {subnet.rawId || subnet.description || `Subnet in ${subnet.datacenter}`}
+            {subnet.rawId || `${subnet.domain} - ${subnet.datacenter}`}
           </SheetDescription>
         </SheetHeader>
         
@@ -147,65 +124,55 @@ export const SubnetDetailSheet: React.FC<SubnetDetailSheetProps> = ({
               <CardHeader className="pb-2">
                 <CardTitle className="text-lg">Route Distribution</CardTitle>
               </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="h-40">
-                    <ChartContainer config={{}} className="h-full">
-                      <PieChart>
-                        <Pie
-                          data={routeDistributionData}
-                          dataKey="value"
-                          nameKey="name"
-                          cx="50%"
-                          cy="50%"
-                          innerRadius={30}
-                          outerRadius={60}
-                          paddingAngle={5}
-                        >
-                          {routeDistributionData.map((entry, index) => (
-                            <Cell key={`cell-${index}`} fill={entry.color} />
-                          ))}
-                        </Pie>
-                        <ChartTooltip 
-                          content={<ChartTooltipContent formatter={(value, name) => (
-                            <div className="flex items-center gap-2">
-                              {getRouteIcon(name as string)}
-                              <span className="capitalize">{name}: {value}</span>
-                            </div>
-                          )}/>}
-                        />
-                      </PieChart>
-                    </ChartContainer>
-                  </div>
-
-                  <div className="space-y-2">
-                    <div className="font-semibold">Status Distribution</div>
-                    {routeDistributionData.map((item) => (
-                      <div key={item.name} className="flex items-center justify-between text-sm">
-                        <div className="flex items-center gap-1.5">
-                          {getRouteIcon(item.name)}
-                          <span className="capitalize">{item.name}</span>
+              <CardContent className="space-y-6">
+                <div className="space-y-4">
+                  {routeStatuses.map((status) => (
+                    <div key={status.name} className="space-y-2">
+                      <div className="flex justify-between items-center">
+                        <div className="flex items-center gap-2">
+                          {status.icon}
+                          <span className="capitalize">{status.name}</span>
                         </div>
-                        <div>{item.value}</div>
+                        <span className="text-xs font-mono">
+                          {status.value} / {routeTotal} ({routeTotal > 0 ? Math.round((status.value / routeTotal) * 100) : 0}%)
+                        </span>
                       </div>
-                    ))}
-                    <Separator className="my-2" />
-                    <div className="font-semibold">Type Distribution</div>
-                    {routeTypeData.map((item) => (
-                      <div key={item.name} className="flex items-center justify-between text-sm">
-                        <div className="flex items-center gap-1.5">
-                          {getRouteIcon(item.name)}
-                          <span className="capitalize">{item.name}</span>
-                        </div>
-                        <div>{item.value}</div>
-                      </div>
-                    ))}
-                    <Separator className="my-2" />
-                    <div className="flex items-center justify-between text-sm font-medium">
-                      <span>Total Routes</span>
-                      <span>{subnet.metadata.total}</span>
+                      <Progress 
+                        value={routeTotal > 0 ? (status.value / routeTotal) * 100 : 0} 
+                        className="h-2" 
+                        indicatorClassName={status.color}
+                      />
                     </div>
-                  </div>
+                  ))}
+                </div>
+
+                <Separator />
+
+                <div className="space-y-4">
+                  <div className="font-semibold">Type Distribution</div>
+                  {routeTypes.map((type) => (
+                    <div key={type.name} className="space-y-2">
+                      <div className="flex justify-between items-center">
+                        <div className="flex items-center gap-2">
+                          {type.icon}
+                          <span className="capitalize">{type.name}</span>
+                        </div>
+                        <span className="text-xs font-mono">
+                          {type.value} / {routeTotal} ({routeTotal > 0 ? Math.round((type.value / routeTotal) * 100) : 0}%)
+                        </span>
+                      </div>
+                      <Progress 
+                        value={routeTotal > 0 ? (type.value / routeTotal) * 100 : 0} 
+                        className="h-2" 
+                        indicatorClassName={type.color}
+                      />
+                    </div>
+                  ))}
+                </div>
+
+                <div className="flex items-center justify-between text-sm font-medium pt-2">
+                  <span>Total Routes</span>
+                  <span>{subnet.metadata.total}</span>
                 </div>
               </CardContent>
             </Card>
@@ -245,7 +212,7 @@ export const SubnetDetailSheet: React.FC<SubnetDetailSheetProps> = ({
                 <Separator />
                 <div className="flex justify-between items-center">
                   <dt className="text-muted-foreground">IP Range</dt>
-                  <dd className="font-medium flex items-center gap-2">
+                  <dd className="flex items-center gap-2">
                     <span className="text-xs px-2 py-1 bg-blue-100 rounded-md dark:bg-blue-900/30">
                       {subnet.ipRange.starts}
                     </span>
@@ -254,6 +221,11 @@ export const SubnetDetailSheet: React.FC<SubnetDetailSheetProps> = ({
                       {subnet.ipRange.ends}
                     </span>
                   </dd>
+                </div>
+                <Separator />
+                <div className="flex justify-between items-center">
+                  <dt className="text-muted-foreground">ID</dt>
+                  <dd className="font-mono text-xs break-all">{subnet.rawId}</dd>
                 </div>
               </dl>
             </CardContent>
@@ -270,7 +242,7 @@ export const SubnetDetailSheet: React.FC<SubnetDetailSheetProps> = ({
                     <Server className="h-4 w-4" />
                     vCenter
                   </dt>
-                  <dd className="font-medium text-right">{subnet.vcenter}</dd>
+                  <dd className="font-medium text-right break-words max-w-[200px]">{subnet.vcenter}</dd>
                 </div>
                 <Separator />
                 <div className="flex justify-between items-center">
