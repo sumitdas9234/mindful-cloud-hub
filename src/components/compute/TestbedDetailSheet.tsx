@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import {
   Sheet,
@@ -83,7 +82,7 @@ const TestbedDetailSheet: React.FC<TestbedDetailSheetProps> = ({
           {
             id: `vm-${testbed.id}-1`,
             name: `${testbed.name}-worker-1`,
-            status: 'running',
+            status: 'running' as const,
             cpu: 4,
             memory: 16,
             storage: 100,
@@ -92,7 +91,7 @@ const TestbedDetailSheet: React.FC<TestbedDetailSheetProps> = ({
           {
             id: `vm-${testbed.id}-2`,
             name: `${testbed.name}-master-1`,
-            status: 'running',
+            status: 'running' as const,
             cpu: 8,
             memory: 32,
             storage: 200,
@@ -101,7 +100,7 @@ const TestbedDetailSheet: React.FC<TestbedDetailSheetProps> = ({
           {
             id: `vm-${testbed.id}-3`,
             name: `${testbed.name}-storage-1`,
-            status: 'stopped',
+            status: 'stopped' as const,
             cpu: 4,
             memory: 16,
             storage: 500,
