@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import {
   Sheet,
@@ -83,6 +84,8 @@ interface Testbed {
   logsDirectory?: string;
   externalDashboardUrl?: string;
   virtualMachines?: VirtualMachine[];
+  kernel?: string;
+  os?: string;
 }
 
 interface VirtualMachine {
@@ -223,11 +226,13 @@ const TestbedDetailSheet: React.FC<TestbedDetailSheetProps> = ({
 
   const environmentVersion = testbed?.environmentVersion || "4.17";
   const kubernetesVersion = testbed?.kubernetesVersion || "1.29";
+  const kernelVersion = testbed?.kernel || "5.15.0-91-generic";
+  const osVersion = testbed?.os || "Ubuntu 22.04.3 LTS";
 
   return (
     <>
       <Sheet open={open} onOpenChange={onOpenChange}>
-        <SheetContent className="w-[70%] overflow-y-auto">
+        <SheetContent className="w-[40%] overflow-y-auto">
           <SheetHeader className="pb-4">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
               <SheetTitle className="text-2xl flex items-center gap-2">
@@ -289,6 +294,16 @@ const TestbedDetailSheet: React.FC<TestbedDetailSheetProps> = ({
                         <div className="flex justify-between items-center">
                           <span className="text-sm text-muted-foreground">Kubernetes:</span>
                           <span className="text-sm font-medium">v{kubernetesVersion}</span>
+                        </div>
+                        <Separator />
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm text-muted-foreground">OS:</span>
+                          <span className="text-sm font-medium">{osVersion}</span>
+                        </div>
+                        <Separator />
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm text-muted-foreground">Kernel:</span>
+                          <span className="text-sm font-medium">{kernelVersion}</span>
                         </div>
                       </div>
                     </CardContent>
@@ -416,7 +431,6 @@ const TestbedDetailSheet: React.FC<TestbedDetailSheetProps> = ({
                             <TableHead>Memory</TableHead>
                             <TableHead>Storage</TableHead>
                             <TableHead>IP</TableHead>
-                            <TableHead>OS</TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -433,7 +447,6 @@ const TestbedDetailSheet: React.FC<TestbedDetailSheetProps> = ({
                               <TableCell>{vm.memory} GB</TableCell>
                               <TableCell>{vm.storage} GB</TableCell>
                               <TableCell>{vm.ip || 'N/A'}</TableCell>
-                              <TableCell>{vm.os || 'N/A'}</TableCell>
                             </TableRow>
                           ))}
                         </TableBody>

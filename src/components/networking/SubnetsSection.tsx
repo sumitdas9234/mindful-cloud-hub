@@ -1,11 +1,19 @@
+
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { 
+  DropdownMenu, DropdownMenuContent, 
+  DropdownMenuItem, DropdownMenuTrigger 
+} from '@/components/ui/dropdown-menu';
+import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Network } from 'lucide-react';
+import { 
+  MoreVertical, Network 
+} from 'lucide-react';
 import { SubnetData } from '@/api/types/networking';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { EmptyState } from '@/components/compute/EmptyState';
+import { DataTable, Column } from '@/components/compute/DataTable';
+import { SearchBar } from '@/components/compute/SearchBar';
+import { useToast } from '@/hooks/use-toast';
 import { SubnetDetailSheet } from './SubnetDetailSheet';
 
 const mockSubnets: SubnetData[] = [
@@ -84,15 +92,39 @@ interface SubnetsSectionProps {
 export const SubnetsSection: React.FC<SubnetsSectionProps> = () => {
   const [selectedSubnet, setSelectedSubnet] = useState<SubnetData | null>(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const { toast } = useToast();
 
-  const { data: subnets = [], isLoading } = useQuery({
+  const { data: subnets = [], isLoading, refetch } = useQuery({
     queryKey: ['subnets'],
     queryFn: () => Promise.resolve(mockSubnets),
   });
 
+  const filteredSubnets = subnets.filter(subnet => 
+    subnet.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    subnet.cidr.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    subnet.gatewayIp.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    subnet.description.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const handleRefresh = () => {
+    refetch();
+    toast({
+      title: "Refreshing subnets",
+      description: "The subnets list has been refreshed.",
+    });
+  };
+
   const handleRowClick = (subnet: SubnetData) => {
     setSelectedSubnet(subnet);
     setIsDetailOpen(true);
+  };
+
+  const handleSubnetAction = (action: string, subnet: SubnetData) => {
+    toast({
+      title: `${action} Subnet`,
+      description: `Action "${action}" triggered for subnet "${subnet.name}".`,
+    });
   };
 
   const getStatusColor = (status: string) => {
@@ -104,76 +136,99 @@ export const SubnetsSection: React.FC<SubnetsSectionProps> = () => {
     }
   };
 
-  if (isLoading) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Loading Subnets...</CardTitle>
-        </CardHeader>
-      </Card>
-    );
-  }
+  const columns: Column<SubnetData>[] = [
+    {
+      key: 'name',
+      header: 'Name',
+      cell: (subnet) => <span className="font-medium">{subnet.name}</span>
+    },
+    {
+      key: 'cidr',
+      header: 'CIDR',
+      cell: (subnet) => subnet.cidr
+    },
+    {
+      key: 'gateway',
+      header: 'Gateway',
+      cell: (subnet) => subnet.gatewayIp
+    },
+    {
+      key: 'status',
+      header: 'Status',
+      cell: (subnet) => (
+        <Badge
+          variant="outline"
+          className={getStatusColor(subnet.status)}
+        >
+          {subnet.status}
+        </Badge>
+      )
+    },
+    {
+      key: 'routes',
+      header: 'Routes',
+      cell: (subnet) => subnet.routesCount
+    }
+  ];
 
-  if (subnets.length === 0) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Subnets</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <EmptyState 
-            icon={<Network className="h-8 w-8 text-muted-foreground mb-2" />}
-            title="No Subnets Found"
-            description="There are no subnets configured in the network."
-          />
-        </CardContent>
-      </Card>
-    );
-  }
+  const actionColumn = (subnet: SubnetData) => (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="ghost" size="icon">
+          <MoreVertical className="h-4 w-4" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end">
+        <DropdownMenuItem onClick={() => handleSubnetAction('View', subnet)}>
+          View Details
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => handleSubnetAction('Edit', subnet)}>
+          Edit
+        </DropdownMenuItem>
+        <DropdownMenuItem 
+          onClick={() => handleSubnetAction('Delete', subnet)}
+          className="text-red-500"
+        >
+          Delete
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Subnets</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Name</TableHead>
-              <TableHead>CIDR</TableHead>
-              <TableHead>Gateway</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Routes</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {subnets.map((subnet) => (
-              <TableRow 
-                key={subnet.id}
-                className="cursor-pointer hover:bg-muted/50"
-                onClick={() => handleRowClick(subnet)}
-              >
-                <TableCell className="font-medium">{subnet.name}</TableCell>
-                <TableCell>{subnet.cidr}</TableCell>
-                <TableCell>{subnet.gatewayIp}</TableCell>
-                <TableCell>
-                  <Badge variant="outline" className={getStatusColor(subnet.status)}>
-                    {subnet.status}
-                  </Badge>
-                </TableCell>
-                <TableCell>{subnet.routesCount}</TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <h2 className="text-xl font-semibold">Subnets</h2>
+        <div className="flex space-x-2">
+          <Button onClick={handleRefresh} variant="outline" size="sm">
+            Refresh
+          </Button>
+        </div>
+      </div>
+      
+      <SearchBar 
+        searchQuery={searchQuery}
+        setSearchQuery={setSearchQuery}
+        placeholder="Search subnets..."
+      />
 
-        <SubnetDetailSheet
-          subnet={selectedSubnet}
-          open={isDetailOpen}
-          onOpenChange={setIsDetailOpen}
-        />
-      </CardContent>
-    </Card>
+      <DataTable
+        data={filteredSubnets}
+        columns={columns}
+        keyExtractor={(subnet) => subnet.id}
+        isLoading={isLoading}
+        emptyTitle="No Subnets Found"
+        emptyDescription={searchQuery ? "No subnets match your search criteria." : "No subnets have been added yet."}
+        searchQuery={searchQuery}
+        onRowClick={handleRowClick}
+        actionColumn={actionColumn}
+      />
+
+      <SubnetDetailSheet
+        subnet={selectedSubnet}
+        open={isDetailOpen}
+        onOpenChange={setIsDetailOpen}
+      />
+    </div>
   );
 };

@@ -23,6 +23,7 @@ export interface RouteData {
   nextHop: string;
   type: 'static' | 'openshift';
   status: 'active' | 'inactive' | 'pending';
+  routeStatus?: 'attached' | 'reserved' | 'orphaned' | 'available';
   priority: number;
   createdAt: string;
   updatedAt: string;
@@ -33,4 +34,5 @@ export type RouteFilter = {
   subnetId?: string;
   type?: 'static' | 'openshift' | 'all';
   status?: 'active' | 'inactive' | 'pending' | 'all';
+  routeStatus?: 'attached' | 'reserved' | 'orphaned' | 'available' | 'all';
 };
