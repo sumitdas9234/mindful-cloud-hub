@@ -34,7 +34,7 @@ const SidebarItem = ({ icon: Icon, label, path, collapsed, active, indent = fals
     <Link
       to={path}
       className={cn(
-        "flex items-center px-4 py-3 my-1 rounded-lg transition-all duration-200 group relative",
+        "flex items-center px-4 py-3 my-1 rounded-lg transition-all duration-200 group relative h-10",
         active 
           ? "bg-primary/10 text-primary" 
           : "text-foreground/70 hover:bg-secondary hover:text-foreground",
@@ -50,8 +50,8 @@ const SidebarItem = ({ icon: Icon, label, path, collapsed, active, indent = fals
       />
       <span 
         className={cn(
-          "text-sm font-medium transition-all duration-200",
-          collapsed && "opacity-0 w-0 overflow-hidden"
+          "text-sm font-medium transition-all duration-200 whitespace-nowrap overflow-hidden",
+          collapsed && "opacity-0 w-0"
         )}
       >
         {label}
@@ -107,18 +107,18 @@ export const Sidebar = () => {
         "flex items-center h-16 px-4 border-b border-border transition-all duration-300",
         collapsed ? "justify-center" : "justify-between"
       )}>
-        <div className="flex items-center">
-          <div className="w-8 h-8 rounded-md bg-primary/10 flex items-center justify-center">
-            <Server className="w-5 h-5 text-primary" />
-          </div>
-          {!collapsed && (
+        {!collapsed && (
+          <div className="flex items-center">
+            <div className="w-8 h-8 rounded-md bg-primary/10 flex items-center justify-center">
+              <Server className="w-5 h-5 text-primary" />
+            </div>
             <span className="ml-2 text-lg font-semibold">InfraOps</span>
-          )}
-        </div>
+          </div>
+        )}
         <Button
           variant="ghost"
           size="icon"
-          className={cn("h-8 w-8", collapsed && "absolute right-3")}
+          className="h-8 w-8"
           onClick={toggleSidebar}
         >
           {collapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
@@ -140,7 +140,7 @@ export const Sidebar = () => {
         <SidebarSection title="Managed Services" collapsed={collapsed}>
           <SidebarItem 
             icon={Cloud} 
-            label="Kubernetes" 
+            label="Production Clusters" 
             path="/kubernetes"
             collapsed={collapsed}
             active={location.pathname === '/kubernetes'}

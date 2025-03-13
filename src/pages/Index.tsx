@@ -6,14 +6,14 @@ import { StatsSummary } from '@/components/dashboard/sections/StatsSummary';
 import { ResourceUsageChart } from '@/components/dashboard/sections/ResourceUsageChart';
 import { SystemLoad } from '@/components/dashboard/sections/SystemLoad';
 import { SelectionControls } from '@/components/dashboard/SelectionControls';
-import { StatCardSkeleton, ChartSkeleton, ResourceCardSkeleton } from '@/components/ui/skeleton';
+import { StatCardSkeleton, ChartSkeleton, ResourceCardSkeleton, PageSkeleton } from '@/components/ui/skeleton';
 import { fetchStatsData, fetchResourceUsageData, fetchSystemLoad } from '@/api/dashboardApi';
 
 const Index = () => {
-  const [animateIn, setAnimateIn] = useState(false);
   const [selectedVCenter, setSelectedVCenter] = useState<string>('');
   const [selectedCluster, setSelectedCluster] = useState<string>('');
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [isReady, setIsReady] = useState(false);
   
   // Fetch all data in parallel
   const statsQuery = useQuery({
@@ -35,10 +35,14 @@ const Index = () => {
   const isLoading = statsQuery.isLoading || resourceUsageQuery.isLoading || systemLoadQuery.isLoading;
 
   useEffect(() => {
-    // Only animate in when all data is loaded
     if (!isLoading) {
-      setAnimateIn(true);
+      // Add a small delay to ensure smooth transition
+      const timer = setTimeout(() => {
+        setIsReady(true);
+      }, 100);
+      return () => clearTimeout(timer);
     }
+    return () => {};
   }, [isLoading]);
 
   const handleVCenterChange = (vCenterId: string) => {
@@ -53,8 +57,8 @@ const Index = () => {
     setSelectedTags(tagIds);
   };
 
-  // Render skeleton UI while loading
-  if (isLoading) {
+  // Show a complete loading skeleton until all data is ready
+  if (!isReady) {
     return (
       <div className="space-y-6">
         <DashboardHeader />
@@ -87,7 +91,7 @@ const Index = () => {
   }
 
   return (
-    <div className={`space-y-6 transition-opacity duration-500 ${animateIn ? 'opacity-100' : 'opacity-0'}`}>
+    <div className="space-y-6 animate-in fade-in duration-500">
       <DashboardHeader />
       
       <SelectionControls 

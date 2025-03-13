@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { PlaceholderPage } from '@/components/layout/PlaceholderPage';
 import { HardDrive, Database, Server, FileText, AlertCircle } from 'lucide-react';
@@ -6,6 +5,14 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Separator } from '@/components/ui/separator';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 interface StorageVolume {
   id: string;
@@ -138,147 +145,133 @@ const datastores: DatastoreInfo[] = [
 ];
 
 const getStatusBadge = (status: string) => {
-  const baseClasses = "px-2 py-1 text-xs rounded-full";
+  const baseClasses = "inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ring-1 ring-inset";
   
   switch (status) {
     case 'online':
     case 'healthy':
-      return <span className={`${baseClasses} bg-green-100 text-green-800`}>Healthy</span>;
+      return <span className={`${baseClasses} bg-green-50 text-green-700 ring-green-600/20`}>Healthy</span>;
     case 'degraded':
     case 'warning':
-      return <span className={`${baseClasses} bg-amber-100 text-amber-800`}>Warning</span>;
+      return <span className={`${baseClasses} bg-yellow-50 text-yellow-700 ring-yellow-600/20`}>Warning</span>;
     case 'offline':
     case 'critical':
-      return <span className={`${baseClasses} bg-red-100 text-red-800`}>Critical</span>;
+      return <span className={`${baseClasses} bg-red-50 text-red-700 ring-red-600/20`}>Critical</span>;
     case 'maintenance':
-      return <span className={`${baseClasses} bg-blue-100 text-blue-800`}>Maintenance</span>;
+      return <span className={`${baseClasses} bg-blue-50 text-blue-700 ring-blue-600/20`}>Maintenance</span>;
     default:
-      return <span className={`${baseClasses} bg-gray-100 text-gray-800`}>{status}</span>;
+      return <span className={`${baseClasses} bg-gray-50 text-gray-700 ring-gray-600/20`}>{status}</span>;
   }
 };
 
 const VolumesTab = () => (
   <Card>
-    <CardHeader>
-      <CardTitle>Storage Volumes</CardTitle>
+    <CardHeader className="pb-3">
+      <CardTitle className="text-lg font-medium">Storage Volumes</CardTitle>
       <CardDescription>Physical storage devices and volumes</CardDescription>
     </CardHeader>
     <CardContent>
-      <div className="space-y-4">
-        {storageVolumes.map((volume) => (
-          <div key={volume.id} className="border rounded-lg p-4">
-            <div className="flex justify-between items-start mb-3">
-              <div>
-                <h3 className="font-semibold">{volume.name}</h3>
-                <p className="text-sm text-muted-foreground">Type: {volume.type}</p>
-              </div>
-              <div>
-                {getStatusBadge(volume.status)}
-              </div>
-            </div>
-            
-            <div className="space-y-2 my-3">
-              <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Usage</span>
-                <span>{volume.used} / {volume.total}</span>
-              </div>
-              <Progress 
-                value={volume.usedPercentage} 
-                className="h-2" 
-                style={{
-                  // Use style.color to set the background color instead of indicator prop
-                  color: volume.usedPercentage > 90 ? 'hsl(var(--destructive))' : 
-                         volume.usedPercentage > 80 ? 'hsl(var(--warning))' : 
-                         'hsl(var(--primary))'
-                }}
-              />
-            </div>
-            
-            <div className="grid grid-cols-2 gap-4 text-sm my-3">
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">IOPS:</span>
-                <span>{volume.iops.toLocaleString()}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Latency:</span>
-                <span>{volume.latency}</span>
-              </div>
-              {volume.host && (
-                <div className="flex justify-between col-span-2">
-                  <span className="text-muted-foreground">Host:</span>
-                  <span>{volume.host}</span>
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Name</TableHead>
+            <TableHead>Type</TableHead>
+            <TableHead>Status</TableHead>
+            <TableHead>Usage</TableHead>
+            <TableHead>IOPS</TableHead>
+            <TableHead>Latency</TableHead>
+            <TableHead>Host</TableHead>
+            <TableHead className="text-right">Actions</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {storageVolumes.map((volume) => (
+            <TableRow key={volume.id}>
+              <TableCell className="font-medium">{volume.name}</TableCell>
+              <TableCell>{volume.type}</TableCell>
+              <TableCell>{getStatusBadge(volume.status)}</TableCell>
+              <TableCell>
+                <div className="w-full max-w-[120px]">
+                  <div className="flex justify-between text-xs mb-1">
+                    <span>{volume.usedPercentage}%</span>
+                    <span>{volume.used}/{volume.total}</span>
+                  </div>
+                  <Progress 
+                    value={volume.usedPercentage} 
+                    className="h-1.5" 
+                    style={{
+                      color: volume.usedPercentage > 90 ? 'hsl(var(--destructive))' : 
+                             volume.usedPercentage > 80 ? 'hsl(var(--warning))' : 
+                             'hsl(var(--primary))'
+                    }}
+                  />
                 </div>
-              )}
-            </div>
-            
-            <div className="flex gap-2 mt-2">
-              <Button size="sm" variant="outline" className="flex-1">Details</Button>
-              <Button size="sm" variant="outline" className="flex-1">Performance</Button>
-              <Button size="sm" variant="outline" className="flex-1">Manage</Button>
-            </div>
-          </div>
-        ))}
-      </div>
+              </TableCell>
+              <TableCell>{volume.iops.toLocaleString()}</TableCell>
+              <TableCell>{volume.latency}</TableCell>
+              <TableCell>{volume.host || '—'}</TableCell>
+              <TableCell className="text-right">
+                <Button variant="ghost" size="sm">Details</Button>
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
     </CardContent>
   </Card>
 );
 
 const DatastoresTab = () => (
   <Card>
-    <CardHeader>
-      <CardTitle>Datastores</CardTitle>
+    <CardHeader className="pb-3">
+      <CardTitle className="text-lg font-medium">Datastores</CardTitle>
       <CardDescription>Logical storage pools for virtual machines</CardDescription>
     </CardHeader>
     <CardContent>
-      <div className="space-y-4">
-        {datastores.map((ds) => (
-          <div key={ds.id} className="border rounded-lg p-4">
-            <div className="flex justify-between items-start mb-3">
-              <div>
-                <h3 className="font-semibold">{ds.name}</h3>
-                <p className="text-sm text-muted-foreground">Type: {ds.type}</p>
-              </div>
-              <div>
-                {getStatusBadge(ds.status)}
-              </div>
-            </div>
-            
-            <div className="space-y-2 my-3">
-              <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Capacity</span>
-                <span>{ds.used} / {ds.total}</span>
-              </div>
-              <Progress 
-                value={ds.usedPercentage} 
-                className="h-2"
-                style={{
-                  // Use style.color to set the background color instead of indicator prop
-                  color: ds.usedPercentage > 90 ? 'hsl(var(--destructive))' : 
-                         ds.usedPercentage > 80 ? 'hsl(var(--warning))' : 
-                         'hsl(var(--primary))'
-                }}
-              />
-            </div>
-            
-            <div className="grid grid-cols-2 gap-4 text-sm my-3">
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Volumes:</span>
-                <span>{ds.volumes}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Free Space:</span>
-                <span>{(parseFloat(ds.total) - parseFloat(ds.used)).toFixed(1)} TB</span>
-              </div>
-            </div>
-            
-            <div className="flex gap-2 mt-2">
-              <Button size="sm" variant="outline" className="flex-1">Details</Button>
-              <Button size="sm" variant="outline" className="flex-1">VMs</Button>
-              <Button size="sm" variant="outline" className="flex-1">Manage</Button>
-            </div>
-          </div>
-        ))}
-      </div>
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Name</TableHead>
+            <TableHead>Type</TableHead>
+            <TableHead>Status</TableHead>
+            <TableHead>Volumes</TableHead>
+            <TableHead>Usage</TableHead>
+            <TableHead>Free Space</TableHead>
+            <TableHead className="text-right">Actions</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {datastores.map((ds) => (
+            <TableRow key={ds.id}>
+              <TableCell className="font-medium">{ds.name}</TableCell>
+              <TableCell>{ds.type}</TableCell>
+              <TableCell>{getStatusBadge(ds.status)}</TableCell>
+              <TableCell>{ds.volumes}</TableCell>
+              <TableCell>
+                <div className="w-full max-w-[120px]">
+                  <div className="flex justify-between text-xs mb-1">
+                    <span>{ds.usedPercentage}%</span>
+                    <span>{ds.used}/{ds.total}</span>
+                  </div>
+                  <Progress 
+                    value={ds.usedPercentage} 
+                    className="h-1.5" 
+                    style={{
+                      color: ds.usedPercentage > 90 ? 'hsl(var(--destructive))' : 
+                             ds.usedPercentage > 80 ? 'hsl(var(--warning))' : 
+                             'hsl(var(--primary))'
+                    }}
+                  />
+                </div>
+              </TableCell>
+              <TableCell>{(parseFloat(ds.total) - parseFloat(ds.used)).toFixed(1)} TB</TableCell>
+              <TableCell className="text-right">
+                <Button variant="ghost" size="sm">Details</Button>
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
     </CardContent>
   </Card>
 );
@@ -288,8 +281,8 @@ const tabs = [
   { id: 'datastores', label: 'Datastores', content: <DatastoresTab /> },
   { id: 'snapshots', label: 'Snapshots', content: (
     <Card>
-      <CardHeader>
-        <CardTitle>Storage Snapshots</CardTitle>
+      <CardHeader className="pb-3">
+        <CardTitle className="text-lg font-medium">Storage Snapshots</CardTitle>
         <CardDescription>Manage point-in-time storage snapshots</CardDescription>
       </CardHeader>
       <CardContent>
@@ -301,8 +294,8 @@ const tabs = [
   )},
   { id: 'policies', label: 'Policies', content: (
     <Card>
-      <CardHeader>
-        <CardTitle>Storage Policies</CardTitle>
+      <CardHeader className="pb-3">
+        <CardTitle className="text-lg font-medium">Storage Policies</CardTitle>
         <CardDescription>Manage storage allocation and retention policies</CardDescription>
       </CardHeader>
       <CardContent>
