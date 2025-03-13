@@ -23,10 +23,10 @@ export const getTypeBadgeColor = (type: string) => {
 
 export const getRouteStatusBadgeColor = (routeStatus: string) => {
   switch (routeStatus) {
-    case 'attached': return 'bg-green-500/10 text-green-500 hover:bg-green-500/20';
-    case 'reserved': return 'bg-blue-500/10 text-blue-500 hover:bg-blue-500/20';
-    case 'orphaned': return 'bg-yellow-500/10 text-yellow-500 hover:bg-yellow-500/20';
-    case 'available': return 'bg-gray-500/10 text-gray-500 hover:bg-gray-500/20';
+    case 'attached': return 'bg-blue-500/10 text-blue-500 hover:bg-blue-500/20';
+    case 'reserved': return 'bg-yellow-500/10 text-yellow-500 hover:bg-yellow-500/20';
+    case 'orphaned': return 'bg-red-500/10 text-red-500 hover:bg-red-500/20';
+    case 'available': return 'bg-green-500/10 text-green-500 hover:bg-green-500/20';
     default: return 'bg-gray-500/10 text-gray-500 hover:bg-gray-500/20';
   }
 };
@@ -40,26 +40,12 @@ export const getRouteColumns = (): Column<RouteData & { routeStatus?: string }>[
   {
     key: 'subnet',
     header: 'Subnet',
-    cell: (route) => (
-      <Badge
-        variant="outline"
-        className="bg-blue-500/10 text-blue-500"
-      >
-        {route.subnetName}
-      </Badge>
-    )
+    cell: (route) => <span>{route.subnetName}</span>
   },
   {
     key: 'type',
     header: 'Type',
-    cell: (route) => (
-      <Badge
-        variant="outline"
-        className={getTypeBadgeColor(route.type)}
-      >
-        {route.type}
-      </Badge>
-    )
+    cell: (route) => <span className="capitalize">{route.type}</span>
   },
   {
     key: 'routeStatus',

@@ -34,16 +34,16 @@ export const FlashBladesTable: React.FC<FlashBladesTableProps> = ({ flashBlades,
       cell: (flashBlade) => {
         const getStatusStyles = () => {
           switch (flashBlade.status) {
-            case 'online': return 'bg-green-100 text-green-800';
-            case 'degraded': return 'bg-yellow-100 text-yellow-800';
-            case 'offline': return 'bg-red-100 text-red-800';
-            case 'maintenance': return 'bg-blue-100 text-blue-800';
-            default: return 'bg-gray-100 text-gray-800';
+            case 'online': return 'bg-green-500/10 text-green-500';
+            case 'degraded': return 'bg-yellow-500/10 text-yellow-500';
+            case 'offline': return 'bg-red-500/10 text-red-500';
+            case 'maintenance': return 'bg-blue-500/10 text-blue-500';
+            default: return 'bg-gray-500/10 text-gray-500';
           }
         };
 
         return (
-          <Badge variant="outline" className={`${getStatusStyles()} capitalize`}>
+          <Badge variant="outline" className={getStatusStyles()}>
             {flashBlade.status}
           </Badge>
         );
@@ -60,7 +60,7 @@ export const FlashBladesTable: React.FC<FlashBladesTableProps> = ({ flashBlades,
         };
 
         return (
-          <div className="w-full space-y-1">
+          <div className="w-full max-w-[180px] space-y-1">
             <div className="flex justify-between text-xs">
               <span className={getCapacityColor()}>
                 {Math.round(flashBlade.usagePercentage)}%
@@ -86,7 +86,7 @@ export const FlashBladesTable: React.FC<FlashBladesTableProps> = ({ flashBlades,
       key: 'performance',
       header: 'Performance',
       cell: (flashBlade) => (
-        <div className="space-y-1">
+        <div className="space-y-1 max-w-[180px]">
           <div className="flex justify-between text-xs">
             <span>IOPS:</span>
             <span className="text-muted-foreground">{(flashBlade.iops / 1000).toFixed(0)}K</span>

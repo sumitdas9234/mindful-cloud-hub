@@ -106,14 +106,6 @@ export const SubnetsSection: React.FC<SubnetsSectionProps> = () => {
     subnet.description.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const handleRefresh = () => {
-    refetch();
-    toast({
-      title: "Refreshing subnets",
-      description: "The subnets list has been refreshed.",
-    });
-  };
-
   const handleRowClick = (subnet: SubnetData) => {
     setSelectedSubnet(subnet);
     setIsDetailOpen(true);
@@ -129,8 +121,7 @@ export const SubnetsSection: React.FC<SubnetsSectionProps> = () => {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'active': return 'bg-green-500/10 text-green-500 hover:bg-green-500/20';
-      case 'inactive': return 'bg-gray-500/10 text-gray-500 hover:bg-gray-500/20';
-      case 'pending': return 'bg-yellow-500/10 text-yellow-500 hover:bg-yellow-500/20';
+      case 'inactive': 
       default: return 'bg-gray-500/10 text-gray-500 hover:bg-gray-500/20';
     }
   };
@@ -159,7 +150,7 @@ export const SubnetsSection: React.FC<SubnetsSectionProps> = () => {
           variant="outline"
           className={getStatusColor(subnet.status)}
         >
-          {subnet.status}
+          {subnet.status === 'pending' ? 'inactive' : subnet.status}
         </Badge>
       )
     },
