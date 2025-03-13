@@ -49,7 +49,6 @@ export const TestbedVMsTab: React.FC<TestbedVMsTabProps> = ({ virtualMachines })
                 <TableHead>Status</TableHead>
                 <TableHead>CPU</TableHead>
                 <TableHead>Memory</TableHead>
-                <TableHead>Storage</TableHead>
                 <TableHead>IP</TableHead>
               </TableRow>
             </TableHeader>
@@ -65,7 +64,6 @@ export const TestbedVMsTab: React.FC<TestbedVMsTabProps> = ({ virtualMachines })
                   </TableCell>
                   <TableCell>{vm.cpu} cores</TableCell>
                   <TableCell>{vm.memory} GB</TableCell>
-                  <TableCell>{vm.storage} GB</TableCell>
                   <TableCell>{vm.ip || 'N/A'}</TableCell>
                 </TableRow>
               ))}

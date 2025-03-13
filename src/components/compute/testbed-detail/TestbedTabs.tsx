@@ -100,7 +100,7 @@ export const TestbedTabs: React.FC<TestbedTabsProps> = ({
           <Button 
             variant="outline" 
             size="sm"
-            className="border-blue-500 text-blue-500 hover:bg-blue-50"
+            className="border-blue-500 text-blue-500 hover:bg-blue-50 rounded-none"
             onClick={handleOpenLogs}
           >
             Logs
@@ -108,7 +108,7 @@ export const TestbedTabs: React.FC<TestbedTabsProps> = ({
           <Button 
             variant="outline" 
             size="sm"
-            className="border-blue-500 text-blue-500 hover:bg-blue-50"
+            className="border-blue-500 text-blue-500 hover:bg-blue-50 rounded-none"
             onClick={handleDownloadKubeconfig}
           >
             Kubeconfig
@@ -116,7 +116,7 @@ export const TestbedTabs: React.FC<TestbedTabsProps> = ({
           <Button 
             variant="outline" 
             size="sm"
-            className="border-blue-500 text-blue-500 hover:bg-blue-50"
+            className="border-blue-500 text-blue-500 hover:bg-blue-50 rounded-none"
             onClick={handleOpenExternalDashboard}
           >
             Dashboard
