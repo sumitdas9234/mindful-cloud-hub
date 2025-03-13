@@ -34,17 +34,18 @@ const SidebarItem = ({ icon: Icon, label, path, collapsed, active, indent = fals
     <Link
       to={path}
       className={cn(
-        "flex items-center px-4 py-3 my-1 rounded-lg transition-all duration-200 group",
+        "flex items-center px-4 py-3 my-1 rounded-lg transition-all duration-200 group relative",
         active 
           ? "bg-primary/10 text-primary" 
           : "text-foreground/70 hover:bg-secondary hover:text-foreground",
-        indent && !collapsed && "pl-8"
+        indent && !collapsed && "pl-8",
+        collapsed && "justify-center"
       )}
     >
       <Icon 
         className={cn(
           "flex-shrink-0 transition-all duration-200",
-          collapsed ? "w-6 h-6" : "w-5 h-5 mr-3"
+          collapsed ? "w-5 h-5" : "w-5 h-5 mr-3"
         )} 
       />
       <span 
@@ -117,7 +118,7 @@ export const Sidebar = () => {
         <Button
           variant="ghost"
           size="icon"
-          className="h-8 w-8"
+          className={cn("h-8 w-8", collapsed && "absolute right-3")}
           onClick={toggleSidebar}
         >
           {collapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
@@ -221,10 +222,10 @@ export const Sidebar = () => {
       
       {/* Status */}
       <div className={cn(
-        "p-4 border-t border-border flex items-center justify-center",
-        collapsed ? "flex-col" : "justify-between"
+        "p-4 border-t border-border flex items-center",
+        collapsed ? "justify-center" : "justify-between"
       )}>
-        <div className="flex items-center">
+        <div className={cn("flex items-center", collapsed && "flex-col")}>
           <div className="w-2 h-2 rounded-full bg-green-500" />
           {!collapsed && (
             <span className="ml-2 text-sm text-muted-foreground">All systems normal</span>
