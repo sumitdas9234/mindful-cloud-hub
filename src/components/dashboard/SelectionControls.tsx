@@ -14,6 +14,9 @@ interface SelectionControlsProps {
   onVCenterChange: (vCenterId: string) => void;
   onClusterChange: (clusterId: string) => void;
   onTagsChange: (tagIds: string[]) => void;
+  selectedVCenter?: string;
+  selectedCluster?: string;
+  selectedTags?: string[];
   disabled?: boolean;
 }
 
@@ -21,11 +24,27 @@ export const SelectionControls: React.FC<SelectionControlsProps> = ({
   onVCenterChange,
   onClusterChange,
   onTagsChange,
+  selectedVCenter: propSelectedVCenter = '',
+  selectedCluster: propSelectedCluster = '',
+  selectedTags: propSelectedTags = [],
   disabled = false
 }) => {
-  const [selectedVCenter, setSelectedVCenter] = useState<string>('');
-  const [selectedCluster, setSelectedCluster] = useState<string>('');
-  const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [selectedVCenter, setSelectedVCenter] = useState<string>(propSelectedVCenter);
+  const [selectedCluster, setSelectedCluster] = useState<string>(propSelectedCluster);
+  const [selectedTags, setSelectedTags] = useState<string[]>(propSelectedTags);
+
+  // Update local state when props change
+  useEffect(() => {
+    setSelectedVCenter(propSelectedVCenter);
+  }, [propSelectedVCenter]);
+
+  useEffect(() => {
+    setSelectedCluster(propSelectedCluster);
+  }, [propSelectedCluster]);
+
+  useEffect(() => {
+    setSelectedTags(propSelectedTags);
+  }, [propSelectedTags]);
 
   const { data: vCenters, isLoading: isLoadingVCenters } = useQuery({
     queryKey: ['vCenters'],

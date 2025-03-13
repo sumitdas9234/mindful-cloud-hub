@@ -15,7 +15,6 @@ const Index = () => {
   const [selectedVCenter, setSelectedVCenter] = useState<string>('');
   const [selectedCluster, setSelectedCluster] = useState<string>('');
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
-  const [isReady, setIsReady] = useState(false);
   const [isSelectionChanging, setIsSelectionChanging] = useState(false);
   
   // Fetch all data in parallel
@@ -39,25 +38,24 @@ const Index = () => {
   const isFetching = statsQuery.isFetching || resourceUsageQuery.isFetching || systemLoadQuery.isFetching;
 
   useEffect(() => {
-    if (!isLoading) {
-      // Add a small delay to ensure smooth transition
-      const timer = setTimeout(() => {
-        setIsReady(true);
-        setIsSelectionChanging(false);
-      }, 100);
-      return () => clearTimeout(timer);
+    // When selection changes, show loading state
+    if (isSelectionChanging && !isFetching) {
+      setIsSelectionChanging(false);
     }
-    return () => {};
-  }, [isLoading]);
+  }, [isFetching, isSelectionChanging]);
 
   const handleVCenterChange = (vCenterId: string) => {
-    setIsSelectionChanging(true);
-    setSelectedVCenter(vCenterId);
+    if (vCenterId !== selectedVCenter) {
+      setIsSelectionChanging(true);
+      setSelectedVCenter(vCenterId);
+    }
   };
 
   const handleClusterChange = (clusterId: string) => {
-    setIsSelectionChanging(true);
-    setSelectedCluster(clusterId);
+    if (clusterId !== selectedCluster) {
+      setIsSelectionChanging(true);
+      setSelectedCluster(clusterId);
+    }
   };
 
   const handleTagsChange = (tagIds: string[]) => {
@@ -66,7 +64,7 @@ const Index = () => {
   };
 
   // Show loading skeletons during initial load or when selections change
-  const showSkeletons = !isReady || isSelectionChanging || isFetching;
+  const showSkeletons = isLoading || (isSelectionChanging && isFetching);
 
   // Render skeleton loading state
   if (showSkeletons) {
@@ -78,7 +76,10 @@ const Index = () => {
           onVCenterChange={handleVCenterChange} 
           onClusterChange={handleClusterChange}
           onTagsChange={handleTagsChange}
-          disabled={!isReady} // Disable controls during initial load
+          selectedVCenter={selectedVCenter}
+          selectedCluster={selectedCluster}
+          selectedTags={selectedTags}
+          disabled={isLoading} // Only disable during initial load
         />
         
         <Separator className="my-6" />
@@ -112,6 +113,9 @@ const Index = () => {
         onVCenterChange={handleVCenterChange} 
         onClusterChange={handleClusterChange}
         onTagsChange={handleTagsChange}
+        selectedVCenter={selectedVCenter}
+        selectedCluster={selectedCluster}
+        selectedTags={selectedTags}
       />
       
       <Separator className="my-6" />
