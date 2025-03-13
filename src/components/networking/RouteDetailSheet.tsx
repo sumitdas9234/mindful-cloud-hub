@@ -10,7 +10,7 @@ import {
 import { RouteData } from "@/api/types/networking";
 import { CardContent, Card, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Router, Network, ArrowRight, Clock, FileText } from "lucide-react";
+import { Router, Network, Clock, FileText } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 
 interface RouteDetailSheetProps {
@@ -25,19 +25,6 @@ export const RouteDetailSheet: React.FC<RouteDetailSheetProps> = ({
   onOpenChange,
 }) => {
   if (!route) return null;
-
-  const getStatusBadgeColor = (status: string) => {
-    switch (status) {
-      case "active":
-        return "bg-green-500/10 text-green-500 border-green-500";
-      case "inactive":
-        return "bg-gray-500/10 text-gray-500 border-gray-500";
-      case "pending":
-        return "bg-yellow-500/10 text-yellow-500 border-yellow-500";
-      default:
-        return "bg-gray-500/10 text-gray-500 border-gray-500";
-    }
-  };
 
   const getTypeBadgeColor = (type: string) => {
     switch (type) {
@@ -66,9 +53,6 @@ export const RouteDetailSheet: React.FC<RouteDetailSheetProps> = ({
         <SheetHeader className="pb-4">
           <SheetTitle className="text-2xl flex items-center gap-2">
             <span>{route.name}</span>
-            <Badge variant="outline" className={getStatusBadgeColor(route.status)}>
-              {route.status}
-            </Badge>
             {route.routeStatus && (
               <Badge variant="outline" className={getRouteStatusBadgeColor(route.routeStatus)}>
                 {route.routeStatus}
@@ -95,22 +79,6 @@ export const RouteDetailSheet: React.FC<RouteDetailSheetProps> = ({
                       {route.subnetName}
                     </Badge>
                   </dd>
-                </div>
-                <Separator />
-                <div className="flex justify-between items-center">
-                  <dt className="text-muted-foreground flex items-center gap-2">
-                    <Router className="h-4 w-4" />
-                    Destination
-                  </dt>
-                  <dd className="font-mono">{route.destination}</dd>
-                </div>
-                <Separator />
-                <div className="flex justify-between items-center">
-                  <dt className="text-muted-foreground flex items-center gap-2">
-                    <ArrowRight className="h-4 w-4" />
-                    Next Hop
-                  </dt>
-                  <dd className="font-mono">{route.nextHop}</dd>
                 </div>
                 <Separator />
                 <div className="flex justify-between items-center">

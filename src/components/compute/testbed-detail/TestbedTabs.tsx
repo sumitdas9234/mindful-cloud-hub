@@ -85,13 +85,6 @@ export const TestbedTabs: React.FC<TestbedTabsProps> = ({
           <TabsTrigger value="infrastructure">Infrastructure</TabsTrigger>
           <TabsTrigger value="details">Additional Details</TabsTrigger>
         </TabsList>
-        <Button 
-          variant="default" 
-          size="sm" 
-          onClick={handleOpenExternalDashboard}
-        >
-          Dashboard
-        </Button>
       </div>
 
       <TabsContent value="overview" className="space-y-4">
@@ -105,18 +98,28 @@ export const TestbedTabs: React.FC<TestbedTabsProps> = ({
         />
         <div className="flex gap-2 justify-end mt-4">
           <Button 
-            variant="default" 
-            size="sm" 
+            variant="outline" 
+            size="sm"
+            className="border-blue-500 text-blue-500 hover:bg-blue-50"
             onClick={handleOpenLogs}
           >
             Logs
           </Button>
           <Button 
-            variant="default" 
-            size="sm" 
+            variant="outline" 
+            size="sm"
+            className="border-blue-500 text-blue-500 hover:bg-blue-50"
             onClick={handleDownloadKubeconfig}
           >
             Kubeconfig
+          </Button>
+          <Button 
+            variant="outline" 
+            size="sm"
+            className="border-blue-500 text-blue-500 hover:bg-blue-50"
+            onClick={handleOpenExternalDashboard}
+          >
+            Dashboard
           </Button>
         </div>
       </TabsContent>

@@ -50,16 +50,6 @@ export const getRouteColumns = (): Column<RouteData & { routeStatus?: string }>[
     )
   },
   {
-    key: 'destination',
-    header: 'Destination',
-    cell: (route) => route.destination
-  },
-  {
-    key: 'nextHop',
-    header: 'Next Hop',
-    cell: (route) => route.nextHop
-  },
-  {
     key: 'type',
     header: 'Type',
     cell: (route) => (
@@ -68,18 +58,6 @@ export const getRouteColumns = (): Column<RouteData & { routeStatus?: string }>[
         className={getTypeBadgeColor(route.type)}
       >
         {route.type}
-      </Badge>
-    )
-  },
-  {
-    key: 'status',
-    header: 'Status',
-    cell: (route) => (
-      <Badge
-        variant="outline"
-        className={getStatusBadgeColor(route.status)}
-      >
-        {route.status}
       </Badge>
     )
   },

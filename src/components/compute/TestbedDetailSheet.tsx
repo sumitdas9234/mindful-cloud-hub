@@ -74,6 +74,42 @@ const TestbedDetailSheet: React.FC<TestbedDetailSheetProps> = ({
 
   if (!testbed) return null;
 
+  // Add mock VM data if none exists
+  const testbedWithVMs = {
+    ...testbed,
+    virtualMachines: testbed.virtualMachines && testbed.virtualMachines.length > 0 
+      ? testbed.virtualMachines 
+      : [
+          {
+            id: `vm-${testbed.id}-1`,
+            name: `${testbed.name}-worker-1`,
+            status: 'running',
+            cpu: 4,
+            memory: 16,
+            storage: 100,
+            ip: '10.0.0.10'
+          },
+          {
+            id: `vm-${testbed.id}-2`,
+            name: `${testbed.name}-master-1`,
+            status: 'running',
+            cpu: 8,
+            memory: 32,
+            storage: 200,
+            ip: '10.0.0.11'
+          },
+          {
+            id: `vm-${testbed.id}-3`,
+            name: `${testbed.name}-storage-1`,
+            status: 'stopped',
+            cpu: 4,
+            memory: 16,
+            storage: 500,
+            ip: '10.0.0.12'
+          }
+        ]
+  };
+
   const kubeCtlCommand = `kubectl config use-context ${testbed.name.toLowerCase().replace(/\s+/g, '-')}-context\nkubectl get pods -n default`;
   const logsDirectory = testbed.logsDirectory || "/var/log/testbeds/" + testbed.id;
   const externalDashboardUrl = testbed.externalDashboardUrl || "https://dashboard.example.com/testbeds/" + testbed.id;
@@ -150,7 +186,7 @@ const TestbedDetailSheet: React.FC<TestbedDetailSheetProps> = ({
 
           <div className="flex items-center justify-between mt-6 mb-4">
             <TestbedTabs 
-              testbed={testbed}
+              testbed={testbedWithVMs}
               handleOpenExternalDashboard={handleOpenExternalDashboard}
               handleOpenLogs={handleOpenLogs}
               handleDownloadKubeconfig={handleDownloadKubeconfig}
