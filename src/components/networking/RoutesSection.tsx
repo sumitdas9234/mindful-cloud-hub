@@ -1,29 +1,14 @@
-
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { 
-  DropdownMenu, DropdownMenuContent, 
-  DropdownMenuItem, DropdownMenuTrigger 
-} from '@/components/ui/dropdown-menu';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { 
-  MoreVertical, RotateCw, Router, 
-  GitBranch, Filter, Network
-} from 'lucide-react';
 import { RouteData, RouteFilter, SubnetData } from '@/api/types/networking';
-import { DataTable, Column } from '@/components/compute/DataTable';
+import { DataTable } from '@/components/compute/DataTable';
 import { SearchBar } from '@/components/compute/SearchBar';
 import { useToast } from '@/hooks/use-toast';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { RouteDetailSheet } from './RouteDetailSheet';
-import { 
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { RouteHeader } from './routes/RouteHeader';
+import { RouteFilters } from './routes/RouteFilters';
+import { RouteActions } from './routes/RouteActions';
+import { getRouteColumns } from './routes/RouteColumns';
 
 // Extend RouteData to include statuses
 const mockRoutes: (RouteData & { routeStatus?: 'available' | 'reserved' | 'orphaned' | 'attached' })[] = [
@@ -256,155 +241,20 @@ export const RoutesSection: React.FC<RoutesSectionProps> = ({
     });
   };
 
-  const getStatusBadgeColor = (status: string) => {
-    switch (status) {
-      case 'active': return 'bg-green-500/10 text-green-500 hover:bg-green-500/20';
-      case 'inactive': return 'bg-gray-500/10 text-gray-500 hover:bg-gray-500/20';
-      case 'pending': return 'bg-yellow-500/10 text-yellow-500 hover:bg-yellow-500/20';
-      default: return 'bg-gray-500/10 text-gray-500 hover:bg-gray-500/20';
-    }
-  };
-
-  const getTypeBadgeColor = (type: string) => {
-    switch (type) {
-      case 'static': return 'bg-blue-500/10 text-blue-500 hover:bg-blue-500/20';
-      case 'openshift': return 'bg-red-500/10 text-red-500 hover:bg-red-500/20';
-      default: return 'bg-gray-500/10 text-gray-500 hover:bg-gray-500/20';
-    }
-  };
-
-  const getRouteStatusBadgeColor = (routeStatus: string) => {
-    switch (routeStatus) {
-      case 'attached': return 'bg-green-500/10 text-green-500 hover:bg-green-500/20';
-      case 'reserved': return 'bg-blue-500/10 text-blue-500 hover:bg-blue-500/20';
-      case 'orphaned': return 'bg-yellow-500/10 text-yellow-500 hover:bg-yellow-500/20';
-      case 'available': return 'bg-gray-500/10 text-gray-500 hover:bg-gray-500/20';
-      default: return 'bg-gray-500/10 text-gray-500 hover:bg-gray-500/20';
-    }
-  };
-
   const handleRowClick = (route: RouteData) => {
     setSelectedRoute(route);
     setIsDetailOpen(true);
   };
 
-  const columns: Column<RouteData & { routeStatus?: string }>[] = [
-    {
-      key: 'name',
-      header: 'Name',
-      cell: (route) => <span className="font-medium">{route.name}</span>
-    },
-    {
-      key: 'subnet',
-      header: 'Subnet',
-      cell: (route) => (
-        <Badge
-          variant="outline"
-          className="bg-blue-500/10 text-blue-500"
-        >
-          {route.subnetName}
-        </Badge>
-      )
-    },
-    {
-      key: 'destination',
-      header: 'Destination',
-      cell: (route) => route.destination
-    },
-    {
-      key: 'nextHop',
-      header: 'Next Hop',
-      cell: (route) => route.nextHop
-    },
-    {
-      key: 'type',
-      header: 'Type',
-      cell: (route) => (
-        <Badge
-          variant="outline"
-          className={getTypeBadgeColor(route.type)}
-        >
-          {route.type}
-        </Badge>
-      )
-    },
-    {
-      key: 'status',
-      header: 'Status',
-      cell: (route) => (
-        <Badge
-          variant="outline"
-          className={getStatusBadgeColor(route.status)}
-        >
-          {route.status}
-        </Badge>
-      )
-    },
-    {
-      key: 'routeStatus',
-      header: 'Route Status',
-      cell: (route) => (
-        route.routeStatus ? (
-          <Badge
-            variant="outline"
-            className={getRouteStatusBadgeColor(route.routeStatus)}
-          >
-            {route.routeStatus}
-          </Badge>
-        ) : null
-      )
-    }
-  ];
+  const columns = getRouteColumns();
 
   const actionColumn = (route: RouteData) => (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon">
-          <MoreVertical className="h-4 w-4" />
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
-        <DropdownMenuItem onClick={() => handleRouteAction('View', route)}>
-          View Details
-        </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => handleRouteAction('Edit', route)}>
-          Edit
-        </DropdownMenuItem>
-        <DropdownMenuItem 
-          onClick={() => handleRouteAction('Delete', route)}
-          className="text-red-500"
-        >
-          Delete
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
+    <RouteActions route={route} handleRouteAction={handleRouteAction} />
   );
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <div className="flex flex-col">
-          <div className="flex items-center">
-            <h2 className="text-xl font-semibold mr-3">{subnet?.name || 'All Routes'}</h2>
-            {subnet && (
-              <Badge variant="outline" className="bg-blue-500/10 text-blue-500">
-                {subnet.cidr}
-              </Badge>
-            )}
-          </div>
-          {subnet && (
-            <p className="text-sm text-muted-foreground mt-1">
-              Gateway: {subnet.gatewayIp} · {subnet.routesCount} routes · {subnet.environment}
-            </p>
-          )}
-        </div>
-        <div className="flex space-x-2">
-          <Button onClick={handleRefresh} variant="outline" size="sm">
-            <RotateCw className="mr-2 h-4 w-4" />
-            Refresh
-          </Button>
-        </div>
-      </div>
+      <RouteHeader subnet={subnet} handleRefresh={handleRefresh} />
       
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mt-6">
         <SearchBar 
@@ -413,61 +263,16 @@ export const RoutesSection: React.FC<RoutesSectionProps> = ({
           placeholder="Search routes..."
         />
         
-        <div className="flex flex-wrap gap-2 items-center">
-          {!subnetId && (
-            <Select 
-              value={subnetFilter} 
-              onValueChange={(value) => setSubnetFilter(value)}
-            >
-              <SelectTrigger className="w-[180px]">
-                <Network className="mr-1.5 h-4 w-4" />
-                <SelectValue placeholder="All Subnets" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Subnets</SelectItem>
-                {subnets.map(subnet => (
-                  <SelectItem key={subnet.id} value={subnet.id}>
-                    {subnet.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          )}
-          
-          <Select 
-            value={routeStatusFilter} 
-            onValueChange={(value) => setRouteStatusFilter(value as RouteStatusFilter)}
-          >
-            <SelectTrigger className="w-[150px]">
-              <Filter className="mr-1.5 h-4 w-4" />
-              <SelectValue placeholder="All Statuses" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Statuses</SelectItem>
-              <SelectItem value="attached">Attached</SelectItem>
-              <SelectItem value="reserved">Reserved</SelectItem>
-              <SelectItem value="orphaned">Orphaned</SelectItem>
-              <SelectItem value="available">Available</SelectItem>
-            </SelectContent>
-          </Select>
-          
-          <Tabs defaultValue="all" className="w-auto" onValueChange={(value) => setActiveTab(value as RouteFilter['type'])}>
-            <TabsList>
-              <TabsTrigger value="all">
-                <Router className="mr-1.5 h-4 w-4" />
-                All
-              </TabsTrigger>
-              <TabsTrigger value="static">
-                <Router className="mr-1.5 h-4 w-4" />
-                Static
-              </TabsTrigger>
-              <TabsTrigger value="openshift">
-                <GitBranch className="mr-1.5 h-4 w-4" />
-                OpenShift
-              </TabsTrigger>
-            </TabsList>
-          </Tabs>
-        </div>
+        <RouteFilters
+          subnetId={subnetId}
+          subnetFilter={subnetFilter}
+          setSubnetFilter={setSubnetFilter}
+          routeStatusFilter={routeStatusFilter}
+          setRouteStatusFilter={setRouteStatusFilter}
+          activeTab={activeTab}
+          setActiveTab={setActiveTab}
+          subnets={subnets}
+        />
       </div>
 
       <DataTable
