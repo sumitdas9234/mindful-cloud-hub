@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { 
   Select, 
@@ -13,12 +14,14 @@ interface SelectionControlsProps {
   onVCenterChange: (vCenterId: string) => void;
   onClusterChange: (clusterId: string) => void;
   onTagsChange: (tagIds: string[]) => void;
+  disabled?: boolean;
 }
 
 export const SelectionControls: React.FC<SelectionControlsProps> = ({
   onVCenterChange,
   onClusterChange,
-  onTagsChange
+  onTagsChange,
+  disabled = false
 }) => {
   const [selectedVCenter, setSelectedVCenter] = useState<string>('');
   const [selectedCluster, setSelectedCluster] = useState<string>('');
@@ -83,6 +86,8 @@ export const SelectionControls: React.FC<SelectionControlsProps> = ({
     onTagsChange(newTags);
   };
 
+  const isDisabled = disabled || isLoadingVCenters || isLoadingTags;
+
   return (
     <div className="flex flex-wrap justify-between mb-6 gap-4">
       <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-1/2">
@@ -91,7 +96,7 @@ export const SelectionControls: React.FC<SelectionControlsProps> = ({
           <Select 
             value={selectedVCenter} 
             onValueChange={handleVCenterChange}
-            disabled={isLoadingVCenters}
+            disabled={isDisabled}
           >
             <SelectTrigger className="w-full">
               <SelectValue placeholder="Select vCenter" />
@@ -110,7 +115,7 @@ export const SelectionControls: React.FC<SelectionControlsProps> = ({
           <Select 
             value={selectedCluster} 
             onValueChange={handleClusterChange}
-            disabled={isLoadingClusters || !selectedVCenter}
+            disabled={isDisabled || isLoadingClusters || !selectedVCenter}
           >
             <SelectTrigger className="w-full">
               <SelectValue placeholder="Select Cluster" />
@@ -129,7 +134,7 @@ export const SelectionControls: React.FC<SelectionControlsProps> = ({
       <div className="w-full sm:w-auto">
         <label className="text-sm font-medium mb-1 block text-muted-foreground">Infra Tags</label>
         <Select 
-          disabled={isLoadingTags}
+          disabled={isDisabled}
         >
           <SelectTrigger className="w-full sm:w-[200px]">
             <SelectValue placeholder="Filter by Tags" />

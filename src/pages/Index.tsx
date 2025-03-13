@@ -6,15 +6,17 @@ import { StatsSummary } from '@/components/dashboard/sections/StatsSummary';
 import { ResourceUsageChart } from '@/components/dashboard/sections/ResourceUsageChart';
 import { SystemLoad } from '@/components/dashboard/sections/SystemLoad';
 import { SelectionControls } from '@/components/dashboard/SelectionControls';
-import { StatCardSkeleton, ChartSkeleton, ResourceCardSkeleton, PageSkeleton } from '@/components/ui/skeleton';
+import { StatCardSkeleton, ChartSkeleton, ResourceCardSkeleton } from '@/components/ui/skeleton';
 import { fetchStatsData, fetchResourceUsageData, fetchSystemLoad } from '@/api/dashboardApi';
 import { Separator } from '@/components/ui/separator';
+import { ManagedServices } from '@/components/dashboard/sections/ManagedServices';
 
 const Index = () => {
   const [selectedVCenter, setSelectedVCenter] = useState<string>('');
   const [selectedCluster, setSelectedCluster] = useState<string>('');
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [isReady, setIsReady] = useState(false);
+  const [isSelectionChanging, setIsSelectionChanging] = useState(false);
   
   // Fetch all data in parallel
   const statsQuery = useQuery({
@@ -34,12 +36,14 @@ const Index = () => {
   
   // Check if all data is loaded
   const isLoading = statsQuery.isLoading || resourceUsageQuery.isLoading || systemLoadQuery.isLoading;
+  const isFetching = statsQuery.isFetching || resourceUsageQuery.isFetching || systemLoadQuery.isFetching;
 
   useEffect(() => {
     if (!isLoading) {
       // Add a small delay to ensure smooth transition
       const timer = setTimeout(() => {
         setIsReady(true);
+        setIsSelectionChanging(false);
       }, 100);
       return () => clearTimeout(timer);
     }
@@ -47,19 +51,25 @@ const Index = () => {
   }, [isLoading]);
 
   const handleVCenterChange = (vCenterId: string) => {
+    setIsSelectionChanging(true);
     setSelectedVCenter(vCenterId);
   };
 
   const handleClusterChange = (clusterId: string) => {
+    setIsSelectionChanging(true);
     setSelectedCluster(clusterId);
   };
 
   const handleTagsChange = (tagIds: string[]) => {
+    setIsSelectionChanging(true);
     setSelectedTags(tagIds);
   };
 
-  // Show a complete loading skeleton until all data is ready
-  if (!isReady) {
+  // Show loading skeletons during initial load or when selections change
+  const showSkeletons = !isReady || isSelectionChanging || isFetching;
+
+  // Render skeleton loading state
+  if (showSkeletons) {
     return (
       <div className="space-y-6">
         <DashboardHeader />
@@ -68,6 +78,7 @@ const Index = () => {
           onVCenterChange={handleVCenterChange} 
           onClusterChange={handleClusterChange}
           onTagsChange={handleTagsChange}
+          disabled={!isReady} // Disable controls during initial load
         />
         
         <Separator className="my-6" />
@@ -123,6 +134,12 @@ const Index = () => {
           tagIds={selectedTags}
         />
       </div>
+      
+      <ManagedServices
+        vCenterId={selectedVCenter}
+        clusterId={selectedCluster}
+        tagIds={selectedTags}
+      />
     </div>
   );
 };
