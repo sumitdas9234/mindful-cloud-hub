@@ -12,6 +12,8 @@ import { FlashBladeDetailSheet } from '@/components/storage/FlashBladeDetailShee
 import { FlashArrayDetailSheet } from '@/components/storage/FlashArrayDetailSheet';
 import { mockDatastores, mockFlashBlades, mockFlashArrays } from '@/api/mockData/storageData';
 import { Datastore, FlashBlade, FlashArray } from '@/api/types/storage';
+import { Separator } from '@/components/ui/separator';
+import { SearchBar } from '@/components/compute/SearchBar';
 
 const StorageManagement = () => {
   const [activeTab, setActiveTab] = useState('datastores');
@@ -21,6 +23,7 @@ const StorageManagement = () => {
   const [datastoreSheetOpen, setDatastoreSheetOpen] = useState(false);
   const [flashBladeSheetOpen, setFlashBladeSheetOpen] = useState(false);
   const [flashArraySheetOpen, setFlashArraySheetOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
 
   const handleRefresh = () => {
     // In a real app, this would fetch updated data
@@ -47,6 +50,19 @@ const StorageManagement = () => {
     setFlashArraySheetOpen(true);
   };
 
+  // Filter data based on search query
+  const filteredDatastores = mockDatastores.filter(item => 
+    item.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+  
+  const filteredFlashBlades = mockFlashBlades.filter(item => 
+    item.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+  
+  const filteredFlashArrays = mockFlashArrays.filter(item => 
+    item.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   return (
     <div className="container mx-auto py-6 space-y-6">
       <PageHeader
@@ -56,6 +72,16 @@ const StorageManagement = () => {
         onAdd={handleAddStorage}
         addButtonText="Add Storage"
       />
+      
+      <Separator className="my-6" />
+      
+      <div className="flex justify-between items-center mb-6">
+        <SearchBar 
+          searchQuery={searchQuery} 
+          setSearchQuery={setSearchQuery} 
+          placeholder="Search storage resources..." 
+        />
+      </div>
 
       <Tabs defaultValue="datastores" value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="grid w-full grid-cols-3">
@@ -75,21 +101,21 @@ const StorageManagement = () => {
 
         <TabsContent value="datastores" className="mt-6">
           <DatastoresTable 
-            datastores={mockDatastores} 
+            datastores={filteredDatastores} 
             onRowClick={handleDatastoreClick}
           />
         </TabsContent>
 
         <TabsContent value="flashblades" className="mt-6">
           <FlashBladesTable 
-            flashBlades={mockFlashBlades} 
+            flashBlades={filteredFlashBlades} 
             onRowClick={handleFlashBladeClick}
           />
         </TabsContent>
 
         <TabsContent value="flasharrays" className="mt-6">
           <FlashArraysTable 
-            flashArrays={mockFlashArrays} 
+            flashArrays={filteredFlashArrays} 
             onRowClick={handleFlashArrayClick}
           />
         </TabsContent>

@@ -174,27 +174,27 @@ export const ManagedServices: React.FC<ManagedServicesProps> = ({ vCenterId, clu
                           currentPageData.map((server) => (
                             <TableRow 
                               key={server.id} 
-                              className="cursor-pointer hover:bg-muted/50"
+                              className="bg-white dark:bg-secondary/20 cursor-pointer hover:bg-muted/50"
                               onClick={() => handleServerClick(server)}
                             >
-                              <TableCell className="font-medium">{server.name}</TableCell>
-                              <TableCell>
+                              <TableCell className="font-medium py-3">{server.name}</TableCell>
+                              <TableCell className="py-3">
                                 <div className="flex items-center gap-2">
                                   <div className={`h-2.5 w-2.5 rounded-full ${getStatusColor(server.status)}`}></div>
                                   <span className="capitalize">{server.status}</span>
                                 </div>
                               </TableCell>
-                              <TableCell>
+                              <TableCell className="py-3">
                                 <Badge variant="outline" className="font-mono">
                                   {server.cpu}%
                                 </Badge>
                               </TableCell>
-                              <TableCell>
+                              <TableCell className="py-3">
                                 <Badge variant="outline" className="font-mono">
                                   {server.memory}%
                                 </Badge>
                               </TableCell>
-                              <TableCell>
+                              <TableCell className="py-3">
                                 <Badge variant="outline" className="font-mono">
                                   {server.disk}%
                                 </Badge>

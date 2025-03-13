@@ -15,7 +15,7 @@ export const DashboardHeader: React.FC = () => {
   
   return (
     <div className="flex items-center justify-between">
-      <h2 className="text-3xl font-bold tracking-tight">Cloud Overview</h2>
+      <h2 className="text-3xl font-bold tracking-tight">Systems Overview</h2>
       <div className="flex items-center text-muted-foreground text-sm">
         <Clock className="h-4 w-4 mr-1" />
         <span>Last updated: {currentTime.toLocaleTimeString()}</span>

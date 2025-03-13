@@ -89,19 +89,22 @@ export function DataTable<T>({
             {currentPageData.map((item) => (
               <TableRow 
                 key={keyExtractor(item)} 
-                className={onRowClick ? "cursor-pointer hover:bg-muted/50" : ""}
+                className={cn(
+                  "bg-white dark:bg-secondary/20",
+                  onRowClick ? "cursor-pointer hover:bg-muted/50" : ""
+                )}
                 onClick={onRowClick ? () => onRowClick(item) : undefined}
               >
                 {columns.map((column) => (
                   <TableCell 
                     key={`${keyExtractor(item)}-${column.key}`} 
-                    className={`py-2 ${column.className || ""}`}
+                    className={`py-3 ${column.className || ""}`}
                   >
                     {column.cell(item)}
                   </TableCell>
                 ))}
                 {actionColumn && (
-                  <TableCell className="py-2" onClick={(e) => e.stopPropagation()}>
+                  <TableCell className="py-3" onClick={(e) => e.stopPropagation()}>
                     {actionColumn(item)}
                   </TableCell>
                 )}
@@ -120,3 +123,6 @@ export function DataTable<T>({
     </div>
   );
 }
+
+// Need to import cn
+import { cn } from "@/lib/utils";

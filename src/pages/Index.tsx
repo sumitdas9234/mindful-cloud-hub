@@ -8,6 +8,7 @@ import { SystemLoad } from '@/components/dashboard/sections/SystemLoad';
 import { SelectionControls } from '@/components/dashboard/SelectionControls';
 import { StatCardSkeleton, ChartSkeleton, ResourceCardSkeleton, PageSkeleton } from '@/components/ui/skeleton';
 import { fetchStatsData, fetchResourceUsageData, fetchSystemLoad } from '@/api/dashboardApi';
+import { Separator } from '@/components/ui/separator';
 
 const Index = () => {
   const [selectedVCenter, setSelectedVCenter] = useState<string>('');
@@ -69,6 +70,8 @@ const Index = () => {
           onTagsChange={handleTagsChange}
         />
         
+        <Separator className="my-6" />
+        
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {Array(4).fill(0).map((_, i) => (
             <StatCardSkeleton key={i} />
@@ -99,6 +102,8 @@ const Index = () => {
         onClusterChange={handleClusterChange}
         onTagsChange={handleTagsChange}
       />
+      
+      <Separator className="my-6" />
       
       <StatsSummary 
         vCenterId={selectedVCenter} 

@@ -130,7 +130,7 @@ export const Sidebar = () => {
         <SidebarSection title="Overview" collapsed={collapsed}>
           <SidebarItem 
             icon={LayoutDashboard} 
-            label="Dashboard" 
+            label="Overview" 
             path="/"
             collapsed={collapsed}
             active={location.pathname === '/'}
