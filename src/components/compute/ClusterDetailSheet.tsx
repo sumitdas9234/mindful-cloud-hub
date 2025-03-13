@@ -19,6 +19,7 @@ import {
   CpuIcon,
   Database,
   HardDrive,
+  Shield,
 } from "lucide-react";
 
 interface KubernetesCluster {
@@ -29,15 +30,20 @@ interface KubernetesCluster {
   provider: "on-premise" | "aws" | "azure" | "gcp";
   location: string;
   nodeCount: number;
-  cpuUsage: number;
-  memoryUsage: number;
-  storageUsage: number;
-  namespaceCount: number;
-  podCount: number;
-  deploymentCount: number;
-  serviceCount: number;
+  portworxInstalled: boolean;
+  portworxVersion?: string;
+  needsUpgrade: boolean;
+  certificates: number;
   createdAt: string;
   lastUpdatedAt: string;
+  // Optional properties for detail view
+  cpuUsage?: number;
+  memoryUsage?: number;
+  storageUsage?: number;
+  namespaceCount?: number;
+  podCount?: number;
+  deploymentCount?: number;
+  serviceCount?: number;
 }
 
 interface ClusterDetailSheetProps {
@@ -77,6 +83,11 @@ export const ClusterDetailSheet: React.FC<ClusterDetailSheetProps> = ({
     if (usage >= 60) return "bg-yellow-500";
     return "bg-green-500";
   };
+
+  // Default values for optional metrics
+  const cpuUsage = cluster?.cpuUsage ?? 35;
+  const memoryUsage = cluster?.memoryUsage ?? 42;
+  const storageUsage = cluster?.storageUsage ?? 28;
 
   if (!cluster) return null;
 
@@ -129,9 +140,9 @@ export const ClusterDetailSheet: React.FC<ClusterDetailSheetProps> = ({
                     <CpuIcon className="h-4 w-4 text-blue-500" />
                     <span>CPU</span>
                   </div>
-                  <span className="font-mono text-sm">{cluster.cpuUsage}%</span>
+                  <span className="font-mono text-sm">{cpuUsage}%</span>
                 </div>
-                <Progress value={cluster.cpuUsage} className={getProgressColor(cluster.cpuUsage)} />
+                <Progress value={cpuUsage} className={getProgressColor(cpuUsage)} />
               </div>
 
               <div className="space-y-2">
@@ -140,9 +151,9 @@ export const ClusterDetailSheet: React.FC<ClusterDetailSheetProps> = ({
                     <HardDrive className="h-4 w-4 text-indigo-500" />
                     <span>Memory</span>
                   </div>
-                  <span className="font-mono text-sm">{cluster.memoryUsage}%</span>
+                  <span className="font-mono text-sm">{memoryUsage}%</span>
                 </div>
-                <Progress value={cluster.memoryUsage} className={getProgressColor(cluster.memoryUsage)} />
+                <Progress value={memoryUsage} className={getProgressColor(memoryUsage)} />
               </div>
 
               <div className="space-y-2">
@@ -151,9 +162,9 @@ export const ClusterDetailSheet: React.FC<ClusterDetailSheetProps> = ({
                     <Database className="h-4 w-4 text-purple-500" />
                     <span>Storage</span>
                   </div>
-                  <span className="font-mono text-sm">{cluster.storageUsage}%</span>
+                  <span className="font-mono text-sm">{storageUsage}%</span>
                 </div>
-                <Progress value={cluster.storageUsage} className={getProgressColor(cluster.storageUsage)} />
+                <Progress value={storageUsage} className={getProgressColor(storageUsage)} />
               </div>
             </CardContent>
           </Card>
@@ -190,23 +201,43 @@ export const ClusterDetailSheet: React.FC<ClusterDetailSheetProps> = ({
                 </div>
                 <Separator />
                 <div className="flex justify-between">
-                  <dt className="text-muted-foreground">Namespaces:</dt>
-                  <dd>{cluster.namespaceCount}</dd>
+                  <dt className="text-muted-foreground">Certificates:</dt>
+                  <dd className="flex items-center">
+                    <Shield className="h-3.5 w-3.5 text-blue-500 mr-1.5" />
+                    <span>{cluster.certificates}</span>
+                  </dd>
                 </div>
                 <Separator />
                 <div className="flex justify-between">
-                  <dt className="text-muted-foreground">Pods:</dt>
-                  <dd>{cluster.podCount}</dd>
+                  <dt className="text-muted-foreground">Portworx:</dt>
+                  <dd>
+                    {cluster.portworxInstalled ? (
+                      <span className="flex items-center">
+                        <CheckCircle2 className="h-3.5 w-3.5 text-green-500 mr-1.5" />
+                        {cluster.portworxVersion || "Installed"}
+                      </span>
+                    ) : (
+                      <span className="flex items-center">
+                        <XCircle className="h-3.5 w-3.5 text-red-500 mr-1.5" />
+                        Not installed
+                      </span>
+                    )}
+                  </dd>
                 </div>
                 <Separator />
                 <div className="flex justify-between">
-                  <dt className="text-muted-foreground">Deployments:</dt>
-                  <dd>{cluster.deploymentCount}</dd>
-                </div>
-                <Separator />
-                <div className="flex justify-between">
-                  <dt className="text-muted-foreground">Services:</dt>
-                  <dd>{cluster.serviceCount}</dd>
+                  <dt className="text-muted-foreground">Upgrade Status:</dt>
+                  <dd>
+                    {cluster.needsUpgrade ? (
+                      <Badge variant="outline" className="bg-yellow-500/10 text-yellow-500">
+                        Needs upgrade
+                      </Badge>
+                    ) : (
+                      <Badge variant="outline" className="bg-green-500/10 text-green-500">
+                        Up to date
+                      </Badge>
+                    )}
+                  </dd>
                 </div>
                 <Separator />
                 <div className="flex justify-between">
