@@ -109,7 +109,7 @@ export const SubnetDetailSheet: React.FC<SubnetDetailSheetProps> = ({
           </div>
           <Badge 
             variant="outline"
-            className="w-16 justify-center bg-green-500/10 text-green-500 hover:bg-green-500/20"
+            className="w-20 justify-center bg-green-500/10 text-green-500 hover:bg-green-500/20"
           >
             active
           </Badge>
@@ -225,7 +225,7 @@ export const SubnetDetailSheet: React.FC<SubnetDetailSheetProps> = ({
                 <Separator />
                 <div className="flex justify-between items-center">
                   <dt className="text-muted-foreground">ID</dt>
-                  <dd className="font-mono text-xs break-all">{subnet.rawId}</dd>
+                  <dd className="font-mono text-xs truncate">{subnet.rawId}</dd>
                 </div>
               </dl>
             </CardContent>
@@ -242,7 +242,7 @@ export const SubnetDetailSheet: React.FC<SubnetDetailSheetProps> = ({
                     <Server className="h-4 w-4" />
                     vCenter
                   </dt>
-                  <dd className="font-medium text-right break-words max-w-[200px]">{subnet.vcenter}</dd>
+                  <dd className="font-medium text-sm truncate max-w-[200px]">{subnet.vcenter}</dd>
                 </div>
                 <Separator />
                 <div className="flex justify-between items-center">
@@ -263,7 +263,7 @@ export const SubnetDetailSheet: React.FC<SubnetDetailSheetProps> = ({
                     <HardDrive className="h-4 w-4" />
                     Datastore
                   </dt>
-                  <dd className="font-medium text-right break-words max-w-[200px]">{subnet.datastore}</dd>
+                  <dd className="font-medium text-sm truncate max-w-[200px]">{subnet.datastore}</dd>
                 </div>
                 <Separator />
                 <div className="flex justify-between items-center">
