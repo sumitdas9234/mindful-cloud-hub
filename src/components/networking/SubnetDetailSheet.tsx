@@ -44,7 +44,7 @@ export const SubnetDetailSheet: React.FC<SubnetDetailSheetProps> = ({
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="overflow-y-auto">
+      <SheetContent className="overflow-y-auto w-[400px] sm:max-w-md">
         <SheetHeader>
           <div className="flex items-center gap-2">
             <Network className="h-5 w-5 text-primary" />
@@ -71,7 +71,7 @@ export const SubnetDetailSheet: React.FC<SubnetDetailSheetProps> = ({
           <div className="space-y-4">
             <h3 className="font-medium">Network Information</h3>
             
-            <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-3">
               <div>
                 <div className="text-sm font-medium text-muted-foreground">CIDR</div>
                 <div className="flex items-center gap-1 mt-1">
@@ -97,14 +97,16 @@ export const SubnetDetailSheet: React.FC<SubnetDetailSheetProps> = ({
                 <div className="text-sm font-medium text-muted-foreground">Domain</div>
                 <div className="mt-1">{subnet.domain}</div>
               </div>
-            </div>
             
-            <div className="mt-2">
-              <div className="text-sm font-medium text-muted-foreground">IP Range</div>
-              <div className="flex items-center gap-2 mt-1">
-                <span className="text-xs px-2 py-1 bg-blue-100 rounded-md dark:bg-blue-900/30">{subnet.ipRange.starts}</span>
-                <span>to</span>
-                <span className="text-xs px-2 py-1 bg-blue-100 rounded-md dark:bg-blue-900/30">{subnet.ipRange.ends}</span>
+              <div>
+                <div className="text-sm font-medium text-muted-foreground">IP Range</div>
+                <div className="flex flex-col gap-1 mt-1">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs px-2 py-1 bg-blue-100 rounded-md dark:bg-blue-900/30">{subnet.ipRange.starts}</span>
+                    <span>to</span>
+                    <span className="text-xs px-2 py-1 bg-blue-100 rounded-md dark:bg-blue-900/30">{subnet.ipRange.ends}</span>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -138,9 +140,9 @@ export const SubnetDetailSheet: React.FC<SubnetDetailSheetProps> = ({
               
               <div>
                 <div className="text-sm font-medium text-muted-foreground">Datastore</div>
-                <div className="flex items-center gap-1 mt-1">
-                  <HardDrive className="h-4 w-4 text-muted-foreground" />
-                  {subnet.datastore}
+                <div className="flex items-center gap-1 mt-1 break-words">
+                  <HardDrive className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                  <span className="text-sm">{subnet.datastore}</span>
                 </div>
               </div>
             </div>
