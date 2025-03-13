@@ -89,11 +89,19 @@ export const SubnetDetailSheet: React.FC<SubnetDetailSheetProps> = ({
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="overflow-y-auto w-[400px] sm:max-w-md">
+      <SheetContent className="overflow-y-auto w-[40%] max-w-none">
         <SheetHeader>
-          <div className="flex items-center gap-2">
-            <Network className="h-5 w-5 text-primary" />
-            <SheetTitle>{subnet.name}</SheetTitle>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Network className="h-5 w-5 text-primary" />
+              <SheetTitle>{subnet.name}</SheetTitle>
+            </div>
+            <Badge
+              variant="outline"
+              className={getStatusColor(subnet.status)}
+            >
+              {subnet.status}
+            </Badge>
           </div>
           <SheetDescription>
             {subnet.description || `Subnet in ${subnet.datacenter}`}
@@ -101,20 +109,6 @@ export const SubnetDetailSheet: React.FC<SubnetDetailSheetProps> = ({
         </SheetHeader>
         
         <div className="mt-6 space-y-6">
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-lg">Status</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Badge
-                variant="outline"
-                className={getStatusColor(subnet.status)}
-              >
-                {subnet.status}
-              </Badge>
-            </CardContent>
-          </Card>
-
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-lg">Network Information</CardTitle>
@@ -147,18 +141,16 @@ export const SubnetDetailSheet: React.FC<SubnetDetailSheetProps> = ({
                   <dd className="font-medium">{subnet.domain}</dd>
                 </div>
                 <Separator />
-                <div className="flex flex-col gap-1">
-                  <dt className="text-muted-foreground mb-1">IP Range</dt>
-                  <dd>
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs px-2 py-1 bg-blue-100 rounded-md dark:bg-blue-900/30">
-                        {subnet.ipRange.starts}
-                      </span>
-                      <span>to</span>
-                      <span className="text-xs px-2 py-1 bg-blue-100 rounded-md dark:bg-blue-900/30">
-                        {subnet.ipRange.ends}
-                      </span>
-                    </div>
+                <div className="flex justify-between items-center">
+                  <dt className="text-muted-foreground">IP Range</dt>
+                  <dd className="font-medium flex items-center gap-2">
+                    <span className="text-xs px-2 py-1 bg-blue-100 rounded-md dark:bg-blue-900/30">
+                      {subnet.ipRange.starts}
+                    </span>
+                    <span>to</span>
+                    <span className="text-xs px-2 py-1 bg-blue-100 rounded-md dark:bg-blue-900/30">
+                      {subnet.ipRange.ends}
+                    </span>
                   </dd>
                 </div>
               </dl>
@@ -199,16 +191,7 @@ export const SubnetDetailSheet: React.FC<SubnetDetailSheetProps> = ({
                   </dt>
                   <dd className="font-medium text-right break-words max-w-[200px]">{subnet.datastore}</dd>
                 </div>
-              </dl>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-lg">Additional Details</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <dl className="space-y-2">
+                <Separator />
                 <div className="flex justify-between items-center">
                   <dt className="text-muted-foreground flex items-center gap-2">
                     <Clock className="h-4 w-4" />
