@@ -1,3 +1,4 @@
+
 export interface SubnetData {
   id: string;
   name: string;
@@ -24,6 +25,16 @@ export interface TransformedSubnetData extends SubnetData {
     starts: string;
     ends: string;
   };
+  metadata?: {
+    total: number;
+    openshift: number;
+    static: number;
+    attached: number;
+    available: number;
+    reserved: number;
+    orphaned: number;
+  };
+  rawId?: string; // To store the $oid value
 }
 
 export interface SubnetApiResponse {
@@ -44,6 +55,15 @@ export interface SubnetApiResponse {
   datacenter: string;
   isActive: boolean;
   netmask: string;
+  metadata?: {
+    total: number;
+    openshift: number;
+    static: number;
+    attached: number;
+    available: number;
+    reserved: number;
+    orphaned: number;
+  };
 }
 
 export interface RouteData {
