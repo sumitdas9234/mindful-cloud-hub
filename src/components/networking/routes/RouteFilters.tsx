@@ -7,8 +7,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Filter, Network, Router, GitBranch } from 'lucide-react';
+import { Filter, Network } from 'lucide-react';
 import { SubnetData, RouteFilter } from '@/api/types/networking';
 
 type RouteStatusFilter = 'all' | 'attached' | 'reserved' | 'orphaned' | 'available';
@@ -19,8 +18,6 @@ interface RouteFiltersProps {
   setSubnetFilter: (value: string) => void;
   routeStatusFilter: RouteStatusFilter;
   setRouteStatusFilter: (value: RouteStatusFilter) => void;
-  activeTab: RouteFilter['type'];
-  setActiveTab: (value: RouteFilter['type']) => void;
   subnets: SubnetData[];
 }
 
@@ -30,8 +27,6 @@ export const RouteFilters: React.FC<RouteFiltersProps> = ({
   setSubnetFilter,
   routeStatusFilter,
   setRouteStatusFilter,
-  activeTab,
-  setActiveTab,
   subnets
 }) => {
   return (
@@ -72,23 +67,6 @@ export const RouteFilters: React.FC<RouteFiltersProps> = ({
           <SelectItem value="available">Available</SelectItem>
         </SelectContent>
       </Select>
-      
-      <Tabs defaultValue={activeTab} className="w-auto" onValueChange={(value) => setActiveTab(value as RouteFilter['type'])}>
-        <TabsList>
-          <TabsTrigger value="all">
-            <Router className="mr-1.5 h-4 w-4" />
-            All
-          </TabsTrigger>
-          <TabsTrigger value="static">
-            <Router className="mr-1.5 h-4 w-4" />
-            Static
-          </TabsTrigger>
-          <TabsTrigger value="openshift">
-            <GitBranch className="mr-1.5 h-4 w-4" />
-            OpenShift
-          </TabsTrigger>
-        </TabsList>
-      </Tabs>
     </div>
   );
 };

@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -14,6 +15,7 @@ import AppsAndServices from "./pages/compute/AppsAndServices";
 import Networking from "./pages/infrastructure/Networking";
 import Subnets from "./pages/infrastructure/Subnets";
 import RoutesPage from "./pages/infrastructure/Routes";
+import StorageManagement from "./pages/infrastructure/StorageManagement";
 
 const queryClient = new QueryClient();
 
@@ -115,7 +117,7 @@ const App = () => (
             path="/storage" 
             element={
               <Layout title="Storage Management">
-                <ComingSoon feature="Storage" />
+                <StorageManagement />
               </Layout>
             } 
           />

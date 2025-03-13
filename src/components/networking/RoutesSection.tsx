@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { RouteData, RouteFilter, SubnetData } from '@/api/types/networking';
@@ -254,7 +255,12 @@ export const RoutesSection: React.FC<RoutesSectionProps> = ({
 
   return (
     <div className="space-y-4">
-      <RouteHeader subnet={subnet} handleRefresh={handleRefresh} />
+      <RouteHeader 
+        subnet={subnet} 
+        handleRefresh={handleRefresh} 
+        activeTab={activeTab}
+        setActiveTab={setActiveTab}
+      />
       
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mt-6">
         <SearchBar 
@@ -269,8 +275,6 @@ export const RoutesSection: React.FC<RoutesSectionProps> = ({
           setSubnetFilter={setSubnetFilter}
           routeStatusFilter={routeStatusFilter}
           setRouteStatusFilter={setRouteStatusFilter}
-          activeTab={activeTab}
-          setActiveTab={setActiveTab}
           subnets={subnets}
         />
       </div>
