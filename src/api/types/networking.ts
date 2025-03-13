@@ -1,4 +1,3 @@
-
 export interface SubnetData {
   id: string;
   name: string;
@@ -12,6 +11,39 @@ export interface SubnetData {
   location: string;
   environment: string;
   tags?: string[];
+}
+
+export interface TransformedSubnetData extends SubnetData {
+  vcenter: string;
+  cluster: string;
+  datastore: string;
+  datacenter: string;
+  domain: string;
+  netmask: string;
+  ipRange: {
+    starts: string;
+    ends: string;
+  };
+}
+
+export interface SubnetApiResponse {
+  _id: {
+    $oid: string;
+  };
+  cidr: string;
+  range: {
+    starts: string;
+    ends: string;
+  };
+  gateway: string;
+  vc: string;
+  name: string;
+  domain: string;
+  cluster: string;
+  datastore: string;
+  datacenter: string;
+  isActive: boolean;
+  netmask: string;
 }
 
 export interface RouteData {
