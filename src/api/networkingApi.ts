@@ -2,8 +2,8 @@
 import axios from 'axios';
 import { SubnetApiResponse, TransformedSubnetData } from '@/api/types/networking';
 
-// Base API URL - in production would come from environment variable
-const API_URL = 'http://10.13.113.35:3030';
+// Base API URL
+const API_URL = 'https://run.mocky.io/v3/91f299ea-a0fb-40b7-93aa-f23c83138fa4';
 
 // Create axios instance with default config
 const apiClient = axios.create({
@@ -18,6 +18,7 @@ const apiClient = axios.create({
 const transformSubnetData = (data: SubnetApiResponse[]): TransformedSubnetData[] => {
   return data.map(subnet => ({
     id: subnet._id.$oid,
+    rawId: subnet._id.$oid,
     name: subnet.name,
     cidr: subnet.cidr,
     description: `${subnet.domain} - ${subnet.datacenter}`,
@@ -38,6 +39,16 @@ const transformSubnetData = (data: SubnetApiResponse[]): TransformedSubnetData[]
     ipRange: {
       starts: subnet.range.starts,
       ends: subnet.range.ends
+    },
+    // Add metadata for route distribution
+    metadata: {
+      total: 100,
+      attached: 42,
+      available: 28,
+      reserved: 18,
+      orphaned: 12,
+      openshift: 65,
+      static: 35
     }
   }));
 };
@@ -45,7 +56,7 @@ const transformSubnetData = (data: SubnetApiResponse[]): TransformedSubnetData[]
 // Fetch subnets with error handling
 export const fetchSubnets = async (): Promise<TransformedSubnetData[]> => {
   try {
-    const response = await apiClient.get<SubnetApiResponse[]>('/subnets');
+    const response = await apiClient.get<SubnetApiResponse[]>('');
     return transformSubnetData(response.data);
   } catch (error) {
     console.error('Error fetching subnets:', error);
@@ -56,7 +67,7 @@ export const fetchSubnets = async (): Promise<TransformedSubnetData[]> => {
 // Get subnet by ID 
 export const fetchSubnetById = async (id: string): Promise<TransformedSubnetData | null> => {
   try {
-    const response = await apiClient.get<SubnetApiResponse[]>('/subnets');
+    const response = await apiClient.get<SubnetApiResponse[]>('');
     const subnets = transformSubnetData(response.data);
     return subnets.find(subnet => subnet.id === id) || null;
   } catch (error) {
