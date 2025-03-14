@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { 
   DropdownMenu, DropdownMenuContent, 
@@ -40,9 +40,16 @@ export const SubnetsSection: React.FC<SubnetsSectionProps> = ({
   } = useQuery({
     queryKey: ['subnets'],
     queryFn: fetchSubnets,
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 0, // Set to 0 to refetch on every mount
+    gcTime: 0, // Remove from cache when component unmounts
+    refetchOnMount: 'always', // Always refetch when component mounts
     retry: 2,
   });
+
+  // Refetch data when component mounts
+  useEffect(() => {
+    refetch();
+  }, [refetch]);
 
   // Error handling
   if (isError && error) {

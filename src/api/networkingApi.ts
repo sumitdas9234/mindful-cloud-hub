@@ -3,7 +3,7 @@ import axios from 'axios';
 import { SubnetApiResponse, TransformedSubnetData } from '@/api/types/networking';
 
 // Base API URL
-const API_URL = 'http://10.13.113.35:3030/subnets';
+const API_URL = 'https://run.mocky.io/v3/91f299ea-a0fb-40b7-93aa-f23c83138fa4';
 
 // Create axios instance with default config
 const apiClient = axios.create({
@@ -41,7 +41,7 @@ const transformSubnetData = (data: SubnetApiResponse[]): TransformedSubnetData[]
       ends: subnet.range.ends
     },
     // Add metadata for route distribution
-    metadata: {
+    metadata: subnet.metadata || {
       total: 100,
       attached: 42,
       available: 28,
@@ -57,6 +57,7 @@ const transformSubnetData = (data: SubnetApiResponse[]): TransformedSubnetData[]
 export const fetchSubnets = async (): Promise<TransformedSubnetData[]> => {
   try {
     const response = await apiClient.get<SubnetApiResponse[]>('');
+    console.log('API Response:', response.data);
     return transformSubnetData(response.data);
   } catch (error) {
     console.error('Error fetching subnets:', error);

@@ -24,7 +24,8 @@ import {
   Package,
   PackageCheck,
   PackagePlus,
-  PackageX
+  PackageX,
+  Copy
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { 
@@ -44,6 +45,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Progress } from '@/components/ui/progress';
+import { useToast } from '@/hooks/use-toast';
 
 interface SubnetDetailSheetProps {
   subnet: TransformedSubnetData | null;
@@ -58,6 +60,7 @@ export const SubnetDetailSheet: React.FC<SubnetDetailSheetProps> = ({
 }) => {
   const [updateDialogOpen, setUpdateDialogOpen] = useState(false);
   const [updatedSubnet, setUpdatedSubnet] = useState<Partial<TransformedSubnetData> | null>(null);
+  const { toast } = useToast();
 
   if (!subnet) {
     return null;
@@ -81,6 +84,21 @@ export const SubnetDetailSheet: React.FC<SubnetDetailSheetProps> = ({
     // Here you would implement the API call to update the subnet
     console.log('Updating subnet with:', updatedSubnet);
     setUpdateDialogOpen(false);
+  };
+
+  const copyToClipboard = (text: string, label: string) => {
+    navigator.clipboard.writeText(text).then(() => {
+      toast({
+        title: "Copied to clipboard",
+        description: `${label} has been copied.`
+      });
+    }).catch(err => {
+      toast({
+        title: "Failed to copy",
+        description: "Could not copy to clipboard.",
+        variant: "destructive"
+      });
+    });
   };
 
   const formattedCreatedAt = subnet.createdAt ? new Date(subnet.createdAt).toLocaleString() : 'N/A';
@@ -109,7 +127,7 @@ export const SubnetDetailSheet: React.FC<SubnetDetailSheetProps> = ({
           </div>
           <Badge 
             variant="outline"
-            className="w-20 justify-center bg-green-500/10 text-green-500 hover:bg-green-500/20"
+            className="w-fit px-3 justify-center bg-green-500/10 text-green-500 hover:bg-green-500/20"
           >
             active
           </Badge>
@@ -225,7 +243,7 @@ export const SubnetDetailSheet: React.FC<SubnetDetailSheetProps> = ({
                 <Separator />
                 <div className="flex justify-between items-center">
                   <dt className="text-muted-foreground">ID</dt>
-                  <dd className="font-mono text-xs truncate">{subnet.rawId}</dd>
+                  <dd className="font-mono text-xs truncate">{subnet.rawId || subnet.id}</dd>
                 </div>
               </dl>
             </CardContent>
@@ -242,12 +260,32 @@ export const SubnetDetailSheet: React.FC<SubnetDetailSheetProps> = ({
                     <Server className="h-4 w-4" />
                     vCenter
                   </dt>
-                  <dd className="font-medium text-sm truncate max-w-[200px]">{subnet.vcenter}</dd>
+                  <dd className="flex items-center gap-2">
+                    <span className="text-sm truncate max-w-[200px]">{subnet.vcenter}</span>
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      className="h-6 w-6" 
+                      onClick={() => copyToClipboard(subnet.vcenter, "vCenter")}
+                    >
+                      <Copy className="h-3.5 w-3.5" />
+                    </Button>
+                  </dd>
                 </div>
                 <Separator />
                 <div className="flex justify-between items-center">
                   <dt className="text-muted-foreground">Datacenter</dt>
-                  <dd className="font-medium">{subnet.datacenter}</dd>
+                  <dd className="flex items-center gap-2">
+                    <span className="text-sm">{subnet.datacenter}</span>
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      className="h-6 w-6" 
+                      onClick={() => copyToClipboard(subnet.datacenter, "Datacenter")}
+                    >
+                      <Copy className="h-3.5 w-3.5" />
+                    </Button>
+                  </dd>
                 </div>
                 <Separator />
                 <div className="flex justify-between items-center">
@@ -255,7 +293,17 @@ export const SubnetDetailSheet: React.FC<SubnetDetailSheetProps> = ({
                     <Database className="h-4 w-4" />
                     Cluster
                   </dt>
-                  <dd className="font-medium text-right">{subnet.cluster}</dd>
+                  <dd className="flex items-center gap-2">
+                    <span className="text-sm text-right">{subnet.cluster}</span>
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      className="h-6 w-6" 
+                      onClick={() => copyToClipboard(subnet.cluster, "Cluster")}
+                    >
+                      <Copy className="h-3.5 w-3.5" />
+                    </Button>
+                  </dd>
                 </div>
                 <Separator />
                 <div className="flex justify-between items-center">
@@ -263,7 +311,17 @@ export const SubnetDetailSheet: React.FC<SubnetDetailSheetProps> = ({
                     <HardDrive className="h-4 w-4" />
                     Datastore
                   </dt>
-                  <dd className="font-medium text-sm truncate max-w-[200px]">{subnet.datastore}</dd>
+                  <dd className="flex items-center gap-2">
+                    <span className="text-sm truncate max-w-[200px]">{subnet.datastore}</span>
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      className="h-6 w-6" 
+                      onClick={() => copyToClipboard(subnet.datastore, "Datastore")}
+                    >
+                      <Copy className="h-3.5 w-3.5" />
+                    </Button>
+                  </dd>
                 </div>
                 <Separator />
                 <div className="flex justify-between items-center">
@@ -273,31 +331,13 @@ export const SubnetDetailSheet: React.FC<SubnetDetailSheetProps> = ({
                   </dt>
                   <dd>{formattedCreatedAt}</dd>
                 </div>
-                {subnet.environment && (
-                  <>
-                    <Separator />
-                    <div className="flex justify-between items-center">
-                      <dt className="text-muted-foreground">Environment</dt>
-                      <dd>{subnet.environment}</dd>
-                    </div>
-                  </>
-                )}
-                {subnet.location && (
-                  <>
-                    <Separator />
-                    <div className="flex justify-between items-center">
-                      <dt className="text-muted-foreground">Location</dt>
-                      <dd>{subnet.location}</dd>
-                    </div>
-                  </>
-                )}
               </dl>
             </CardContent>
           </Card>
         </div>
 
         <SheetFooter className="mt-6">
-          <Button onClick={handleOpenUpdateDialog} className="w-full">
+          <Button onClick={handleOpenUpdateDialog} className="w-auto">
             <PencilIcon className="h-4 w-4 mr-2" />
             Update Subnet
           </Button>
