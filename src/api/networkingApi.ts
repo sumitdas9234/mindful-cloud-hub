@@ -3,7 +3,7 @@ import axios from 'axios';
 import { SubnetApiResponse, TransformedSubnetData } from '@/api/types/networking';
 
 // Base API URL
-const API_URL = 'https://run.mocky.io/v3/91f299ea-a0fb-40b7-93aa-f23c83138fa4';
+const API_URL = 'http://10.13.113.35:3030/subnets';
 
 // Create axios instance with default config
 const apiClient = axios.create({
