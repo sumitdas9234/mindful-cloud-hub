@@ -8,7 +8,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { 
-  MoreVertical, Server, Database, Network, HardDrive, Tag
+  MoreVertical, Server, HardDrive, Network
 } from 'lucide-react';
 import { ClusterData } from '@/api/types/clusters';
 import { DataTable, Column } from '@/components/compute/DataTable';
@@ -65,11 +65,10 @@ export const ClustersSection: React.FC<ClustersSectionProps> = ({
 
   const filteredClusters = clusters.filter(cluster => 
     cluster.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    cluster.datacenter.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    cluster.org.toLowerCase().includes(searchQuery.toLowerCase()) ||
     cluster.vc.toLowerCase().includes(searchQuery.toLowerCase()) ||
     cluster.datastore.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    cluster.tags.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()))
+    cluster.resourcepool.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    cluster.defaultnetwork.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   const handleRowClick = (cluster: ClusterData) => {
@@ -115,19 +114,14 @@ export const ClustersSection: React.FC<ClustersSectionProps> = ({
       cell: (cluster) => <span className="font-medium">{cluster.name}</span>
     },
     {
-      key: 'datacenter',
-      header: 'Datacenter',
+      key: 'vc',
+      header: 'vCenter',
       cell: (cluster) => (
         <div className="flex items-center">
-          <Database className="mr-2 h-4 w-4 text-muted-foreground" /> 
-          {cluster.datacenter}
+          <Server className="mr-2 h-4 w-4 text-muted-foreground" /> 
+          {cluster.vc}
         </div>
       )
-    },
-    {
-      key: 'org',
-      header: 'Organization',
-      cell: (cluster) => cluster.org
     },
     {
       key: 'status',
@@ -158,16 +152,6 @@ export const ClustersSection: React.FC<ClustersSectionProps> = ({
         <div className="flex items-center">
           <Network className="mr-2 h-4 w-4 text-muted-foreground" /> 
           <span className="truncate max-w-[200px]">{cluster.defaultnetwork}</span>
-        </div>
-      )
-    },
-    {
-      key: 'tags',
-      header: 'Tags',
-      cell: (cluster) => (
-        <div className="flex items-center">
-          <Tag className="mr-2 h-4 w-4 text-muted-foreground" /> 
-          <span>{cluster.tags.length > 0 ? cluster.tags.slice(0, 2).join(', ') + (cluster.tags.length > 2 ? '...' : '') : 'No tags'}</span>
         </div>
       )
     }

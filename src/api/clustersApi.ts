@@ -1,5 +1,7 @@
 
+import axios from 'axios';
 import { ClusterApiResponse, ClusterData } from './types/clusters';
+import env from '@/config/env';
 
 // Mock data for clusters
 const MOCK_CLUSTERS: ClusterApiResponse[] = [
@@ -113,12 +115,30 @@ const transformClusterData = (data: ClusterApiResponse[]): ClusterData[] => {
   }));
 };
 
+// Fetch real clusters from API
+const fetchRealClusters = async (): Promise<ClusterData[]> => {
+  try {
+    console.log('Fetching clusters from real API');
+    const response = await axios.get(env.CLUSTERS_API_URL);
+    return transformClusterData(response.data);
+  } catch (error) {
+    console.error('Error fetching clusters from API:', error);
+    // Fallback to mock data in case of error
+    console.log('Falling back to mock data');
+    return transformClusterData(MOCK_CLUSTERS);
+  }
+};
+
 // Fetch all clusters
 export const fetchClusters = async (): Promise<ClusterData[]> => {
-  // Simulating API call delay
-  await new Promise(resolve => setTimeout(resolve, 500));
-  console.log('Fetching clusters from mock API');
-  return transformClusterData(MOCK_CLUSTERS);
+  if (env.USE_MOCK_DATA) {
+    // Simulating API call delay
+    await new Promise(resolve => setTimeout(resolve, 500));
+    console.log('Fetching clusters from mock API');
+    return transformClusterData(MOCK_CLUSTERS);
+  }
+  
+  return fetchRealClusters();
 };
 
 // Fetch a single cluster by ID
@@ -126,6 +146,7 @@ export const fetchClusterById = async (clusterId: string): Promise<ClusterData |
   // Simulating API call delay
   await new Promise(resolve => setTimeout(resolve, 300));
   
+  // For now, we just use mock data regardless of the env setting
   const cluster = MOCK_CLUSTERS.find(c => c._id === clusterId);
   return cluster ? transformClusterData([cluster])[0] : null;
 };
