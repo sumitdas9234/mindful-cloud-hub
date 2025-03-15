@@ -77,7 +77,10 @@ export const ClustersSection: React.FC<ClustersSectionProps> = ({
   };
 
   const handleClusterAction = (action: string, cluster: ClusterData) => {
-    if (action === 'Update') {
+    if (action === 'View') {
+      setSelectedCluster(cluster);
+      setIsDetailOpen(true);
+    } else if (action === 'Update') {
       setSelectedCluster(cluster);
       setIsUpdateOpen(true);
     } else {

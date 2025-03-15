@@ -131,6 +131,7 @@ const fetchRealClusters = async (): Promise<ClusterData[]> => {
 
 // Fetch all clusters
 export const fetchClusters = async (): Promise<ClusterData[]> => {
+  // Use real API by default, only use mock if explicitly configured
   if (env.USE_MOCK_DATA) {
     // Simulating API call delay
     await new Promise(resolve => setTimeout(resolve, 500));
@@ -143,33 +144,73 @@ export const fetchClusters = async (): Promise<ClusterData[]> => {
 
 // Fetch a single cluster by ID
 export const fetchClusterById = async (clusterId: string): Promise<ClusterData | null> => {
-  // Simulating API call delay
-  await new Promise(resolve => setTimeout(resolve, 300));
-  
-  // For now, we just use mock data regardless of the env setting
-  const cluster = MOCK_CLUSTERS.find(c => c._id === clusterId);
-  return cluster ? transformClusterData([cluster])[0] : null;
+  try {
+    if (env.USE_MOCK_DATA) {
+      // Simulating API call delay for mock data
+      await new Promise(resolve => setTimeout(resolve, 300));
+      
+      const cluster = MOCK_CLUSTERS.find(c => c._id === clusterId);
+      return cluster ? transformClusterData([cluster])[0] : null;
+    }
+    
+    // Fetch from real API
+    const response = await axios.get(`${env.CLUSTERS_API_URL}?id=${clusterId}`);
+    const clusters = transformClusterData(Array.isArray(response.data) ? response.data : [response.data]);
+    return clusters.find(c => c.id === clusterId) || null;
+  } catch (error) {
+    console.error(`Error fetching cluster ${clusterId}:`, error);
+    
+    // Fallback to mock data in case of error
+    const cluster = MOCK_CLUSTERS.find(c => c._id === clusterId);
+    return cluster ? transformClusterData([cluster])[0] : null;
+  }
 };
 
 // Update a cluster (mock implementation)
 export const updateCluster = async (clusterId: string, updates: Partial<ClusterData>): Promise<ClusterData> => {
-  // Simulating API call delay
-  await new Promise(resolve => setTimeout(resolve, 800));
-  
-  console.log(`Updating cluster ${clusterId} with:`, updates);
-  
-  // In a real implementation, this would update the server
-  // For now, we just return a mock response
-  const cluster = MOCK_CLUSTERS.find(c => c._id === clusterId);
-  if (!cluster) {
-    throw new Error(`Cluster with ID ${clusterId} not found`);
+  try {
+    if (env.USE_MOCK_DATA) {
+      // Simulating API call delay
+      await new Promise(resolve => setTimeout(resolve, 800));
+      
+      console.log(`Updating cluster ${clusterId} with:`, updates);
+      
+      // In a real implementation, this would update the server
+      const cluster = MOCK_CLUSTERS.find(c => c._id === clusterId);
+      if (!cluster) {
+        throw new Error(`Cluster with ID ${clusterId} not found`);
+      }
+      
+      // Return the "updated" cluster
+      return transformClusterData([{
+        ...cluster,
+        ...updates,
+        // Make sure _id is not overwritten
+        _id: clusterId
+      }])[0];
+    }
+    
+    // In a real implementation, we would do a PUT or PATCH request
+    console.log(`Updating cluster ${clusterId} with:`, updates);
+    
+    // For now, we'll just simulate an update with a fake success response
+    // In a real app, you would do:
+    // const response = await axios.patch(`${env.CLUSTERS_API_URL}/${clusterId}`, updates);
+    
+    // Fetch the current state
+    const currentCluster = await fetchClusterById(clusterId);
+    if (!currentCluster) {
+      throw new Error(`Cluster with ID ${clusterId} not found`);
+    }
+    
+    // Return simulated updated cluster
+    return {
+      ...currentCluster,
+      ...updates,
+      id: clusterId // Make sure id is not overwritten
+    };
+  } catch (error) {
+    console.error(`Error updating cluster ${clusterId}:`, error);
+    throw error;
   }
-  
-  // Return the "updated" cluster
-  return transformClusterData([{
-    ...cluster,
-    ...updates,
-    // Make sure _id is not overwritten
-    _id: clusterId
-  }])[0];
 };

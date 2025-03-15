@@ -5,13 +5,18 @@ import { Separator } from '@/components/ui/separator';
 import { PageHeader } from '@/components/compute/PageHeader';
 import { useToast } from '@/hooks/use-toast';
 import { ClustersSection } from '@/components/clusters/ClustersSection';
+import { useQueryClient } from '@tanstack/react-query';
 
 const ClustersPage: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   
   const handleRefresh = () => {
+    // Invalidate and refetch clusters data
+    queryClient.invalidateQueries({ queryKey: ['clusters'] });
+    
     toast({
       title: "Refreshing clusters data",
       description: "The clusters information has been refreshed.",
@@ -37,7 +42,7 @@ const ClustersPage: React.FC = () => {
 
       <Separator className="my-6" />
 
-      <ClustersSection />
+      <ClustersSection onRefresh={handleRefresh} />
     </div>
   );
 };
