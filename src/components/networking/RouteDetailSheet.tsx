@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { format } from 'date-fns';
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Separator } from '@/components/ui/separator';
@@ -7,45 +7,23 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { RouteData } from '@/api/types/networking';
 import { getStatusBadgeColor, getTypeBadgeColor } from './routes/RouteColumns';
-import { Copy, ExternalLink, Globe, Server, Save } from 'lucide-react';
+import { Copy, ExternalLink, Globe, Server, Edit } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { 
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Input } from "@/components/ui/input";
-import { Label } from '@/components/ui/label';
 
 interface RouteDetailSheetProps {
   route: RouteData | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onRouteUpdate?: (routeId: string, updates: Partial<RouteData>) => void;
+  onUpdateClick: () => void;
 }
 
 export const RouteDetailSheet: React.FC<RouteDetailSheetProps> = ({ 
   route, 
   open, 
   onOpenChange,
-  onRouteUpdate
+  onUpdateClick
 }) => {
   const { toast } = useToast();
-  const [status, setStatus] = useState<RouteData['status']>('available');
-  const [testbed, setTestbed] = useState<string | null>(null);
-  const [expiry, setExpiry] = useState<string | null>(null);
-  const [isEditing, setIsEditing] = useState(false);
-
-  // Initialize form values when route changes
-  React.useEffect(() => {
-    if (route) {
-      setStatus(route.status);
-      setTestbed(route.testbed);
-      setExpiry(route.expiry);
-    }
-  }, [route]);
 
   if (!route) return null;
 
@@ -66,41 +44,20 @@ export const RouteDetailSheet: React.FC<RouteDetailSheetProps> = ({
     }
   };
 
-  const handleUpdate = () => {
-    if (isEditing) {
-      // Save changes
-      if (onRouteUpdate && route) {
-        onRouteUpdate(route.id, {
-          status,
-          testbed,
-          expiry
-        });
-      }
-      
-      toast({
-        title: 'Route Updated',
-        description: `Route ${route.name} has been updated successfully.`,
-      });
-      
-      setIsEditing(false);
-    } else {
-      // Start editing
-      setIsEditing(true);
-    }
-  };
-
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="sm:max-w-md">
-        <SheetHeader>
-          <SheetTitle className="flex items-center gap-2">
-            {route.type === 'openshift' ? (
-              <Globe className="h-5 w-5 text-red-500" />
-            ) : (
-              <Server className="h-5 w-5 text-blue-500" />
-            )}
-            {route.name}
-          </SheetTitle>
+      <SheetContent className="sm:max-w-md overflow-y-auto">
+        <SheetHeader className="pb-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              {route.type === 'openshift' ? (
+                <Globe className="h-5 w-5 text-red-500" />
+              ) : (
+                <Server className="h-5 w-5 text-blue-500" />
+              )}
+              <SheetTitle>{route.name}</SheetTitle>
+            </div>
+          </div>
           <SheetDescription>
             <div className="flex gap-2 mt-1">
               <Badge
@@ -111,167 +68,142 @@ export const RouteDetailSheet: React.FC<RouteDetailSheetProps> = ({
               </Badge>
               <Badge
                 variant="outline"
-                className={getStatusBadgeColor(status)}
+                className={getStatusBadgeColor(route.status)}
               >
-                {status}
+                {route.status}
               </Badge>
             </div>
           </SheetDescription>
         </SheetHeader>
         
-        <div className="mt-6 space-y-6">
-          <div className="space-y-2">
-            <h4 className="text-sm font-medium">Subnet</h4>
-            <p className="text-sm">{route.subnetName}</p>
+        <div className="space-y-6">
+          <div>
+            <h3 className="text-lg font-semibold mb-4">Route Details</h3>
+            <dl className="space-y-4">
+              <div className="flex flex-row justify-between">
+                <dt className="text-sm font-medium text-muted-foreground">Subnet</dt>
+                <dd className="text-sm">{route.subnetName}</dd>
+              </div>
+              
+              {route.testbed && (
+                <div className="flex flex-row justify-between">
+                  <dt className="text-sm font-medium text-muted-foreground">Testbed</dt>
+                  <dd className="text-sm">{route.testbed}</dd>
+                </div>
+              )}
+              
+              {route.expiry && (
+                <div className="flex flex-row justify-between">
+                  <dt className="text-sm font-medium text-muted-foreground">Expires</dt>
+                  <dd className="text-sm">{formatDate(route.expiry)}</dd>
+                </div>
+              )}
+              
+              <div className="flex flex-row justify-between">
+                <dt className="text-sm font-medium text-muted-foreground">Created</dt>
+                <dd className="text-sm">{formatDate(route.createdAt)}</dd>
+              </div>
+              
+              <div className="flex flex-row justify-between">
+                <dt className="text-sm font-medium text-muted-foreground">Updated</dt>
+                <dd className="text-sm">{formatDate(route.updatedAt)}</dd>
+              </div>
+            </dl>
           </div>
-
-          {isEditing ? (
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="status">Status</Label>
-                <Select value={status} onValueChange={(value) => setStatus(value as RouteData['status'])}>
-                  <SelectTrigger id="status" className="w-full">
-                    <SelectValue placeholder="Status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="available">Available</SelectItem>
-                    <SelectItem value="attached">Attached</SelectItem>
-                    <SelectItem value="reserved">Reserved</SelectItem>
-                    <SelectItem value="orphaned">Orphaned</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="testbed">Testbed</Label>
-                <Input 
-                  id="testbed" 
-                  value={testbed || ''} 
-                  onChange={(e) => setTestbed(e.target.value || null)}
-                  placeholder="Testbed name" 
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="expiry">Expiry Date</Label>
-                <Input 
-                  id="expiry" 
-                  type="date" 
-                  value={expiry ? new Date(expiry).toISOString().split('T')[0] : ''} 
-                  onChange={(e) => setExpiry(e.target.value || null)}
-                />
-              </div>
-            </div>
-          ) : (
-            <>
-              {/* Testbed information (conditional) */}
-              {testbed && (
-                <div className="space-y-2">
-                  <h4 className="text-sm font-medium">Testbed</h4>
-                  <p className="text-sm">{testbed}</p>
-                </div>
-              )}
-
-              {/* Expiry information (conditional) */}
-              {expiry && (
-                <div className="space-y-2">
-                  <h4 className="text-sm font-medium">Expires</h4>
-                  <p className="text-sm">{formatDate(expiry)}</p>
-                </div>
-              )}
-            </>
-          )}
 
           <Separator />
 
           {/* Display details based on route type */}
           {route.type === 'openshift' && route.vip && route.apps ? (
-            <>
-              <div className="space-y-3">
-                <h4 className="text-sm font-medium">API Endpoint</h4>
-                <div className="space-y-1">
-                  <div className="flex items-center justify-between">
-                    <p className="text-sm font-medium">FQDN</p>
-                    <div className="flex gap-2">
+            <div>
+              <h3 className="text-lg font-semibold mb-4">Endpoints</h3>
+              <div className="space-y-4">
+                <div>
+                  <h4 className="text-sm font-medium mb-2">API Endpoint</h4>
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <p className="text-sm text-muted-foreground">FQDN</p>
+                      <div className="flex gap-2">
+                        <Button 
+                          size="icon" 
+                          variant="ghost" 
+                          className="h-8 w-8"
+                          onClick={() => handleCopyToClipboard(route.vip?.fqdn || '', 'API FQDN')}
+                        >
+                          <Copy className="h-4 w-4" />
+                        </Button>
+                        <Button 
+                          size="icon" 
+                          variant="ghost" 
+                          className="h-8 w-8"
+                          onClick={() => window.open(`https://${route.vip?.fqdn}`, '_blank')}
+                        >
+                          <ExternalLink className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                    <p className="text-sm font-mono">{route.vip.fqdn}</p>
+                  </div>
+                  
+                  <div className="space-y-2 mt-4">
+                    <div className="flex items-center justify-between">
+                      <p className="text-sm text-muted-foreground">IP Address</p>
                       <Button 
                         size="icon" 
                         variant="ghost" 
                         className="h-8 w-8"
-                        onClick={() => handleCopyToClipboard(route.vip?.fqdn || '', 'API FQDN')}
+                        onClick={() => handleCopyToClipboard(route.vip?.ip || '', 'API IP')}
                       >
                         <Copy className="h-4 w-4" />
                       </Button>
+                    </div>
+                    <p className="text-sm font-mono">{route.vip.ip}</p>
+                  </div>
+                </div>
+
+                <Separator />
+
+                <div>
+                  <h4 className="text-sm font-medium mb-2">Applications Endpoint</h4>
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <p className="text-sm text-muted-foreground">FQDN</p>
                       <Button 
                         size="icon" 
                         variant="ghost" 
                         className="h-8 w-8"
-                        onClick={() => window.open(`https://${route.vip?.fqdn}`, '_blank')}
+                        onClick={() => handleCopyToClipboard(route.apps?.fqdn || '', 'Apps FQDN')}
                       >
-                        <ExternalLink className="h-4 w-4" />
+                        <Copy className="h-4 w-4" />
                       </Button>
                     </div>
+                    <p className="text-sm font-mono">{route.apps.fqdn}</p>
                   </div>
-                  <p className="text-sm font-mono">{route.vip.fqdn}</p>
-                </div>
-                
-                <div className="space-y-1">
-                  <div className="flex items-center justify-between">
-                    <p className="text-sm font-medium">IP Address</p>
-                    <Button 
-                      size="icon" 
-                      variant="ghost" 
-                      className="h-8 w-8"
-                      onClick={() => handleCopyToClipboard(route.vip?.ip || '', 'API IP')}
-                    >
-                      <Copy className="h-4 w-4" />
-                    </Button>
+                  
+                  <div className="space-y-2 mt-4">
+                    <div className="flex items-center justify-between">
+                      <p className="text-sm text-muted-foreground">IP Address</p>
+                      <Button 
+                        size="icon" 
+                        variant="ghost" 
+                        className="h-8 w-8"
+                        onClick={() => handleCopyToClipboard(route.apps?.ip || '', 'Apps IP')}
+                      >
+                        <Copy className="h-4 w-4" />
+                      </Button>
+                    </div>
+                    <p className="text-sm font-mono">{route.apps.ip}</p>
                   </div>
-                  <p className="text-sm font-mono">{route.vip.ip}</p>
-                </div>
-              </div>
-
-              <Separator />
-
-              <div className="space-y-3">
-                <h4 className="text-sm font-medium">Applications Endpoint</h4>
-                <div className="space-y-1">
-                  <div className="flex items-center justify-between">
-                    <p className="text-sm font-medium">FQDN</p>
-                    <Button 
-                      size="icon" 
-                      variant="ghost" 
-                      className="h-8 w-8"
-                      onClick={() => handleCopyToClipboard(route.apps?.fqdn || '', 'Apps FQDN')}
-                    >
-                      <Copy className="h-4 w-4" />
-                    </Button>
-                  </div>
-                  <p className="text-sm font-mono">{route.apps.fqdn}</p>
-                </div>
-                
-                <div className="space-y-1">
-                  <div className="flex items-center justify-between">
-                    <p className="text-sm font-medium">IP Address</p>
-                    <Button 
-                      size="icon" 
-                      variant="ghost" 
-                      className="h-8 w-8"
-                      onClick={() => handleCopyToClipboard(route.apps?.ip || '', 'Apps IP')}
-                    >
-                      <Copy className="h-4 w-4" />
-                    </Button>
-                  </div>
-                  <p className="text-sm font-mono">{route.apps.ip}</p>
                 </div>
               </div>
-            </>
+            </div>
           ) : (
             // For static routes
-            <div className="space-y-3">
-              <h4 className="text-sm font-medium">Static IP Address</h4>
-              <div className="space-y-1">
+            <div>
+              <h3 className="text-lg font-semibold mb-4">Static IP Address</h3>
+              <div className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <p className="text-sm font-medium">IP Address</p>
+                  <p className="text-sm text-muted-foreground">IP Address</p>
                   <Button 
                     size="icon" 
                     variant="ghost" 
@@ -288,19 +220,14 @@ export const RouteDetailSheet: React.FC<RouteDetailSheetProps> = ({
 
           <Separator />
 
-          <div className="flex justify-end gap-2">
+          <div className="flex justify-end">
             <Button 
-              variant={isEditing ? "default" : "outline"} 
-              onClick={handleUpdate}
+              variant="default" 
+              onClick={onUpdateClick}
+              className="w-full sm:w-auto"
             >
-              {isEditing ? (
-                <>
-                  <Save className="mr-2 h-4 w-4" />
-                  Save Changes
-                </>
-              ) : (
-                'Update Route'
-              )}
+              <Edit className="mr-2 h-4 w-4" />
+              Update Route
             </Button>
           </div>
         </div>

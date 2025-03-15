@@ -8,10 +8,10 @@ import { useToast } from '@/hooks/use-toast';
 import { RouteDetailSheet } from './RouteDetailSheet';
 import { RouteHeader } from './routes/RouteHeader';
 import { RouteFilters } from './routes/RouteFilters';
-import { RouteActions } from './routes/RouteActions';
 import { getRouteColumns } from './routes/RouteColumns';
-import { fetchRoutes, fetchRoutesBySubnet } from '@/api/routesApi';
+import { fetchRoutes } from '@/api/routesApi';
 import { fetchSubnets } from '@/api/networkingApi';
+import { RouteUpdateDialog } from './routes/RouteUpdateDialog';
 
 interface RoutesSectionProps {
   subnetId: string | null;
@@ -30,6 +30,7 @@ export const RoutesSection: React.FC<RoutesSectionProps> = ({
   const [subnetFilter, setSubnetFilter] = useState<string>(subnetId || 'all');
   const [selectedRoute, setSelectedRoute] = useState<RouteData | null>(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
+  const [isUpdateDialogOpen, setIsUpdateDialogOpen] = useState(false);
   const { toast } = useToast();
 
   // Update the subnetFilter when the subnetId prop changes
@@ -39,7 +40,7 @@ export const RoutesSection: React.FC<RoutesSectionProps> = ({
     }
   }, [subnetId]);
 
-  // Fetch all routes - we'll filter them client-side based on the subnet filter
+  // Fetch all routes
   const { 
     data: allRoutes = [], 
     isLoading, 
@@ -109,11 +110,18 @@ export const RoutesSection: React.FC<RoutesSectionProps> = ({
     
     // Refresh routes after update
     refetchRoutes();
+    setIsUpdateDialogOpen(false);
   };
 
   const handleRowClick = (route: RouteData) => {
     setSelectedRoute(route);
     setIsDetailOpen(true);
+  };
+
+  const handleUpdateClick = () => {
+    if (selectedRoute) {
+      setIsUpdateDialogOpen(true);
+    }
   };
 
   const columns = getRouteColumns();
@@ -165,8 +173,17 @@ export const RoutesSection: React.FC<RoutesSectionProps> = ({
         route={selectedRoute}
         open={isDetailOpen}
         onOpenChange={setIsDetailOpen}
-        onRouteUpdate={handleRouteUpdate}
+        onUpdateClick={handleUpdateClick}
       />
+
+      {selectedRoute && (
+        <RouteUpdateDialog
+          route={selectedRoute}
+          open={isUpdateDialogOpen}
+          onOpenChange={setIsUpdateDialogOpen}
+          onRouteUpdate={handleRouteUpdate}
+        />
+      )}
     </div>
   );
 };
