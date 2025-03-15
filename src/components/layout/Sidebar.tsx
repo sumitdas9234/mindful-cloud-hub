@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
@@ -17,7 +16,8 @@ import {
   MemoryStick,
   Folder,
   GitBranch,
-  Globe
+  Globe,
+  Network
 } from 'lucide-react';
 
 interface SidebarItemProps {
@@ -168,6 +168,13 @@ export const Sidebar = () => {
             path="/testbeds"
             collapsed={collapsed}
             active={location.pathname === '/testbeds'}
+          />
+          <SidebarItem 
+            icon={Network} 
+            label="Clusters" 
+            path="/clusters"
+            collapsed={collapsed}
+            active={location.pathname === '/clusters'}
           />
           <SidebarItem 
             icon={Globe} 

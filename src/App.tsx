@@ -15,6 +15,7 @@ import AppsAndServices from "./pages/compute/AppsAndServices";
 import Networking from "./pages/infrastructure/Networking";
 import Subnets from "./pages/infrastructure/Subnets";
 import RoutesPage from "./pages/infrastructure/Routes";
+import ClustersPage from "./pages/infrastructure/Clusters";
 import StorageManagement from "./pages/infrastructure/StorageManagement";
 
 const queryClient = new QueryClient();
@@ -86,6 +87,14 @@ const App = () => (
             element={
               <Layout title="Testbed Management">
                 <Testbeds />
+              </Layout>
+            } 
+          />
+          <Route 
+            path="/clusters" 
+            element={
+              <Layout title="Cluster Management">
+                <ClustersPage />
               </Layout>
             } 
           />
