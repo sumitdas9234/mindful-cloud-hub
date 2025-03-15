@@ -1,18 +1,19 @@
 
 import axios from 'axios';
 import { RouteApiResponse, RouteData } from '@/api/types/networking';
-
-// Base API URL for routes
-const ROUTES_API_URL = 'https://run.mocky.io/v3/7db7bcea-3526-4174-b04f-03ca79cd69ef';
+import env from '@/config/env';
 
 // Create axios instance with default config
-const routesApiClient = axios.create({
-  baseURL: ROUTES_API_URL,
+const apiClient = axios.create({
+  baseURL: env.API_BASE_URL,
   timeout: 10000,
   headers: {
     'Content-Type': 'application/json',
   }
 });
+
+// API endpoints
+const ROUTES_ENDPOINT = '/routes';
 
 // Transform routes from API response format to app format
 const transformRouteData = (data: RouteApiResponse[]): RouteData[] => {
@@ -38,7 +39,7 @@ const transformRouteData = (data: RouteApiResponse[]): RouteData[] => {
 // Fetch all routes
 export const fetchRoutes = async (): Promise<RouteData[]> => {
   try {
-    const response = await routesApiClient.get<RouteApiResponse[]>('');
+    const response = await apiClient.get<RouteApiResponse[]>(ROUTES_ENDPOINT);
     console.log('API Response - Routes:', response.data);
     return transformRouteData(response.data);
   } catch (error) {
@@ -50,7 +51,7 @@ export const fetchRoutes = async (): Promise<RouteData[]> => {
 // Fetch routes for a specific subnet
 export const fetchRoutesBySubnet = async (subnetId: string): Promise<RouteData[]> => {
   try {
-    const response = await routesApiClient.get<RouteApiResponse[]>('');
+    const response = await apiClient.get<RouteApiResponse[]>(`${ROUTES_ENDPOINT}?subnet=${subnetId}`);
     console.log(`API Response - Routes for subnet ${subnetId}:`, response.data);
     const filteredRoutes = response.data.filter(route => route.subnet === subnetId);
     return transformRouteData(filteredRoutes);
@@ -63,8 +64,10 @@ export const fetchRoutesBySubnet = async (subnetId: string): Promise<RouteData[]
 // Fetch a single route by ID
 export const fetchRouteById = async (routeId: string): Promise<RouteData | null> => {
   try {
-    const response = await routesApiClient.get<RouteApiResponse[]>('');
-    const route = response.data.find(r => r._id.$oid === routeId);
+    const response = await apiClient.get<RouteApiResponse[]>(`${ROUTES_ENDPOINT}/${routeId}`);
+    const route = Array.isArray(response.data) 
+      ? response.data.find(r => r._id.$oid === routeId)
+      : response.data;
     return route ? transformRouteData([route])[0] : null;
   } catch (error) {
     console.error(`Error fetching route ${routeId}:`, error);

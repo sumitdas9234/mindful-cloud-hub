@@ -1,18 +1,19 @@
 
 import axios from 'axios';
 import { SubnetApiResponse, TransformedSubnetData } from '@/api/types/networking';
-
-// Base API URL
-const API_URL = 'https://run.mocky.io/v3/fd67e9b1-4948-44a6-93d5-c9e923d4e08b';
+import env from '@/config/env';
 
 // Create axios instance with default config
 const apiClient = axios.create({
-  baseURL: API_URL,
+  baseURL: env.API_BASE_URL,
   timeout: 10000,
   headers: {
     'Content-Type': 'application/json',
   }
 });
+
+// API endpoints
+const SUBNETS_ENDPOINT = '/subnets';
 
 // Transform API response to match our application's data structure
 const transformSubnetData = (data: SubnetApiResponse[]): TransformedSubnetData[] => {
@@ -56,7 +57,7 @@ const transformSubnetData = (data: SubnetApiResponse[]): TransformedSubnetData[]
 // Fetch subnets with error handling
 export const fetchSubnets = async (): Promise<TransformedSubnetData[]> => {
   try {
-    const response = await apiClient.get<SubnetApiResponse[]>('');
+    const response = await apiClient.get<SubnetApiResponse[]>(SUBNETS_ENDPOINT);
     console.log('API Response:', response.data);
     return transformSubnetData(response.data);
   } catch (error) {
@@ -68,8 +69,8 @@ export const fetchSubnets = async (): Promise<TransformedSubnetData[]> => {
 // Get subnet by ID 
 export const fetchSubnetById = async (id: string): Promise<TransformedSubnetData | null> => {
   try {
-    const response = await apiClient.get<SubnetApiResponse[]>('');
-    const subnets = transformSubnetData(response.data);
+    const response = await apiClient.get<SubnetApiResponse[]>(`${SUBNETS_ENDPOINT}/${id}`);
+    const subnets = transformSubnetData(Array.isArray(response.data) ? response.data : [response.data]);
     return subnets.find(subnet => subnet.id === id) || null;
   } catch (error) {
     console.error(`Error fetching subnet with ID ${id}:`, error);
