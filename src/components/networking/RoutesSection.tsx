@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { RouteData, RouteFilter, SubnetData } from '@/api/types/networking';
@@ -32,7 +33,7 @@ export const RoutesSection: React.FC<RoutesSectionProps> = ({
   const { toast } = useToast();
 
   // Fetch routes - either all routes or filtered by subnet
-  const { data: routes = [], isLoading, refetch } = useQuery({
+  const { data: routes = [], isLoading, refetch: refetchRoutes, error: routesError } = useQuery({
     queryKey: ['routes', subnetId],
     queryFn: () => subnetId ? fetchRoutesBySubnet(subnetId) : fetchRoutes(),
     staleTime: 0,
@@ -41,11 +42,15 @@ export const RoutesSection: React.FC<RoutesSectionProps> = ({
   });
 
   // Fetch all subnets for filtering
-  const { data: subnets = [] } = useQuery({
+  const { data: subnets = [], error: subnetsError } = useQuery({
     queryKey: ['subnets-for-routes'],
     queryFn: fetchSubnets,
     staleTime: 0,
   });
+
+  // Log any errors
+  if (routesError) console.error('Error fetching routes:', routesError);
+  if (subnetsError) console.error('Error fetching subnets:', subnetsError);
 
   const filteredRoutes = routes.filter(route => {
     const matchesSearch = 
@@ -66,7 +71,7 @@ export const RoutesSection: React.FC<RoutesSectionProps> = ({
   });
 
   const handleRefresh = () => {
-    refetch();
+    refetchRoutes();
     toast({
       title: "Refreshing routes",
       description: "The routes list has been refreshed.",
