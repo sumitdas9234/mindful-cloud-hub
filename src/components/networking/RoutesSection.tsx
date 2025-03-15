@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { RouteData, RouteFilter, SubnetData } from '@/api/types/networking';
 import { DataTable } from '@/components/compute/DataTable';
@@ -32,10 +32,22 @@ export const RoutesSection: React.FC<RoutesSectionProps> = ({
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const { toast } = useToast();
 
-  // Fetch routes - either all routes or filtered by subnet
-  const { data: routes = [], isLoading, refetch: refetchRoutes, error: routesError } = useQuery({
-    queryKey: ['routes', subnetId],
-    queryFn: () => subnetId ? fetchRoutesBySubnet(subnetId) : fetchRoutes(),
+  // Update the subnetFilter when the subnetId prop changes
+  useEffect(() => {
+    if (subnetId) {
+      setSubnetFilter(subnetId);
+    }
+  }, [subnetId]);
+
+  // Fetch all routes - we'll filter them client-side based on the subnet filter
+  const { 
+    data: allRoutes = [], 
+    isLoading, 
+    refetch: refetchRoutes, 
+    error: routesError 
+  } = useQuery({
+    queryKey: ['routes'],
+    queryFn: fetchRoutes,
     staleTime: 0,
     refetchOnMount: 'always',
     gcTime: 0,
@@ -52,7 +64,8 @@ export const RoutesSection: React.FC<RoutesSectionProps> = ({
   if (routesError) console.error('Error fetching routes:', routesError);
   if (subnetsError) console.error('Error fetching subnets:', subnetsError);
 
-  const filteredRoutes = routes.filter(route => {
+  // Apply filters on the client side
+  const filteredRoutes = allRoutes.filter(route => {
     const matchesSearch = 
       route.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       route.subnetName.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -83,6 +96,19 @@ export const RoutesSection: React.FC<RoutesSectionProps> = ({
       title: `${action} Route`,
       description: `Action "${action}" triggered for route "${route.name}".`,
     });
+  };
+
+  const handleRouteUpdate = (routeId: string, updates: Partial<RouteData>) => {
+    console.log('Updating route:', routeId, updates);
+    // In a real app, this would make an API call to update the route
+    // For now, we'll just show a toast
+    toast({
+      title: "Route Updated",
+      description: `Route ${routeId} has been updated with new values.`,
+    });
+    
+    // Refresh routes after update
+    refetchRoutes();
   };
 
   const handleRowClick = (route: RouteData) => {
@@ -139,6 +165,7 @@ export const RoutesSection: React.FC<RoutesSectionProps> = ({
         route={selectedRoute}
         open={isDetailOpen}
         onOpenChange={setIsDetailOpen}
+        onRouteUpdate={handleRouteUpdate}
       />
     </div>
   );

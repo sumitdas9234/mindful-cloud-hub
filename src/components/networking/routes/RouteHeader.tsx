@@ -3,7 +3,7 @@ import React from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, RefreshCw, Globe, Server } from 'lucide-react';
+import { ArrowLeft, Globe, Server } from 'lucide-react';
 import { SubnetData, RouteFilter } from '@/api/types/networking';
 
 interface RouteHeaderProps {
@@ -68,16 +68,6 @@ export const RouteHeader: React.FC<RouteHeaderProps> = ({
             </TabsTrigger>
           </TabsList>
         </Tabs>
-        
-        <Button
-          variant="outline"
-          size="sm"
-          className="mt-2 sm:mt-0"
-          onClick={handleRefresh}
-        >
-          <RefreshCw className="mr-2 h-4 w-4" />
-          Refresh
-        </Button>
       </div>
     </div>
   );
