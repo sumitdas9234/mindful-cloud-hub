@@ -16,6 +16,7 @@ import { SearchBar } from '@/components/compute/SearchBar';
 import { useToast } from '@/hooks/use-toast';
 import { SubnetDetailSheet } from './SubnetDetailSheet';
 import { fetchSubnets } from '@/api/networkingApi';
+import { TableSkeleton } from '@/components/ui/skeleton';
 
 interface SubnetsSectionProps {
   onSubnetSelect?: (subnetId: string) => void;
@@ -173,21 +174,25 @@ export const SubnetsSection: React.FC<SubnetsSectionProps> = ({
           placeholder="Search subnets..."
         />
         <Badge className="bg-blue-500/10 text-blue-500">
-          {subnets.length} total
+          {!isLoading ? `${subnets.length} total` : "Loading..."}
         </Badge>
       </div>
 
-      <DataTable
-        data={filteredSubnets}
-        columns={columns}
-        keyExtractor={(subnet) => subnet.id}
-        isLoading={isLoading}
-        emptyTitle="No Subnets Found"
-        emptyDescription={searchQuery ? "No subnets match your search criteria." : "No subnets have been added yet."}
-        searchQuery={searchQuery}
-        onRowClick={handleRowClick}
-        actionColumn={actionColumn}
-      />
+      {isLoading ? (
+        <TableSkeleton rows={5} />
+      ) : (
+        <DataTable
+          data={filteredSubnets}
+          columns={columns}
+          keyExtractor={(subnet) => subnet.id}
+          isLoading={isLoading}
+          emptyTitle="No Subnets Found"
+          emptyDescription={searchQuery ? "No subnets match your search criteria." : "No subnets have been added yet."}
+          searchQuery={searchQuery}
+          onRowClick={handleRowClick}
+          actionColumn={actionColumn}
+        />
+      )}
 
       <SubnetDetailSheet
         subnet={selectedSubnet}

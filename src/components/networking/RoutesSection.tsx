@@ -12,6 +12,7 @@ import { fetchRoutes } from '@/api/routesApi';
 import { fetchSubnets } from '@/api/networkingApi';
 import { RouteUpdateDialog } from './routes/RouteUpdateDialog';
 import { RouteActions } from './routes/RouteActions';
+import { TableSkeleton } from '@/components/ui/skeleton';
 
 interface RoutesSectionProps {
   subnetId: string | null;
@@ -41,7 +42,7 @@ export const RoutesSection: React.FC<RoutesSectionProps> = ({
 
   const { 
     data: allRoutes = [], 
-    isLoading, 
+    isLoading: isRoutesLoading, 
     refetch: refetchRoutes, 
     error: routesError 
   } = useQuery({
@@ -52,11 +53,17 @@ export const RoutesSection: React.FC<RoutesSectionProps> = ({
     gcTime: 0,
   });
 
-  const { data: subnets = [], error: subnetsError } = useQuery({
+  const { 
+    data: subnets = [], 
+    isLoading: isSubnetsLoading,
+    error: subnetsError 
+  } = useQuery({
     queryKey: ['subnets-for-routes'],
     queryFn: fetchSubnets,
     staleTime: 0,
   });
+
+  const isLoading = isRoutesLoading || isSubnetsLoading;
 
   if (routesError) console.error('Error fetching routes:', routesError);
   if (subnetsError) console.error('Error fetching subnets:', subnetsError);
@@ -66,10 +73,7 @@ export const RoutesSection: React.FC<RoutesSectionProps> = ({
     return subnet ? subnet.name : null;
   };
 
-  console.log('Filtering routes with subnetFilter ID:', subnetFilter);
   const subnetName = subnetFilter !== 'all' ? getSubnetNameFromId(subnetFilter) : 'all';
-  console.log('Subnet name for filtering:', subnetName);
-  console.log('Available subnets:', subnets.map(s => ({ id: s.id, name: s.name })));
 
   const filteredRoutes = allRoutes.filter(route => {
     const matchesSearch = 
@@ -94,8 +98,6 @@ export const RoutesSection: React.FC<RoutesSectionProps> = ({
     
     return matchesSearch && matchesType && matchesStatus && matchesSubnet;
   });
-
-  console.log('Filtered routes count:', filteredRoutes.length);
 
   const handleRefresh = () => {
     refetchRoutes();
@@ -167,17 +169,21 @@ export const RoutesSection: React.FC<RoutesSectionProps> = ({
         />
       </div>
 
-      <DataTable
-        data={filteredRoutes}
-        columns={columns}
-        keyExtractor={(route) => route.id}
-        isLoading={isLoading}
-        emptyTitle="No Routes Found"
-        emptyDescription={searchQuery ? "No routes match your search criteria." : "No routes have been added yet."}
-        searchQuery={searchQuery}
-        onRowClick={handleRowClick}
-        actionColumn={actionColumn}
-      />
+      {isLoading ? (
+        <TableSkeleton rows={5} />
+      ) : (
+        <DataTable
+          data={filteredRoutes}
+          columns={columns}
+          keyExtractor={(route) => route.id}
+          isLoading={isLoading}
+          emptyTitle="No Routes Found"
+          emptyDescription={searchQuery ? "No routes match your search criteria." : "No routes have been added yet."}
+          searchQuery={searchQuery}
+          onRowClick={handleRowClick}
+          actionColumn={actionColumn}
+        />
+      )}
 
       <RouteDetailSheet
         route={selectedRoute}

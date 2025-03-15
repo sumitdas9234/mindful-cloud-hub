@@ -17,6 +17,7 @@ import { useToast } from '@/hooks/use-toast';
 import { ClusterDetailSheet } from './ClusterDetailSheet';
 import { ClusterUpdateDialog } from './ClusterUpdateDialog';
 import { fetchClusters, updateCluster } from '@/api/clustersApi';
+import { TableSkeleton } from '@/components/ui/skeleton';
 
 interface ClustersSectionProps {
   onClusterSelect?: (clusterId: string) => void;
@@ -193,21 +194,25 @@ export const ClustersSection: React.FC<ClustersSectionProps> = ({
           placeholder="Search clusters..."
         />
         <Badge className="bg-blue-500/10 text-blue-500">
-          {clusters.length} total
+          {!isLoading ? `${clusters.length} total` : "Loading..."}
         </Badge>
       </div>
 
-      <DataTable
-        data={filteredClusters}
-        columns={columns}
-        keyExtractor={(cluster) => cluster.id}
-        isLoading={isLoading}
-        emptyTitle="No Clusters Found"
-        emptyDescription={searchQuery ? "No clusters match your search criteria." : "No clusters have been added yet."}
-        searchQuery={searchQuery}
-        onRowClick={handleRowClick}
-        actionColumn={actionColumn}
-      />
+      {isLoading ? (
+        <TableSkeleton rows={5} />
+      ) : (
+        <DataTable
+          data={filteredClusters}
+          columns={columns}
+          keyExtractor={(cluster) => cluster.id}
+          isLoading={isLoading}
+          emptyTitle="No Clusters Found"
+          emptyDescription={searchQuery ? "No clusters match your search criteria." : "No clusters have been added yet."}
+          searchQuery={searchQuery}
+          onRowClick={handleRowClick}
+          actionColumn={actionColumn}
+        />
+      )}
 
       <ClusterDetailSheet
         cluster={selectedCluster}
