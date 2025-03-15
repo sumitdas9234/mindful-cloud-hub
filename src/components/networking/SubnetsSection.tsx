@@ -8,7 +8,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { 
-  MoreVertical, Network, Server, Database
+  MoreVertical, Server, Database
 } from 'lucide-react';
 import { TransformedSubnetData } from '@/api/types/networking';
 import { DataTable, Column } from '@/components/compute/DataTable';
@@ -167,24 +167,15 @@ export const SubnetsSection: React.FC<SubnetsSectionProps> = ({
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-xl font-semibold">
-          <div className="flex items-center">
-            <Network className="mr-2 h-5 w-5 text-primary" />
-            Subnets
-          </div>
-        </h2>
-        <div className="flex items-center gap-2">
-          <Badge className="bg-blue-500/10 text-blue-500">
-            {subnets.length} total
-          </Badge>
-        </div>
+        <SearchBar 
+          searchQuery={searchQuery}
+          setSearchQuery={setSearchQuery}
+          placeholder="Search subnets..."
+        />
+        <Badge className="bg-blue-500/10 text-blue-500">
+          {subnets.length} total
+        </Badge>
       </div>
-      
-      <SearchBar 
-        searchQuery={searchQuery}
-        setSearchQuery={setSearchQuery}
-        placeholder="Search subnets..."
-      />
 
       <DataTable
         data={filteredSubnets}

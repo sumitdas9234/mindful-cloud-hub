@@ -58,6 +58,15 @@ export const RouteDetailSheet: React.FC<RouteDetailSheetProps> = ({
               )}
               <SheetTitle>{route.name}</SheetTitle>
             </div>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={onUpdateClick}
+              className="ml-auto" 
+            >
+              <Edit className="h-4 w-4 mr-1" />
+              Update
+            </Button>
           </div>
           <div className="flex gap-2 mt-1">
             <Badge
@@ -227,19 +236,6 @@ export const RouteDetailSheet: React.FC<RouteDetailSheetProps> = ({
               </CardContent>
             </Card>
           )}
-
-          <Card>
-            <CardContent className="pt-6">
-              <Button 
-                variant="default" 
-                onClick={onUpdateClick}
-                className="w-full"
-              >
-                <Edit className="mr-2 h-4 w-4" />
-                Update Route
-              </Button>
-            </CardContent>
-          </Card>
         </div>
       </SheetContent>
     </Sheet>

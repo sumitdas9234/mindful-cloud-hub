@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { RouteData, RouteFilter, SubnetData } from '@/api/types/networking';
@@ -62,8 +61,14 @@ export const RoutesSection: React.FC<RoutesSectionProps> = ({
   if (routesError) console.error('Error fetching routes:', routesError);
   if (subnetsError) console.error('Error fetching subnets:', subnetsError);
 
-  // Debug log to see what's happening with filtering
-  console.log('Filtering routes with subnetFilter:', subnetFilter);
+  const getSubnetNameFromId = (id: string): string | null => {
+    const subnet = subnets.find(s => s.id === id);
+    return subnet ? subnet.name : null;
+  };
+
+  console.log('Filtering routes with subnetFilter ID:', subnetFilter);
+  const subnetName = subnetFilter !== 'all' ? getSubnetNameFromId(subnetFilter) : 'all';
+  console.log('Subnet name for filtering:', subnetName);
   console.log('Available subnets:', subnets.map(s => ({ id: s.id, name: s.name })));
 
   const filteredRoutes = allRoutes.filter(route => {
@@ -79,11 +84,12 @@ export const RoutesSection: React.FC<RoutesSectionProps> = ({
     
     const matchesType = activeTab === 'all' || route.type === activeTab;
     const matchesStatus = statusFilter === 'all' || route.status === statusFilter;
-    const matchesSubnet = subnetFilter === 'all' || route.subnetId === subnetFilter;
     
-    // Log route filtering for debugging
-    if (subnetFilter !== 'all' && route.subnetId === subnetFilter) {
-      console.log('Route matches subnet filter:', route.name, route.subnetId);
+    const matchesSubnet = subnetFilter === 'all' || 
+      (subnetName && route.subnetName === subnetName);
+    
+    if (subnetFilter !== 'all' && subnetName && route.subnetName === subnetName) {
+      console.log('Route matches subnet filter:', route.name, route.subnetName);
     }
     
     return matchesSearch && matchesType && matchesStatus && matchesSubnet;
