@@ -7,17 +7,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Filter, Network } from 'lucide-react';
-import { SubnetData, RouteFilter } from '@/api/types/networking';
-
-type RouteStatusFilter = 'all' | 'attached' | 'reserved' | 'orphaned' | 'available';
+import { SubnetData } from '@/api/types/networking';
 
 interface RouteFiltersProps {
   subnetId: string | null;
   subnetFilter: string;
   setSubnetFilter: (value: string) => void;
-  routeStatusFilter: RouteStatusFilter;
-  setRouteStatusFilter: (value: RouteStatusFilter) => void;
+  statusFilter: 'all' | 'available' | 'attached' | 'reserved' | 'orphaned';
+  setStatusFilter: (value: 'all' | 'available' | 'attached' | 'reserved' | 'orphaned') => void;
   subnets: SubnetData[];
 }
 
@@ -25,24 +22,41 @@ export const RouteFilters: React.FC<RouteFiltersProps> = ({
   subnetId,
   subnetFilter,
   setSubnetFilter,
-  routeStatusFilter,
-  setRouteStatusFilter,
+  statusFilter,
+  setStatusFilter,
   subnets
 }) => {
+  const handleStatusChange = (value: string) => {
+    setStatusFilter(value as 'all' | 'available' | 'attached' | 'reserved' | 'orphaned');
+  };
+
+  const handleSubnetChange = (value: string) => {
+    setSubnetFilter(value);
+  };
+
   return (
-    <div className="flex flex-wrap gap-2 items-center">
+    <div className="flex flex-col sm:flex-row gap-2">
+      <Select value={statusFilter} onValueChange={handleStatusChange}>
+        <SelectTrigger className="w-[130px]">
+          <SelectValue placeholder="Status" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="all">All Statuses</SelectItem>
+          <SelectItem value="available">Available</SelectItem>
+          <SelectItem value="attached">Attached</SelectItem>
+          <SelectItem value="reserved">Reserved</SelectItem>
+          <SelectItem value="orphaned">Orphaned</SelectItem>
+        </SelectContent>
+      </Select>
+
       {!subnetId && (
-        <Select 
-          value={subnetFilter} 
-          onValueChange={(value) => setSubnetFilter(value)}
-        >
-          <SelectTrigger className="w-[180px]">
-            <Network className="mr-1.5 h-4 w-4" />
-            <SelectValue placeholder="All Subnets" />
+        <Select value={subnetFilter} onValueChange={handleSubnetChange}>
+          <SelectTrigger className="w-[150px]">
+            <SelectValue placeholder="Subnet" />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Subnets</SelectItem>
-            {subnets.map(subnet => (
+            {subnets.map((subnet) => (
               <SelectItem key={subnet.id} value={subnet.id}>
                 {subnet.name}
               </SelectItem>
@@ -50,23 +64,6 @@ export const RouteFilters: React.FC<RouteFiltersProps> = ({
           </SelectContent>
         </Select>
       )}
-      
-      <Select 
-        value={routeStatusFilter} 
-        onValueChange={(value) => setRouteStatusFilter(value as RouteStatusFilter)}
-      >
-        <SelectTrigger className="w-[150px]">
-          <Filter className="mr-1.5 h-4 w-4" />
-          <SelectValue placeholder="All Statuses" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="all">All Statuses</SelectItem>
-          <SelectItem value="attached">Attached</SelectItem>
-          <SelectItem value="reserved">Reserved</SelectItem>
-          <SelectItem value="orphaned">Orphaned</SelectItem>
-          <SelectItem value="available">Available</SelectItem>
-        </SelectContent>
-      </Select>
     </div>
   );
 };

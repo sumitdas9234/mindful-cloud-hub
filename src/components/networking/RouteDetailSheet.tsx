@@ -10,11 +10,13 @@ import {
 import { RouteData } from "@/api/types/networking";
 import { CardContent, Card, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Router, Network, Clock, FileText } from "lucide-react";
+import { Network, Clock, FileText, Globe, Server, Link2, Calendar, Laptop } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
+import { Button } from "@/components/ui/button";
+import { useToast } from "@/hooks/use-toast";
 
 interface RouteDetailSheetProps {
-  route: RouteData & { routeStatus?: string } | null;
+  route: RouteData | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
@@ -24,27 +26,35 @@ export const RouteDetailSheet: React.FC<RouteDetailSheetProps> = ({
   open,
   onOpenChange,
 }) => {
+  const { toast } = useToast();
+  
   if (!route) return null;
 
-  const getTypeBadgeColor = (type: string) => {
-    switch (type) {
-      case "static":
-        return "bg-blue-500/10 text-blue-500 border-blue-500";
-      case "openshift":
-        return "bg-red-500/10 text-red-500 border-red-500";
-      default:
-        return "bg-gray-500/10 text-gray-500 border-gray-500";
+  const getStatusBadgeColor = (status: string) => {
+    switch (status) {
+      case 'attached': return 'bg-blue-500/10 text-blue-500 border-blue-500';
+      case 'reserved': return 'bg-yellow-500/10 text-yellow-500 border-yellow-500';
+      case 'orphaned': return 'bg-red-500/10 text-red-500 border-red-500';
+      case 'available': return 'bg-green-500/10 text-green-500 border-green-500';
+      default: return 'bg-gray-500/10 text-gray-500 border-gray-500';
     }
   };
 
-  const getRouteStatusBadgeColor = (routeStatus: string) => {
-    switch (routeStatus) {
-      case 'attached': return 'bg-green-500/10 text-green-500 border-green-500';
-      case 'reserved': return 'bg-blue-500/10 text-blue-500 border-blue-500';
-      case 'orphaned': return 'bg-yellow-500/10 text-yellow-500 border-yellow-500';
-      case 'available': return 'bg-gray-500/10 text-gray-500 border-gray-500';
+  const getTypeBadgeColor = (type: string) => {
+    switch (type) {
+      case 'static': return 'bg-blue-500/10 text-blue-500 border-blue-500';
+      case 'openshift': return 'bg-red-500/10 text-red-500 border-red-500';
       default: return 'bg-gray-500/10 text-gray-500 border-gray-500';
     }
+  };
+
+  const handleCopy = (text: string, label: string) => {
+    navigator.clipboard.writeText(text).then(() => {
+      toast({
+        title: "Copied to clipboard",
+        description: `${label} has been copied to your clipboard.`,
+      });
+    });
   };
 
   return (
@@ -53,11 +63,9 @@ export const RouteDetailSheet: React.FC<RouteDetailSheetProps> = ({
         <SheetHeader className="pb-4">
           <SheetTitle className="text-2xl flex items-center gap-2">
             <span>{route.name}</span>
-            {route.routeStatus && (
-              <Badge variant="outline" className={getRouteStatusBadgeColor(route.routeStatus)}>
-                {route.routeStatus}
-              </Badge>
-            )}
+            <Badge variant="outline" className={getStatusBadgeColor(route.status)}>
+              {route.status}
+            </Badge>
           </SheetTitle>
           <SheetDescription>Network route details and configuration</SheetDescription>
         </SheetHeader>
@@ -65,7 +73,13 @@ export const RouteDetailSheet: React.FC<RouteDetailSheetProps> = ({
         <div className="space-y-6 pt-4">
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-lg">Route Information</CardTitle>
+              <CardTitle className="text-lg flex items-center gap-2">
+                {route.type === 'openshift' ? 
+                  <Globe className="h-5 w-5 text-red-500" /> : 
+                  <Server className="h-5 w-5 text-blue-500" />
+                }
+                Route Information
+              </CardTitle>
             </CardHeader>
             <CardContent>
               <dl className="space-y-2">
@@ -94,16 +108,169 @@ export const RouteDetailSheet: React.FC<RouteDetailSheetProps> = ({
                 </div>
                 <Separator />
                 <div className="flex justify-between items-center">
-                  <dt className="text-muted-foreground">Priority</dt>
-                  <dd className="font-medium">{route.priority}</dd>
+                  <dt className="text-muted-foreground">Status</dt>
+                  <dd>
+                    <Badge
+                      variant="outline"
+                      className={getStatusBadgeColor(route.status)}
+                    >
+                      {route.status}
+                    </Badge>
+                  </dd>
                 </div>
               </dl>
             </CardContent>
           </Card>
 
+          {/* Different cards based on route type */}
+          {route.type === 'openshift' && route.vip && route.apps && (
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <Globe className="h-5 w-5 text-red-500" />
+                  OpenShift Endpoints
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <dl className="space-y-4">
+                  <div>
+                    <dt className="text-muted-foreground mb-1 font-medium">API Endpoint (VIP)</dt>
+                    <dd className="space-y-2">
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm">FQDN</span>
+                        <div className="flex items-center">
+                          <span className="text-sm font-medium mr-2">{route.vip.fqdn}</span>
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            className="h-6 w-6" 
+                            onClick={() => handleCopy(route.vip?.fqdn || '', 'API FQDN')}
+                          >
+                            <Link2 className="h-3.5 w-3.5" />
+                          </Button>
+                        </div>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm">IP Address</span>
+                        <div className="flex items-center">
+                          <span className="text-sm font-medium mr-2">{route.vip.ip}</span>
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            className="h-6 w-6" 
+                            onClick={() => handleCopy(route.vip?.ip || '', 'API IP')}
+                          >
+                            <Link2 className="h-3.5 w-3.5" />
+                          </Button>
+                        </div>
+                      </div>
+                    </dd>
+                  </div>
+                  <Separator />
+                  <div>
+                    <dt className="text-muted-foreground mb-1 font-medium">Applications (Apps)</dt>
+                    <dd className="space-y-2">
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm">FQDN</span>
+                        <div className="flex items-center">
+                          <span className="text-sm font-medium mr-2">{route.apps.fqdn}</span>
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            className="h-6 w-6" 
+                            onClick={() => handleCopy(route.apps?.fqdn || '', 'Apps FQDN')}
+                          >
+                            <Link2 className="h-3.5 w-3.5" />
+                          </Button>
+                        </div>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm">IP Address</span>
+                        <div className="flex items-center">
+                          <span className="text-sm font-medium mr-2">{route.apps.ip}</span>
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            className="h-6 w-6" 
+                            onClick={() => handleCopy(route.apps?.ip || '', 'Apps IP')}
+                          >
+                            <Link2 className="h-3.5 w-3.5" />
+                          </Button>
+                        </div>
+                      </div>
+                    </dd>
+                  </div>
+                </dl>
+              </CardContent>
+            </Card>
+          )}
+
+          {route.type === 'static' && route.ip && (
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <Server className="h-5 w-5 text-blue-500" />
+                  Static IP Configuration
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <dl className="space-y-2">
+                  <div className="flex justify-between items-center">
+                    <dt className="text-muted-foreground">IP Address</dt>
+                    <dd className="flex items-center">
+                      <span className="font-medium mr-2">{route.ip}</span>
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className="h-6 w-6" 
+                        onClick={() => handleCopy(route.ip || '', 'Static IP')}
+                      >
+                        <Link2 className="h-3.5 w-3.5" />
+                      </Button>
+                    </dd>
+                  </div>
+                </dl>
+              </CardContent>
+            </Card>
+          )}
+
+          {(route.testbed || route.expiry) && (
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <Laptop className="h-5 w-5 text-primary" />
+                  Testbed Information
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <dl className="space-y-2">
+                  {route.testbed && (
+                    <div className="flex justify-between items-center">
+                      <dt className="text-muted-foreground flex items-center gap-2">
+                        <Laptop className="h-4 w-4" />
+                        Testbed
+                      </dt>
+                      <dd className="font-medium">{route.testbed}</dd>
+                    </div>
+                  )}
+                  {route.testbed && route.expiry && <Separator />}
+                  {route.expiry && (
+                    <div className="flex justify-between items-center">
+                      <dt className="text-muted-foreground flex items-center gap-2">
+                        <Calendar className="h-4 w-4" />
+                        Expiry Date
+                      </dt>
+                      <dd>{new Date(route.expiry).toLocaleString()}</dd>
+                    </div>
+                  )}
+                </dl>
+              </CardContent>
+            </Card>
+          )}
+
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-lg">Additional Details</CardTitle>
+              <CardTitle className="text-lg">Timestamps</CardTitle>
             </CardHeader>
             <CardContent>
               <dl className="space-y-2">
@@ -122,18 +289,6 @@ export const RouteDetailSheet: React.FC<RouteDetailSheetProps> = ({
                   </dt>
                   <dd>{new Date(route.updatedAt).toLocaleString()}</dd>
                 </div>
-                {route.description && (
-                  <>
-                    <Separator />
-                    <div className="flex flex-col gap-1">
-                      <dt className="text-muted-foreground flex items-center gap-2">
-                        <FileText className="h-4 w-4" />
-                        Description
-                      </dt>
-                      <dd className="text-sm">{route.description}</dd>
-                    </div>
-                  </>
-                )}
               </dl>
             </CardContent>
           </Card>

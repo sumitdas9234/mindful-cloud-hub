@@ -1,4 +1,3 @@
-
 export interface SubnetData {
   id: string;
   name: string;
@@ -71,20 +70,51 @@ export interface RouteData {
   name: string;
   subnetId: string;
   subnetName: string;
-  destination: string;
-  nextHop: string;
-  type: 'static' | 'openshift';
-  status: 'active' | 'inactive' | 'pending';
-  routeStatus?: 'attached' | 'reserved' | 'orphaned' | 'available';
-  priority: number;
+  type: 'openshift' | 'static';
+  status: 'available' | 'attached' | 'reserved' | 'orphaned';
+  testbed?: string | null;
+  expiry?: string | null;
   createdAt: string;
   updatedAt: string;
   description?: string;
+  // For openshift routes
+  vip?: {
+    fqdn: string;
+    ip: string;
+  };
+  apps?: {
+    fqdn: string;
+    ip: string;
+  };
+  // For static routes
+  ip?: string;
 }
 
 export type RouteFilter = {
   subnetId?: string;
   type?: 'static' | 'openshift' | 'all';
-  status?: 'active' | 'inactive' | 'pending' | 'all';
-  routeStatus?: 'attached' | 'reserved' | 'orphaned' | 'available' | 'all';
+  status?: 'available' | 'attached' | 'reserved' | 'orphaned' | 'all';
 };
+
+export interface RouteApiResponse {
+  _id: {
+    $oid: string;
+  };
+  subnet: string;
+  status: 'available' | 'attached' | 'reserved' | 'orphaned';
+  expiry: string | null;
+  testbed: string | null;
+  name: string;
+  // For static routes
+  ip?: string;
+  type?: string;
+  // For openshift routes
+  vip?: {
+    fqdn: string;
+    ip: string;
+  };
+  apps?: {
+    fqdn: string;
+    ip: string;
+  };
+}
