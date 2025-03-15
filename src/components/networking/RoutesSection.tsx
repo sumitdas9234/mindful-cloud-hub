@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { RouteData, RouteFilter, SubnetData } from '@/api/types/networking';
@@ -11,6 +10,7 @@ import { RouteFilters } from './routes/RouteFilters';
 import { RouteActions } from './routes/RouteActions';
 import { getRouteColumns } from './routes/RouteColumns';
 import { fetchRoutes, fetchRoutesBySubnet } from '@/api/routesApi';
+import { fetchSubnets } from '@/api/networkingApi';
 
 interface RoutesSectionProps {
   subnetId: string | null;
@@ -43,7 +43,7 @@ export const RoutesSection: React.FC<RoutesSectionProps> = ({
   // Fetch all subnets for filtering
   const { data: subnets = [] } = useQuery({
     queryKey: ['subnets-for-routes'],
-    queryFn: () => fetchSubnets(),
+    queryFn: fetchSubnets,
     staleTime: 0,
   });
 
