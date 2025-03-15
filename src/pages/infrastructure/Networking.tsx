@@ -16,83 +16,20 @@ import {
 import { Network, GitBranch, Globe, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { SubnetData, RouteData } from '@/api/types/networking';
-
-// Mock data
-const mockSubnets: SubnetData[] = [
-  {
-    id: "subnet-1",
-    name: "Production Network",
-    cidr: "10.0.0.0/16",
-    description: "Main production network subnet",
-    status: "active",
-    vlanId: 100,
-    gatewayIp: "10.0.0.1",
-    routesCount: 12,
-    createdAt: "2023-01-15T10:00:00Z",
-    location: "US-East",
-    environment: "Production"
-  },
-  {
-    id: "subnet-2",
-    name: "Development Network",
-    cidr: "172.16.0.0/20",
-    description: "Development and testing environment",
-    status: "active",
-    vlanId: 200,
-    gatewayIp: "172.16.0.1",
-    routesCount: 8,
-    createdAt: "2023-02-20T14:30:00Z",
-    location: "US-West",
-    environment: "Development"
-  },
-];
-
-const mockRoutes: RouteData[] = [
-  {
-    id: "route-1",
-    name: "Default Gateway",
-    subnetId: "subnet-1",
-    subnetName: "Production Network",
-    destination: "0.0.0.0/0",
-    nextHop: "10.0.0.1",
-    type: "static",
-    status: "active",
-    priority: 100,
-    createdAt: "2023-01-15T10:30:00Z",
-    updatedAt: "2023-01-15T10:30:00Z",
-    description: "Default route to internet gateway"
-  },
-  {
-    id: "route-3",
-    name: "Pod Network",
-    subnetId: "subnet-1",
-    subnetName: "Production Network",
-    destination: "172.17.0.0/16",
-    nextHop: "10.0.0.100",
-    type: "openshift",
-    status: "active",
-    priority: 300,
-    createdAt: "2023-02-10T14:20:00Z",
-    updatedAt: "2023-02-10T14:20:00Z",
-    description: "Route to Kubernetes pod network"
-  },
-];
+import { fetchSubnets } from '@/api/networkingApi';
 
 const NetworkingPage: React.FC = () => {
   const { toast } = useToast();
 
-  const { data: subnets = [] } = useQuery({
+  const { data: subnets = [], refetch: refetchSubnets } = useQuery({
     queryKey: ['subnets-summary'],
-    queryFn: () => Promise.resolve(mockSubnets.slice(0, 2)),
-  });
-
-  const { data: routes = [] } = useQuery({
-    queryKey: ['routes-summary'],
-    queryFn: () => Promise.resolve(mockRoutes.slice(0, 2)),
+    queryFn: fetchSubnets,
   });
 
   const handleRefresh = () => {
+    // Refresh data
+    refetchSubnets();
+    
     toast({
       title: "Refreshing network data",
       description: "The network information has been refreshed.",
@@ -116,6 +53,9 @@ const NetworkingPage: React.FC = () => {
     }
   };
 
+  // Show only first 2 subnets in summary
+  const displaySubnets = subnets.slice(0, 2);
+
   return (
     <div className="container mx-auto space-y-6">
       <PageHeader 
@@ -135,7 +75,7 @@ const NetworkingPage: React.FC = () => {
                 <CardTitle>Subnets</CardTitle>
               </div>
               <Badge variant="outline" className="bg-blue-500/10 text-blue-500">
-                {mockSubnets.length} total
+                {subnets.length} total
               </Badge>
             </div>
             <CardDescription>
@@ -144,20 +84,26 @@ const NetworkingPage: React.FC = () => {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {subnets.map(subnet => (
-                <div key={subnet.id} className="flex items-center justify-between border-b pb-3">
-                  <div>
-                    <div className="font-medium">{subnet.name}</div>
-                    <div className="text-sm text-muted-foreground">{subnet.cidr}</div>
+              {displaySubnets.length > 0 ? (
+                displaySubnets.map(subnet => (
+                  <div key={subnet.id} className="flex items-center justify-between border-b pb-3">
+                    <div>
+                      <div className="font-medium">{subnet.name}</div>
+                      <div className="text-sm text-muted-foreground">{subnet.cidr}</div>
+                    </div>
+                    <Badge
+                      variant="outline"
+                      className={getStatusColor(subnet.status)}
+                    >
+                      {subnet.status}
+                    </Badge>
                   </div>
-                  <Badge
-                    variant="outline"
-                    className={getStatusColor(subnet.status)}
-                  >
-                    {subnet.status}
-                  </Badge>
+                ))
+              ) : (
+                <div className="py-6 text-center text-muted-foreground">
+                  No subnets available
                 </div>
-              ))}
+              )}
             </div>
           </CardContent>
           <CardFooter>
@@ -177,7 +123,7 @@ const NetworkingPage: React.FC = () => {
                 <CardTitle>Routes</CardTitle>
               </div>
               <Badge variant="outline" className="bg-blue-500/10 text-blue-500">
-                {mockRoutes.length} total
+                0 total
               </Badge>
             </div>
             <CardDescription>
@@ -185,31 +131,8 @@ const NetworkingPage: React.FC = () => {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              {routes.map(route => (
-                <div key={route.id} className="flex items-center justify-between border-b pb-3">
-                  <div>
-                    <div className="font-medium">{route.name}</div>
-                    <div className="text-sm text-muted-foreground">
-                      {route.destination} → {route.nextHop}
-                    </div>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Badge
-                      variant="outline"
-                      className={getTypeColor(route.type)}
-                    >
-                      {route.type}
-                    </Badge>
-                    <Badge
-                      variant="outline"
-                      className={getStatusColor(route.status)}
-                    >
-                      {route.status}
-                    </Badge>
-                  </div>
-                </div>
-              ))}
+            <div className="py-6 text-center text-muted-foreground">
+              No routes available
             </div>
           </CardContent>
           <CardFooter>

@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { 
   DropdownMenu, DropdownMenuContent, 
@@ -20,11 +20,13 @@ import { fetchSubnets } from '@/api/networkingApi';
 interface SubnetsSectionProps {
   onSubnetSelect?: (subnetId: string) => void;
   selectedSubnetId?: string | null;
+  onRefresh?: () => void;
 }
 
 export const SubnetsSection: React.FC<SubnetsSectionProps> = ({ 
   onSubnetSelect,
-  selectedSubnetId 
+  selectedSubnetId,
+  onRefresh 
 }) => {
   const [selectedSubnet, setSelectedSubnet] = useState<TransformedSubnetData | null>(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
@@ -40,16 +42,19 @@ export const SubnetsSection: React.FC<SubnetsSectionProps> = ({
   } = useQuery({
     queryKey: ['subnets'],
     queryFn: fetchSubnets,
-    staleTime: 0, // Set to 0 to refetch on every mount
-    gcTime: 0, // Remove from cache when component unmounts
-    refetchOnMount: 'always', // Always refetch when component mounts
-    retry: 2,
+    refetchOnWindowFocus: true,
   });
 
-  // Refetch data when component mounts
-  useEffect(() => {
-    refetch();
-  }, [refetch]);
+  // Expose refetch method to parent component
+  React.useEffect(() => {
+    if (onRefresh) {
+      const originalOnRefresh = onRefresh;
+      onRefresh = () => {
+        refetch();
+        originalOnRefresh();
+      };
+    }
+  }, [onRefresh, refetch]);
 
   // Error handling
   if (isError && error) {

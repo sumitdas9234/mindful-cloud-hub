@@ -1,18 +1,21 @@
 
-import React, { useState, Suspense } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import React, { useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { Separator } from '@/components/ui/separator';
 import { PageHeader } from '@/components/compute/PageHeader';
 import { useToast } from '@/hooks/use-toast';
 import { SubnetsSection } from '@/components/networking/SubnetsSection';
-import { fetchSubnets } from '@/api/networkingApi';
 import { ErrorBoundary } from '@/components/ui/error-boundary';
 
 const SubnetsPage: React.FC = () => {
   const [selectedSubnetId, setSelectedSubnetId] = useState<string | null>(null);
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   const handleRefresh = () => {
+    // Invalidate and refetch the subnets query
+    queryClient.invalidateQueries({ queryKey: ['subnets'] });
+    
     toast({
       title: "Refreshing subnet data",
       description: "The subnet information has been refreshed.",
@@ -52,12 +55,11 @@ const SubnetsPage: React.FC = () => {
           </div>
         }
       >
-        <Suspense fallback={<div>Loading subnets...</div>}>
-          <SubnetsSection 
-            onSubnetSelect={handleSubnetSelect}
-            selectedSubnetId={selectedSubnetId}
-          />
-        </Suspense>
+        <SubnetsSection 
+          onSubnetSelect={handleSubnetSelect}
+          selectedSubnetId={selectedSubnetId}
+          onRefresh={handleRefresh}
+        />
       </ErrorBoundary>
     </div>
   );
