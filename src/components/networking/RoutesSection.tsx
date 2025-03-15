@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { RouteData, RouteFilter, SubnetData } from '@/api/types/networking';
@@ -12,6 +11,7 @@ import { getRouteColumns } from './routes/RouteColumns';
 import { fetchRoutes } from '@/api/routesApi';
 import { fetchSubnets } from '@/api/networkingApi';
 import { RouteUpdateDialog } from './routes/RouteUpdateDialog';
+import { RouteActions } from './routes/RouteActions';
 
 interface RoutesSectionProps {
   subnetId: string | null;
@@ -33,14 +33,12 @@ export const RoutesSection: React.FC<RoutesSectionProps> = ({
   const [isUpdateDialogOpen, setIsUpdateDialogOpen] = useState(false);
   const { toast } = useToast();
 
-  // Update the subnetFilter when the subnetId prop changes
   useEffect(() => {
     if (subnetId) {
       setSubnetFilter(subnetId);
     }
   }, [subnetId]);
 
-  // Fetch all routes
   const { 
     data: allRoutes = [], 
     isLoading, 
@@ -54,18 +52,15 @@ export const RoutesSection: React.FC<RoutesSectionProps> = ({
     gcTime: 0,
   });
 
-  // Fetch all subnets for filtering
   const { data: subnets = [], error: subnetsError } = useQuery({
     queryKey: ['subnets-for-routes'],
     queryFn: fetchSubnets,
     staleTime: 0,
   });
 
-  // Log any errors
   if (routesError) console.error('Error fetching routes:', routesError);
   if (subnetsError) console.error('Error fetching subnets:', subnetsError);
 
-  // Apply filters on the client side
   const filteredRoutes = allRoutes.filter(route => {
     const matchesSearch = 
       route.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -101,14 +96,11 @@ export const RoutesSection: React.FC<RoutesSectionProps> = ({
 
   const handleRouteUpdate = (routeId: string, updates: Partial<RouteData>) => {
     console.log('Updating route:', routeId, updates);
-    // In a real app, this would make an API call to update the route
-    // For now, we'll just show a toast
     toast({
       title: "Route Updated",
       description: `Route ${routeId} has been updated with new values.`,
     });
     
-    // Refresh routes after update
     refetchRoutes();
     setIsUpdateDialogOpen(false);
   };
