@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { 
   Select,
   SelectContent,
@@ -26,11 +26,19 @@ export const RouteFilters: React.FC<RouteFiltersProps> = ({
   setStatusFilter,
   subnets
 }) => {
+  // Update filter when subnetId changes from props
+  useEffect(() => {
+    if (subnetId) {
+      setSubnetFilter(subnetId);
+    }
+  }, [subnetId, setSubnetFilter]);
+
   const handleStatusChange = (value: string) => {
     setStatusFilter(value as 'all' | 'available' | 'attached' | 'reserved' | 'orphaned');
   };
 
   const handleSubnetChange = (value: string) => {
+    console.log('Subnet filter changed to:', value);
     setSubnetFilter(value);
   };
 

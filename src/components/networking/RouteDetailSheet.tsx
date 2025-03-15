@@ -5,6 +5,7 @@ import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '
 import { Separator } from '@/components/ui/separator';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { RouteData } from '@/api/types/networking';
 import { getStatusBadgeColor, getTypeBadgeColor } from './routes/RouteColumns';
 import { Copy, ExternalLink, Globe, Server, Edit } from 'lucide-react';
@@ -47,7 +48,7 @@ export const RouteDetailSheet: React.FC<RouteDetailSheetProps> = ({
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent className="sm:max-w-md overflow-y-auto">
-        <SheetHeader className="pb-4">
+        <SheetHeader>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               {route.type === 'openshift' ? (
@@ -58,66 +59,71 @@ export const RouteDetailSheet: React.FC<RouteDetailSheetProps> = ({
               <SheetTitle>{route.name}</SheetTitle>
             </div>
           </div>
-          <SheetDescription>
-            <div className="flex gap-2 mt-1">
-              <Badge
-                variant="outline"
-                className={getTypeBadgeColor(route.type)}
-              >
-                {route.type}
-              </Badge>
-              <Badge
-                variant="outline"
-                className={getStatusBadgeColor(route.status)}
-              >
-                {route.status}
-              </Badge>
-            </div>
+          <div className="flex gap-2 mt-1">
+            <Badge
+              variant="outline"
+              className={getTypeBadgeColor(route.type)}
+            >
+              {route.type}
+            </Badge>
+            <Badge
+              variant="outline"
+              className={getStatusBadgeColor(route.status)}
+            >
+              {route.status}
+            </Badge>
+          </div>
+          <SheetDescription className="mt-2">
+            Route in subnet {route.subnetName}
           </SheetDescription>
         </SheetHeader>
         
-        <div className="space-y-6">
-          <div>
-            <h3 className="text-lg font-semibold mb-4">Route Details</h3>
-            <dl className="space-y-4">
-              <div className="flex flex-row justify-between">
-                <dt className="text-sm font-medium text-muted-foreground">Subnet</dt>
-                <dd className="text-sm">{route.subnetName}</dd>
-              </div>
-              
-              {route.testbed && (
+        <div className="mt-6 space-y-6">
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-lg">Route Details</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <dl className="space-y-4">
                 <div className="flex flex-row justify-between">
-                  <dt className="text-sm font-medium text-muted-foreground">Testbed</dt>
-                  <dd className="text-sm">{route.testbed}</dd>
+                  <dt className="text-sm font-medium text-muted-foreground">Subnet</dt>
+                  <dd className="text-sm">{route.subnetName}</dd>
                 </div>
-              )}
-              
-              {route.expiry && (
+                
+                {route.testbed && (
+                  <div className="flex flex-row justify-between">
+                    <dt className="text-sm font-medium text-muted-foreground">Testbed</dt>
+                    <dd className="text-sm">{route.testbed}</dd>
+                  </div>
+                )}
+                
+                {route.expiry && (
+                  <div className="flex flex-row justify-between">
+                    <dt className="text-sm font-medium text-muted-foreground">Expires</dt>
+                    <dd className="text-sm">{formatDate(route.expiry)}</dd>
+                  </div>
+                )}
+                
                 <div className="flex flex-row justify-between">
-                  <dt className="text-sm font-medium text-muted-foreground">Expires</dt>
-                  <dd className="text-sm">{formatDate(route.expiry)}</dd>
+                  <dt className="text-sm font-medium text-muted-foreground">Created</dt>
+                  <dd className="text-sm">{formatDate(route.createdAt)}</dd>
                 </div>
-              )}
-              
-              <div className="flex flex-row justify-between">
-                <dt className="text-sm font-medium text-muted-foreground">Created</dt>
-                <dd className="text-sm">{formatDate(route.createdAt)}</dd>
-              </div>
-              
-              <div className="flex flex-row justify-between">
-                <dt className="text-sm font-medium text-muted-foreground">Updated</dt>
-                <dd className="text-sm">{formatDate(route.updatedAt)}</dd>
-              </div>
-            </dl>
-          </div>
-
-          <Separator />
+                
+                <div className="flex flex-row justify-between">
+                  <dt className="text-sm font-medium text-muted-foreground">Updated</dt>
+                  <dd className="text-sm">{formatDate(route.updatedAt)}</dd>
+                </div>
+              </dl>
+            </CardContent>
+          </Card>
 
           {/* Display details based on route type */}
           {route.type === 'openshift' && route.vip && route.apps ? (
-            <div>
-              <h3 className="text-lg font-semibold mb-4">Endpoints</h3>
-              <div className="space-y-4">
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-lg">Endpoints</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
                 <div>
                   <h4 className="text-sm font-medium mb-2">API Endpoint</h4>
                   <div className="space-y-2">
@@ -195,41 +201,45 @@ export const RouteDetailSheet: React.FC<RouteDetailSheetProps> = ({
                     <p className="text-sm font-mono">{route.apps.ip}</p>
                   </div>
                 </div>
-              </div>
-            </div>
+              </CardContent>
+            </Card>
           ) : (
             // For static routes
-            <div>
-              <h3 className="text-lg font-semibold mb-4">Static IP Address</h3>
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <p className="text-sm text-muted-foreground">IP Address</p>
-                  <Button 
-                    size="icon" 
-                    variant="ghost" 
-                    className="h-8 w-8"
-                    onClick={() => handleCopyToClipboard(route.ip || '', 'IP Address')}
-                  >
-                    <Copy className="h-4 w-4" />
-                  </Button>
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-lg">Static IP Address</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <p className="text-sm text-muted-foreground">IP Address</p>
+                    <Button 
+                      size="icon" 
+                      variant="ghost" 
+                      className="h-8 w-8"
+                      onClick={() => handleCopyToClipboard(route.ip || '', 'IP Address')}
+                    >
+                      <Copy className="h-4 w-4" />
+                    </Button>
+                  </div>
+                  <p className="text-sm font-mono">{route.ip}</p>
                 </div>
-                <p className="text-sm font-mono">{route.ip}</p>
-              </div>
-            </div>
+              </CardContent>
+            </Card>
           )}
 
-          <Separator />
-
-          <div className="flex justify-end">
-            <Button 
-              variant="default" 
-              onClick={onUpdateClick}
-              className="w-full sm:w-auto"
-            >
-              <Edit className="mr-2 h-4 w-4" />
-              Update Route
-            </Button>
-          </div>
+          <Card>
+            <CardContent className="pt-6">
+              <Button 
+                variant="default" 
+                onClick={onUpdateClick}
+                className="w-full"
+              >
+                <Edit className="mr-2 h-4 w-4" />
+                Update Route
+              </Button>
+            </CardContent>
+          </Card>
         </div>
       </SheetContent>
     </Sheet>

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { RouteData, RouteFilter, SubnetData } from '@/api/types/networking';
@@ -61,6 +62,10 @@ export const RoutesSection: React.FC<RoutesSectionProps> = ({
   if (routesError) console.error('Error fetching routes:', routesError);
   if (subnetsError) console.error('Error fetching subnets:', subnetsError);
 
+  // Debug log to see what's happening with filtering
+  console.log('Filtering routes with subnetFilter:', subnetFilter);
+  console.log('Available subnets:', subnets.map(s => ({ id: s.id, name: s.name })));
+
   const filteredRoutes = allRoutes.filter(route => {
     const matchesSearch = 
       route.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -76,8 +81,15 @@ export const RoutesSection: React.FC<RoutesSectionProps> = ({
     const matchesStatus = statusFilter === 'all' || route.status === statusFilter;
     const matchesSubnet = subnetFilter === 'all' || route.subnetId === subnetFilter;
     
+    // Log route filtering for debugging
+    if (subnetFilter !== 'all' && route.subnetId === subnetFilter) {
+      console.log('Route matches subnet filter:', route.name, route.subnetId);
+    }
+    
     return matchesSearch && matchesType && matchesStatus && matchesSubnet;
   });
+
+  console.log('Filtered routes count:', filteredRoutes.length);
 
   const handleRefresh = () => {
     refetchRoutes();
