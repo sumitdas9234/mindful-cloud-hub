@@ -54,8 +54,16 @@ export const AlertDetail: React.FC<AlertDetailProps> = ({
     return value;
   };
 
+  // Handle sheet close with proper body overflow reset
+  const handleSheetOpenChange = (open: boolean) => {
+    if (typeof document !== 'undefined') {
+      document.body.style.overflow = 'auto';
+    }
+    onOpenChange(open);
+  };
+
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
+    <Sheet open={open} onOpenChange={handleSheetOpenChange}>
       <SheetContent className="sm:max-w-lg overflow-hidden">
         <SheetHeader>
           <SheetTitle className="flex items-center gap-2">
@@ -107,13 +115,35 @@ export const AlertDetail: React.FC<AlertDetailProps> = ({
             </div>
             
             {alert.acknowledgedBy && (
-              <div>
-                <h3 className="text-sm font-medium">Acknowledged</h3>
+              <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 p-3 rounded-md">
+                <h3 className="text-sm font-medium text-blue-800 dark:text-blue-300">Acknowledged</h3>
                 <p className="mt-1 text-sm">By {alert.acknowledgedBy}</p>
                 {alert.acknowledgedAt && (
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">
                     {formatDistanceToNow(new Date(alert.acknowledgedAt), { addSuffix: true })}
                   </p>
+                )}
+              </div>
+            )}
+            
+            {alert.silenceURL && (
+              <div className="bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 p-3 rounded-md">
+                <h3 className="text-sm font-medium text-purple-800 dark:text-purple-300">Silenced</h3>
+                <p className="text-xs text-purple-600 dark:text-purple-400 mt-1">
+                  This alert is currently silenced. Notifications are suppressed.
+                </p>
+                {alert.silenceURL && (
+                  <Button variant="link" size="sm" className="p-0 h-auto mt-1" asChild>
+                    <a 
+                      href={alert.silenceURL} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="text-purple-600 dark:text-purple-400 text-xs inline-flex items-center"
+                    >
+                      View Silence Details
+                      <ExternalLink className="ml-1 h-3 w-3" />
+                    </a>
+                  </Button>
                 )}
               </div>
             )}

@@ -66,15 +66,15 @@ const Alerts = () => {
 
   const handleAcknowledge = async (alertId: string, by: string, comment: string) => {
     try {
-      // Fixed: Added the "by" parameter to the acknowledgeAlert function call
       const result = await acknowledgeAlert(alertId, by);
       if (result.success) {
         toast({
           title: "Alert Acknowledged",
           description: `Alert has been acknowledged by ${by}.`
         });
-        refetchAlerts();
-        refetchStats();
+        
+        // Immediate refresh to show the updated state
+        await Promise.all([refetchAlerts(), refetchStats()]);
       } else {
         throw new Error(result.message);
       }
@@ -95,8 +95,9 @@ const Alerts = () => {
           title: "Alert Silenced",
           description: `Alert has been silenced for ${duration} hours.`
         });
-        refetchAlerts();
-        refetchStats();
+        
+        // Immediate refresh to show the updated state
+        await Promise.all([refetchAlerts(), refetchStats()]);
       } else {
         throw new Error(result.message);
       }

@@ -1,7 +1,7 @@
+
 import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { AlertTriangle, CheckCircle, Clock } from 'lucide-react';
-import { SeverityBadge } from './AlertBadges';
 import { AlertStats } from '@/api/types/alerts';
 
 interface AlertsStatsProps {

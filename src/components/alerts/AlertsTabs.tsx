@@ -104,11 +104,19 @@ export const AlertsTabs: React.FC<AlertsTabsProps> = ({
   };
 
   const handleSilenceButtonClick = (alertId: string) => {
+    // Prevent body scroll when dialog opens
+    if (typeof document !== 'undefined') {
+      document.body.style.overflow = 'auto';
+    }
     setActionAlertId(alertId);
     setSilenceOpen(true);
   };
 
   const handleAcknowledgeButtonClick = (alertId: string) => {
+    // Prevent body scroll when dialog opens
+    if (typeof document !== 'undefined') {
+      document.body.style.overflow = 'auto';
+    }
     setActionAlertId(alertId);
     setAcknowledgeOpen(true);
   };
@@ -127,6 +135,14 @@ export const AlertsTabs: React.FC<AlertsTabsProps> = ({
       setAcknowledgeOpen(false);
       setActionAlertId(null);
     }
+  };
+
+  // Update dialog open/close handlers to manage body scroll
+  const handleDialogOpenChange = (open: boolean, setOpenState: React.Dispatch<React.SetStateAction<boolean>>) => {
+    if (typeof document !== 'undefined') {
+      document.body.style.overflow = open ? 'auto' : 'auto';
+    }
+    setOpenState(open);
   };
 
   if (error) {
@@ -207,14 +223,17 @@ export const AlertsTabs: React.FC<AlertsTabsProps> = ({
       <AlertDetail 
         alert={selectedAlert}
         open={detailOpen}
-        onOpenChange={setDetailOpen}
+        onOpenChange={(open) => handleDialogOpenChange(open, setDetailOpen)}
         onAcknowledge={handleAcknowledgeButtonClick}
         onSilence={handleSilenceButtonClick}
       />
       
-      {/* Silence Dialog - Fix scroll issue by adding className */}
-      <Dialog open={silenceOpen} onOpenChange={setSilenceOpen}>
-        <DialogContent className="sm:max-w-md">
+      {/* Silence Dialog */}
+      <Dialog 
+        open={silenceOpen} 
+        onOpenChange={(open) => handleDialogOpenChange(open, setSilenceOpen)}
+      >
+        <DialogContent className="sm:max-w-md overflow-auto max-h-[90vh]">
           <DialogHeader>
             <DialogTitle>Silence Alert</DialogTitle>
             <DialogDescription>
@@ -225,9 +244,12 @@ export const AlertsTabs: React.FC<AlertsTabsProps> = ({
         </DialogContent>
       </Dialog>
       
-      {/* Acknowledge Dialog - Fix scroll issue by adding className */}
-      <Dialog open={acknowledgeOpen} onOpenChange={setAcknowledgeOpen}>
-        <DialogContent className="sm:max-w-md">
+      {/* Acknowledge Dialog */}
+      <Dialog 
+        open={acknowledgeOpen} 
+        onOpenChange={(open) => handleDialogOpenChange(open, setAcknowledgeOpen)}
+      >
+        <DialogContent className="sm:max-w-md overflow-auto max-h-[90vh]">
           <DialogHeader>
             <DialogTitle>Acknowledge Alert</DialogTitle>
             <DialogDescription>
