@@ -25,7 +25,7 @@ export const TestbedDistributionTab: React.FC<TestbedDistributionTabProps> = ({ 
 
       <DistributionChart 
         title="Testbed Status Distribution" 
-        data={stats.byStatus} 
+        data={stats.byStatus.filter(item => item.name !== 'decommissioned')} 
         size="large"
       />
     </div>
