@@ -1,16 +1,48 @@
 import React, { useState } from 'react';
+import { MoreVertical } from 'lucide-react';
+import { Separator } from '@/components/ui/separator';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { 
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator
+} from '@/components/ui/dropdown-menu';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { useQuery } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
+import { SearchBar } from '@/components/compute/SearchBar';
 import { PageHeader } from '@/components/compute/PageHeader';
+import { DataTable, Column } from '@/components/compute/DataTable';
 import { TestbedDetailSheet } from '@/components/compute/TestbedDetailSheet';
-import { TestbedOverviewTab } from '@/components/compute/testbed-tabs/TestbedOverviewTab';
-import { TestbedDistributionTab } from '@/components/compute/testbed-tabs/TestbedDistributionTab';
-import { TestbedListTab } from '@/components/compute/testbed-tabs/TestbedListTab';
-import { Testbed, calculateStats } from '@/components/compute/testbedUtils';
+import { TestbedActivityChart } from '@/components/compute/TestbedActivityChart';
 
-// Mock data for testbeds
+interface Testbed {
+  id: string;
+  name: string;
+  description: string;
+  purpose: string;
+  status: 'active' | 'provisioning' | 'failed' | 'decommissioned';
+  type: 'hardware' | 'virtual' | 'hybrid';
+  location: string;
+  ownedBy: string;
+  createdAt: string;
+  expiresAt: string | null;
+  cpu: number;
+  memory: number;
+  storage: number;
+  usagePercent: number;
+  vms: number;
+  networks: number;
+  users: number;
+  deployments: number;
+  whitelisted?: boolean;
+  environment?: 'Openshift' | 'Vanilla' | 'Rancher' | 'Anthos' | 'Charmed';
+}
+
 const mockTestbeds: Testbed[] = [
   {
     id: 'tb-1',
@@ -146,11 +178,38 @@ const mockTestbeds: Testbed[] = [
   }
 ];
 
+interface TestbedStats {
+  total: number;
+  active: number;
+  provisioning: number;
+  failed: number;
+  decommissioned: number;
+  whitelisted: number;
+  totalCpu: number;
+  totalMemory: number;
+  totalStorage: number;
+  totalVMs: number;
+}
+
+const calculateStats = (testbeds: Testbed[]): TestbedStats => {
+  return {
+    total: testbeds.length,
+    active: testbeds.filter(tb => tb.status === 'active').length,
+    provisioning: testbeds.filter(tb => tb.status === 'provisioning').length,
+    failed: testbeds.filter(tb => tb.status === 'failed').length,
+    decommissioned: testbeds.filter(tb => tb.status === 'decommissioned').length,
+    whitelisted: testbeds.filter(tb => tb.whitelisted).length,
+    totalCpu: testbeds.reduce((sum, tb) => sum + tb.cpu, 0),
+    totalMemory: testbeds.reduce((sum, tb) => sum + tb.memory, 0),
+    totalStorage: testbeds.reduce((sum, tb) => sum + tb.storage, 0),
+    totalVMs: testbeds.reduce((sum, tb) => sum + tb.vms, 0)
+  };
+};
+
 const TestbedsPage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTestbed, setSelectedTestbed] = useState<Testbed | null>(null);
   const [detailSheetOpen, setDetailSheetOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState('overview');
   const { toast } = useToast();
 
   const { data: testbeds = [], isLoading, refetch } = useQuery({
@@ -163,8 +222,7 @@ const TestbedsPage: React.FC = () => {
           tb.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
           tb.purpose.toLowerCase().includes(searchQuery.toLowerCase()) ||
           tb.location.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          tb.ownedBy.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          (tb.environment && tb.environment.toLowerCase().includes(searchQuery.toLowerCase()))
+          tb.ownedBy.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   const stats = calculateStats(testbeds);
@@ -196,48 +254,157 @@ const TestbedsPage: React.FC = () => {
     setDetailSheetOpen(true);
   };
 
+  const getEnvironmentBadgeColor = (env: Testbed['environment']) => {
+    switch (env) {
+      case 'Openshift':
+        return 'bg-red-500/10 text-red-500 hover:bg-red-500/20';
+      case 'Vanilla':
+        return 'bg-blue-500/10 text-blue-500 hover:bg-blue-500/20';
+      case 'Rancher':
+        return 'bg-teal-500/10 text-teal-500 hover:bg-teal-500/20';
+      case 'Anthos':
+        return 'bg-purple-500/10 text-purple-500 hover:bg-purple-500/20';
+      case 'Charmed':
+        return 'bg-orange-500/10 text-orange-500 hover:bg-orange-500/20';
+      default:
+        return 'bg-gray-500/10 text-gray-500 hover:bg-gray-500/20';
+    }
+  };
+
+  const columns: Column<Testbed>[] = [
+    {
+      key: 'name',
+      header: 'Name',
+      cell: (testbed) => <span className="font-medium">{testbed.name}</span>
+    },
+    {
+      key: 'owner',
+      header: 'Owner',
+      cell: (testbed) => testbed.ownedBy
+    },
+    {
+      key: 'environment',
+      header: 'Environment',
+      cell: (testbed) => testbed.environment ? (
+        <Badge
+          variant="outline"
+          className={getEnvironmentBadgeColor(testbed.environment)}
+        >
+          {testbed.environment}
+        </Badge>
+      ) : null
+    },
+    {
+      key: 'created',
+      header: 'Created',
+      cell: (testbed) => new Date(testbed.createdAt).toLocaleDateString()
+    },
+    {
+      key: 'whitelisted',
+      header: 'Whitelisted',
+      cell: (testbed) => (testbed.whitelisted ? 'Yes' : 'No')
+    }
+  ];
+
+  const actionColumn = (testbed: Testbed) => (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="ghost" size="icon">
+          <MoreVertical className="h-4 w-4" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end">
+        <DropdownMenuItem onClick={() => handleTestbedAction('View', testbed)}>
+          View Details
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => handleTestbedAction('Edit', testbed)}>
+          Edit
+        </DropdownMenuItem>
+        <DropdownMenuSeparator />
+        {testbed.status === 'active' && (
+          <DropdownMenuItem onClick={() => handleTestbedAction('Deploy', testbed)}>
+            Deploy Workload
+          </DropdownMenuItem>
+        )}
+        {testbed.status === 'active' && (
+          <DropdownMenuItem onClick={() => handleTestbedAction('Snapshot', testbed)}>
+            Create Snapshot
+          </DropdownMenuItem>
+        )}
+        <DropdownMenuSeparator />
+        {testbed.status === 'active' && (
+          <DropdownMenuItem onClick={() => handleTestbedAction('Decommission', testbed)}>
+            Decommission
+          </DropdownMenuItem>
+        )}
+        {testbed.status !== 'active' && testbed.status !== 'decommissioned' && (
+          <DropdownMenuItem onClick={() => handleTestbedAction('Recover', testbed)}>
+            Recover
+          </DropdownMenuItem>
+        )}
+        <DropdownMenuItem 
+          onClick={() => handleTestbedAction('Delete', testbed)}
+          className="text-red-500"
+        >
+          Delete
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+
   return (
     <div className="container mx-auto space-y-6">
       <PageHeader 
         title="Testbed Management"
         description="Manage your testing environments and infrastructure."
         onRefresh={handleRefresh}
-        onAdd={handleAddTestbed}
-        addButtonText="Add Testbed"
       />
 
-      <Tabs 
-        defaultValue="overview" 
-        className="w-full"
-        value={activeTab}
-        onValueChange={setActiveTab}
-      >
-        <TabsList>
-          <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="distribution">Distribution</TabsTrigger>
-          <TabsTrigger value="list">List View</TabsTrigger>
-        </TabsList>
+      <div className="grid gap-4 md:grid-cols-4">
+        <Card className="md:col-span-1">
+          <CardHeader className="py-2">
+            <CardTitle className="text-sm font-medium">Total Testbeds</CardTitle>
+          </CardHeader>
+          <CardContent className="pt-0 pb-2">
+            <div className="text-2xl font-bold">{stats.total}</div>
+            <p className="text-xs text-muted-foreground mt-1">
+              {stats.whitelisted} whitelisted
+            </p>
+          </CardContent>
+        </Card>
+        <Card className="md:col-span-1">
+          <CardHeader className="py-2">
+            <CardTitle className="text-sm font-medium">Total VMs</CardTitle>
+          </CardHeader>
+          <CardContent className="pt-0 pb-2">
+            <div className="text-2xl font-bold">{stats.totalVMs}</div>
+            <p className="text-xs text-muted-foreground mt-1">
+              Across all testbeds
+            </p>
+          </CardContent>
+        </Card>
+        <TestbedActivityChart />
+      </div>
 
-        <TabsContent value="overview">
-          <TestbedOverviewTab stats={stats} />
-        </TabsContent>
+      <SearchBar 
+        searchQuery={searchQuery}
+        setSearchQuery={setSearchQuery}
+        placeholder="Search testbeds..."
+      />
 
-        <TabsContent value="distribution">
-          <TestbedDistributionTab stats={stats} />
-        </TabsContent>
+      <Separator />
 
-        <TabsContent value="list">
-          <TestbedListTab 
-            testbeds={testbeds}
-            filteredTestbeds={filteredTestbeds}
-            searchQuery={searchQuery}
-            setSearchQuery={setSearchQuery}
-            isLoading={isLoading}
-            onTestbedAction={handleTestbedAction}
-            onViewDetails={openTestbedDetails}
-          />
-        </TabsContent>
-      </Tabs>
+      <DataTable
+        data={filteredTestbeds}
+        columns={columns}
+        keyExtractor={(testbed) => testbed.id}
+        isLoading={isLoading}
+        emptyTitle="No Testbeds Found"
+        emptyDescription="No testbeds have been added yet."
+        searchQuery={searchQuery}
+        onRowClick={openTestbedDetails}
+        actionColumn={actionColumn}
+      />
 
       <TestbedDetailSheet
         testbed={selectedTestbed}
