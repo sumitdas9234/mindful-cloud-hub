@@ -9,6 +9,7 @@ interface PageHeaderProps {
   onRefresh: () => void;
   onAdd?: () => void;
   addButtonText?: string;
+  children?: React.ReactNode;
 }
 
 export const PageHeader: React.FC<PageHeaderProps> = ({
@@ -16,13 +17,15 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
   description,
   onRefresh,
   onAdd,
-  addButtonText
+  addButtonText,
+  children
 }) => {
   return (
     <div className="flex flex-col space-y-2 md:flex-row md:items-center md:justify-between md:space-y-0">
       <div>
         <h1 className="text-2xl font-bold tracking-tight">{title}</h1>
         <p className="text-muted-foreground">{description}</p>
+        {children}
       </div>
       <div className="flex items-center space-x-2">
         <Button onClick={onRefresh} variant="outline" size="sm">

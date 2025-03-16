@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -17,6 +16,7 @@ import Subnets from "./pages/infrastructure/Subnets";
 import RoutesPage from "./pages/infrastructure/Routes";
 import ClustersPage from "./pages/infrastructure/Clusters";
 import StorageManagement from "./pages/infrastructure/StorageManagement";
+import Alerts from "./pages/observability/Alerts";
 
 const queryClient = new QueryClient();
 
@@ -143,7 +143,7 @@ const App = () => (
             path="/alerts" 
             element={
               <Layout title="Alerts">
-                <ComingSoon feature="Alert" />
+                <Alerts />
               </Layout>
             } 
           />
