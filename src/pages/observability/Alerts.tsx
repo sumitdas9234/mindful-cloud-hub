@@ -66,7 +66,8 @@ const Alerts = () => {
 
   const handleAcknowledge = async (alertId: string, by: string, comment: string) => {
     try {
-      const result = await acknowledgeAlert(alertId);
+      // Fixed: Added the "by" parameter to the acknowledgeAlert function call
+      const result = await acknowledgeAlert(alertId, by);
       if (result.success) {
         toast({
           title: "Alert Acknowledged",
