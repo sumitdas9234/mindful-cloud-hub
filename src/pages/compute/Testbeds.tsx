@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { MoreVertical, Server, Layers, Cube, ServerOff, BarChart3 } from 'lucide-react';
+import { MoreVertical, Server, Layers, Box, ServerOff, BarChart3 } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { 
@@ -47,6 +47,34 @@ interface Testbed {
   environment?: 'Openshift' | 'Vanilla' | 'Rancher' | 'Anthos' | 'Charmed';
   envFlavor?: 'ControlPlane' | 'User';
   deploymentType?: 'Single VM' | 'VM Group' | 'Kubernetes';
+}
+
+interface TestbedStats {
+  total: number;
+  active: number;
+  provisioning: number;
+  failed: number;
+  decommissioned: number;
+  whitelisted: number;
+  totalCpu: number;
+  totalMemory: number;
+  totalStorage: number;
+  totalVMs: number;
+  byEnvironment: {
+    name: string;
+    value: number;
+    color: string;
+  }[];
+  byType: {
+    name: string;
+    value: number;
+    color: string;
+  }[];
+  byStatus: {
+    name: string;
+    value: number;
+    color: string;
+  }[];
 }
 
 const mockTestbeds: Testbed[] = [
