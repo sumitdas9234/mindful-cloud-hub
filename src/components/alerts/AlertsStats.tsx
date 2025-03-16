@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { AlertTriangle, CheckCircle, Clock } from 'lucide-react';
@@ -24,12 +23,9 @@ export const AlertsStats: React.FC<AlertsStatsProps> = ({ stats, isLoading }) =>
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold">{stats.critical}</div>
-          <div className="flex items-center space-x-1 mt-1">
-            <SeverityBadge severity="critical" />
-            <p className="text-xs text-muted-foreground">
-              {Math.round((stats.critical / stats.total) * 100) || 0}% of total
-            </p>
-          </div>
+          <p className="text-xs text-muted-foreground mt-1">
+            {Math.round((stats.critical / stats.total) * 100) || 0}% of total
+          </p>
         </CardContent>
       </Card>
       

@@ -2,6 +2,7 @@
 import React from 'react';
 import { Badge } from '@/components/ui/badge';
 import { AlertSeverity, AlertStatus } from '@/api/types/alerts';
+import { Clock, Volume2, CheckCircle } from 'lucide-react';
 
 interface SeverityBadgeProps {
   severity: AlertSeverity;
@@ -37,6 +38,37 @@ export const StatusBadge: React.FC<StatusBadgeProps> = ({ status }) => {
   return (
     <Badge variant="outline" className={styles[status]}>
       {status.charAt(0).toUpperCase() + status.slice(1)}
+    </Badge>
+  );
+};
+
+interface StateBadgeProps {
+  state: 'silenced' | 'acknowledged' | null;
+  by?: string;
+}
+
+export const StateBadge: React.FC<StateBadgeProps> = ({ state, by }) => {
+  if (!state) return null;
+  
+  const badges = {
+    silenced: {
+      icon: <Volume2 className="mr-1 h-3 w-3" />,
+      label: "Silenced",
+      className: "border-purple-500 text-purple-500 bg-purple-50 dark:bg-purple-950/30"
+    },
+    acknowledged: {
+      icon: <CheckCircle className="mr-1 h-3 w-3" />,
+      label: "Acknowledged",
+      className: "border-blue-500 text-blue-500 bg-blue-50 dark:bg-blue-950/30"
+    }
+  };
+  
+  const badge = badges[state];
+  
+  return (
+    <Badge variant="outline" className={`flex items-center ${badge.className}`}>
+      {badge.icon}
+      <span>{badge.label}{by ? ` by ${by}` : ''}</span>
     </Badge>
   );
 };

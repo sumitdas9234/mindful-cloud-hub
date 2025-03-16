@@ -11,7 +11,7 @@ import {
 } from '@/components/ui/sheet';
 import { Alert } from '@/api/types/alerts';
 import { Button } from '@/components/ui/button';
-import { SeverityBadge, StatusBadge } from './AlertBadges';
+import { SeverityBadge, StatusBadge, StateBadge } from './AlertBadges';
 import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
@@ -56,7 +56,7 @@ export const AlertDetail: React.FC<AlertDetailProps> = ({
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="sm:max-w-lg">
+      <SheetContent className="sm:max-w-lg overflow-hidden">
         <SheetHeader>
           <SheetTitle className="flex items-center gap-2">
             {alert.alertname}
@@ -66,10 +66,18 @@ export const AlertDetail: React.FC<AlertDetailProps> = ({
           <SheetDescription>
             {alert.summary}
           </SheetDescription>
+          <div className="flex gap-2 mt-2">
+            {alert.acknowledgedBy && (
+              <StateBadge state="acknowledged" by={alert.acknowledgedBy} />
+            )}
+            {alert.silenceURL && (
+              <StateBadge state="silenced" />
+            )}
+          </div>
         </SheetHeader>
         
-        <ScrollArea className="h-[calc(100vh-180px)] mt-6">
-          <div className="space-y-6 pr-6">
+        <ScrollArea className="h-[calc(100vh-180px)] mt-6 pr-4">
+          <div className="space-y-6">
             <div>
               <h3 className="text-sm font-medium">Description</h3>
               <p className="mt-1 text-sm">{alert.description}</p>

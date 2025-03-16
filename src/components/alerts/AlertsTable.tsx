@@ -16,7 +16,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
-import { StatusBadge, SeverityBadge } from './AlertBadges';
+import { StatusBadge, SeverityBadge, StateBadge } from './AlertBadges';
 import { Alert } from '@/api/types/alerts';
 import { formatDistanceToNow } from 'date-fns';
 import { AlertMenu } from './AlertMenu';
@@ -88,6 +88,14 @@ export const AlertsTable: React.FC<AlertsTableProps> = ({
                   <div>
                     {alert.alertname}
                     <p className="text-sm text-muted-foreground line-clamp-1">{alert.summary}</p>
+                    <div className="flex gap-1 mt-1">
+                      {alert.acknowledgedBy && (
+                        <StateBadge state="acknowledged" by={alert.acknowledgedBy} />
+                      )}
+                      {alert.silenceURL && (
+                        <StateBadge state="silenced" />
+                      )}
+                    </div>
                   </div>
                 </TableCell>
                 <TableCell>

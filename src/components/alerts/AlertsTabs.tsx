@@ -212,9 +212,9 @@ export const AlertsTabs: React.FC<AlertsTabsProps> = ({
         onSilence={handleSilenceButtonClick}
       />
       
-      {/* Silence Dialog */}
+      {/* Silence Dialog - Fix scroll issue by adding className */}
       <Dialog open={silenceOpen} onOpenChange={setSilenceOpen}>
-        <DialogContent>
+        <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Silence Alert</DialogTitle>
             <DialogDescription>
@@ -225,9 +225,9 @@ export const AlertsTabs: React.FC<AlertsTabsProps> = ({
         </DialogContent>
       </Dialog>
       
-      {/* Acknowledge Dialog */}
+      {/* Acknowledge Dialog - Fix scroll issue by adding className */}
       <Dialog open={acknowledgeOpen} onOpenChange={setAcknowledgeOpen}>
-        <DialogContent>
+        <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Acknowledge Alert</DialogTitle>
             <DialogDescription>
