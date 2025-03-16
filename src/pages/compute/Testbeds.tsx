@@ -1,6 +1,5 @@
-
 import React, { useState } from 'react';
-import { MoreVertical, Server, Layers, CubeIcon, ServerOff, BarChart3 } from 'lucide-react';
+import { MoreVertical, Server, Layers, Cube, ServerOff, BarChart3 } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { 
@@ -185,7 +184,6 @@ const mockTestbeds: Testbed[] = [
   }
 ];
 
-// Define colors for different environment types
 const ENV_COLORS = {
   'Openshift': '#EF4444',
   'Vanilla': '#3B82F6',
@@ -208,48 +206,17 @@ const STATUS_COLORS = {
   'decommissioned': '#6B7280',
 };
 
-interface TestbedStats {
-  total: number;
-  active: number;
-  provisioning: number;
-  failed: number;
-  decommissioned: number;
-  whitelisted: number;
-  totalCpu: number;
-  totalMemory: number;
-  totalStorage: number;
-  totalVMs: number;
-  byEnvironment: {
-    name: string;
-    value: number;
-    color: string;
-  }[];
-  byType: {
-    name: string;
-    value: number;
-    color: string;
-  }[];
-  byStatus: {
-    name: string;
-    value: number;
-    color: string;
-  }[];
-}
-
 const calculateStats = (testbeds: Testbed[]): TestbedStats => {
   const envCounts: Record<string, number> = {};
   const typeCounts: Record<string, number> = {};
   const statusCounts: Record<string, number> = {};
 
   testbeds.forEach(tb => {
-    // Count by environment
     const env = tb.environment || 'Other';
     envCounts[env] = (envCounts[env] || 0) + 1;
 
-    // Count by type
     typeCounts[tb.type] = (typeCounts[tb.type] || 0) + 1;
 
-    // Count by status
     statusCounts[tb.status] = (statusCounts[tb.status] || 0) + 1;
   });
 
@@ -567,9 +534,9 @@ const TestbedsPage: React.FC = () => {
         title="Testbed Management"
         description="Manage your testing environments and infrastructure."
         onRefresh={handleRefresh}
-      >
-        <Button onClick={handleAddTestbed}>Add Testbed</Button>
-      </PageHeader>
+        onAdd={handleAddTestbed}
+        addButtonText="Add Testbed"
+      />
 
       <Tabs 
         defaultValue="overview" 
@@ -607,7 +574,7 @@ const TestbedsPage: React.FC = () => {
               <CardHeader className="py-2">
                 <div className="flex items-center justify-between">
                   <CardTitle className="text-sm font-medium">Environments</CardTitle>
-                  <CubeIcon className="h-4 w-4 text-muted-foreground" />
+                  <Cube className="h-4 w-4 text-muted-foreground" />
                 </div>
               </CardHeader>
               <CardContent className="pt-0 pb-2">
