@@ -23,6 +23,7 @@ export interface Alert {
   value?: string;
   acknowledgedBy?: string;
   acknowledgedAt?: string;
+  acknowledgeComment?: string;
   silencedBy?: string;
   silencedAt?: string;
   silenceDuration?: number;
