@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
@@ -13,11 +14,11 @@ import {
   AlertTriangle,
   Cloud,
   Cpu,
-  MemoryStick,
   Folder,
   GitBranch,
   Globe,
-  Network
+  Network,
+  Activity
 } from 'lucide-react';
 
 interface SidebarItemProps {
@@ -27,9 +28,49 @@ interface SidebarItemProps {
   collapsed: boolean;
   active: boolean;
   indent?: boolean;
+  external?: boolean;
 }
 
-const SidebarItem = ({ icon: Icon, label, path, collapsed, active, indent = false }: SidebarItemProps) => {
+const SidebarItem = ({ 
+  icon: Icon, 
+  label, 
+  path, 
+  collapsed, 
+  active, 
+  indent = false,
+  external = false 
+}: SidebarItemProps) => {
+  if (external) {
+    return (
+      <a
+        href={path}
+        target="_blank"
+        rel="noopener noreferrer"
+        className={cn(
+          "flex items-center px-4 py-3 my-1 rounded-lg transition-all duration-200 group relative h-10",
+          "text-foreground/70 hover:bg-secondary hover:text-foreground",
+          indent && !collapsed && "pl-8",
+          collapsed && "justify-center"
+        )}
+      >
+        <Icon 
+          className={cn(
+            "flex-shrink-0 transition-all duration-200",
+            collapsed ? "w-5 h-5" : "w-5 h-5 mr-3"
+          )} 
+        />
+        <span 
+          className={cn(
+            "text-sm font-medium transition-all duration-200 whitespace-nowrap overflow-hidden",
+            collapsed && "opacity-0 w-0"
+          )}
+        >
+          {label}
+        </span>
+      </a>
+    );
+  }
+
   return (
     <Link
       to={path}
@@ -223,6 +264,14 @@ export const Sidebar = () => {
             path="/users"
             collapsed={collapsed}
             active={location.pathname === '/users'}
+          />
+          <SidebarItem 
+            icon={Activity} 
+            label="System Status" 
+            path="/system-status"
+            collapsed={collapsed}
+            active={location.pathname === '/system-status'}
+            external={true}
           />
         </SidebarSection>
       </div>

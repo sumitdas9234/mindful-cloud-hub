@@ -110,6 +110,9 @@ export const acknowledgeAlert = async (alertId: string, by: string, comment?: st
       mockAlerts[alertIndex].status = 'acknowledged';
       mockAlerts[alertIndex].acknowledgedBy = by;
       mockAlerts[alertIndex].acknowledgedAt = new Date().toISOString();
+      if (comment) {
+        mockAlerts[alertIndex].acknowledgeComment = comment;
+      }
     }
     
     return { success: true, message: `Alert ${alertId} acknowledged by ${by}` };

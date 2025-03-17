@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -5,8 +6,10 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { Navbar } from "@/components/layout/Navbar";
+import PublicLayout from "@/components/layout/PublicLayout";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
+import SystemStatus from "./pages/public/SystemStatus";
 import VCenters from "./pages/compute/VCenters";
 import Testbeds from "./pages/compute/Testbeds";
 import Kubernetes from "./pages/compute/Kubernetes";
@@ -48,6 +51,17 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <Routes>
+          {/* Public Routes (No Auth Required) */}
+          <Route 
+            path="/system-status" 
+            element={
+              <PublicLayout>
+                <SystemStatus />
+              </PublicLayout>
+            }
+          />
+          
+          {/* Protected Routes (Auth Required) */}
           <Route 
             path="/" 
             element={
