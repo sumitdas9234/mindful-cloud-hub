@@ -1,3 +1,4 @@
+
 export type AlertSeverity = 'critical' | 'high' | 'medium' | 'low' | 'info';
 export type AlertStatus = 'firing' | 'pending' | 'resolved' | 'acknowledged' | 'silenced';
 
@@ -67,4 +68,6 @@ export interface AlertStats {
   firing: number;
   pending: number;
   resolved: number;
+  acknowledged: number;
+  silenced: number;
 }

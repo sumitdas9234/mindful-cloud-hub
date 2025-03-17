@@ -48,7 +48,7 @@ export const AlertsStats: React.FC<AlertsStatsProps> = ({ stats, isLoading }) =>
           <UserCheck className="h-4 w-4 text-blue-500" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold">{stats.acknowledged || 0}</div>
+          <div className="text-2xl font-bold">{stats.acknowledged}</div>
           <p className="text-xs text-muted-foreground mt-1">
             Being worked on
           </p>
@@ -61,7 +61,7 @@ export const AlertsStats: React.FC<AlertsStatsProps> = ({ stats, isLoading }) =>
           <Volume2 className="h-4 w-4 text-purple-500" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold">{stats.silenced || 0}</div>
+          <div className="text-2xl font-bold">{stats.silenced}</div>
           <p className="text-xs text-muted-foreground mt-1">
             Notifications suppressed
           </p>
