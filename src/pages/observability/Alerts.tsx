@@ -66,7 +66,8 @@ const Alerts = () => {
 
   const handleAcknowledge = async (alertId: string, by: string, comment: string) => {
     try {
-      const result = await acknowledgeAlert(alertId, by);
+      document.body.style.overflow = 'auto';
+      const result = await acknowledgeAlert(alertId, by, comment);
       if (result.success) {
         toast({
           title: "Alert Acknowledged",
@@ -89,11 +90,13 @@ const Alerts = () => {
 
   const handleSilence = async (alertId: string, duration: number, comment: string) => {
     try {
-      const result = await silenceAlert(alertId, duration, comment);
+      document.body.style.overflow = 'auto';
+      const by = localStorage.getItem('userName') || 'Anonymous';
+      const result = await silenceAlert(alertId, duration, comment, by);
       if (result.success) {
         toast({
           title: "Alert Silenced",
-          description: `Alert has been silenced for ${duration} hours.`
+          description: `Alert has been silenced for ${duration} hours by ${by}.`
         });
         
         // Immediate refresh to show the updated state
@@ -134,7 +137,9 @@ const Alerts = () => {
           total: 0,
           firing: 0,
           pending: 0,
-          resolved: 0
+          resolved: 0,
+          acknowledged: 0,
+          silenced: 0
         }}
         isLoading={isStatsLoading}
       />

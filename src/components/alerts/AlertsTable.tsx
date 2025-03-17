@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { AlertTriangle, Bell, CheckCircle, Clock, ExternalLink, Trash } from 'lucide-react';
+import { AlertTriangle, Bell, CheckCircle, Clock, ExternalLink, Volume2, UserCheck } from 'lucide-react';
 import { 
   Table, 
   TableHeader,
@@ -56,6 +56,10 @@ export const AlertsTable: React.FC<AlertsTableProps> = ({
         return <AlertTriangle className={`h-5 w-5 ${severity === 'critical' ? 'text-red-500' : 'text-orange-500'}`} />;
       case 'pending':
         return <Clock className="h-5 w-5 text-yellow-500" />;
+      case 'acknowledged':
+        return <UserCheck className="h-5 w-5 text-blue-500" />;
+      case 'silenced':
+        return <Volume2 className="h-5 w-5 text-purple-500" />;
       case 'resolved':
         return <CheckCircle className="h-5 w-5 text-green-500" />;
       default:
@@ -63,6 +67,12 @@ export const AlertsTable: React.FC<AlertsTableProps> = ({
     }
   };
   
+  // Stop propagation to fix body scroll issues
+  const handleStopPropagation = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    document.body.style.overflow = 'auto';
+  };
+
   return (
     <div className="rounded-md border">
       <div className="overflow-x-auto">
@@ -89,11 +99,11 @@ export const AlertsTable: React.FC<AlertsTableProps> = ({
                     {alert.alertname}
                     <p className="text-sm text-muted-foreground line-clamp-1">{alert.summary}</p>
                     <div className="flex gap-1 mt-1">
-                      {alert.acknowledgedBy && (
+                      {alert.status === 'acknowledged' && (
                         <StateBadge state="acknowledged" by={alert.acknowledgedBy} />
                       )}
-                      {alert.silenceURL && (
-                        <StateBadge state="silenced" />
+                      {alert.status === 'silenced' && (
+                        <StateBadge state="silenced" by={alert.silencedBy} />
                       )}
                     </div>
                   </div>
@@ -116,8 +126,8 @@ export const AlertsTable: React.FC<AlertsTableProps> = ({
                   {formatDistanceToNow(new Date(alert.startsAt), { addSuffix: true })}
                 </TableCell>
                 <TableCell>
-                  <div className="flex items-center justify-end" onClick={(e) => e.stopPropagation()}>
-                    {alert.status !== 'resolved' && (
+                  <div className="flex items-center justify-end" onClick={handleStopPropagation}>
+                    {alert.status !== 'resolved' && alert.status !== 'acknowledged' && alert.status !== 'silenced' && (
                       <>
                         <TooltipProvider>
                           <Tooltip>
@@ -127,11 +137,11 @@ export const AlertsTable: React.FC<AlertsTableProps> = ({
                                 size="icon"
                                 className="h-8 w-8"
                                 onClick={(e) => {
-                                  e.stopPropagation();
+                                  handleStopPropagation(e);
                                   onAcknowledge(alert.id);
                                 }}
                               >
-                                <CheckCircle className="h-4 w-4" />
+                                <UserCheck className="h-4 w-4" />
                               </Button>
                             </TooltipTrigger>
                             <TooltipContent>
@@ -157,7 +167,7 @@ export const AlertsTable: React.FC<AlertsTableProps> = ({
                               size="icon"
                               className="h-8 w-8"
                               onClick={(e) => {
-                                e.stopPropagation();
+                                handleStopPropagation(e);
                                 window.open(alert.generatorURL, '_blank');
                               }}
                             >
@@ -169,6 +179,14 @@ export const AlertsTable: React.FC<AlertsTableProps> = ({
                           </TooltipContent>
                         </Tooltip>
                       </TooltipProvider>
+                    )}
+                    
+                    {(alert.status === 'acknowledged' || alert.status === 'silenced') && (
+                      <AlertMenu 
+                        alert={alert} 
+                        onAcknowledge={onAcknowledge}
+                        onSilence={onSilence}
+                      />
                     )}
                   </div>
                 </TableCell>

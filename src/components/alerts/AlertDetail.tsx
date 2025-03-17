@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { formatDistanceToNow, format } from 'date-fns';
-import { ExternalLink } from 'lucide-react';
+import { ExternalLink, UserCheck, Volume2 } from 'lucide-react';
 import {
   Sheet,
   SheetContent,
@@ -56,10 +56,19 @@ export const AlertDetail: React.FC<AlertDetailProps> = ({
 
   // Handle sheet close with proper body overflow reset
   const handleSheetOpenChange = (open: boolean) => {
-    if (typeof document !== 'undefined') {
-      document.body.style.overflow = 'auto';
-    }
+    document.body.style.overflow = 'auto';
     onOpenChange(open);
+  };
+
+  // Handle action buttons
+  const handleAcknowledge = () => {
+    document.body.style.overflow = 'auto';
+    onAcknowledge(alert.id);
+  };
+
+  const handleSilence = () => {
+    document.body.style.overflow = 'auto';
+    onSilence(alert.id);
   };
 
   return (
@@ -75,11 +84,11 @@ export const AlertDetail: React.FC<AlertDetailProps> = ({
             {alert.summary}
           </SheetDescription>
           <div className="flex gap-2 mt-2">
-            {alert.acknowledgedBy && (
+            {alert.status === 'acknowledged' && (
               <StateBadge state="acknowledged" by={alert.acknowledgedBy} />
             )}
-            {alert.silenceURL && (
-              <StateBadge state="silenced" />
+            {alert.status === 'silenced' && (
+              <StateBadge state="silenced" by={alert.silencedBy} />
             )}
           </div>
         </SheetHeader>
@@ -114,24 +123,44 @@ export const AlertDetail: React.FC<AlertDetailProps> = ({
               </div>
             </div>
             
-            {alert.acknowledgedBy && (
+            {alert.status === 'acknowledged' && (
               <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 p-3 rounded-md">
-                <h3 className="text-sm font-medium text-blue-800 dark:text-blue-300">Acknowledged</h3>
+                <h3 className="text-sm font-medium text-blue-800 dark:text-blue-300 flex items-center">
+                  <UserCheck className="mr-2 h-4 w-4" />
+                  Acknowledged
+                </h3>
                 <p className="mt-1 text-sm">By {alert.acknowledgedBy}</p>
                 {alert.acknowledgedAt && (
                   <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">
-                    {formatDistanceToNow(new Date(alert.acknowledgedAt), { addSuffix: true })}
+                    {formatTimestamp(alert.acknowledgedAt)} ({formatDistanceToNow(new Date(alert.acknowledgedAt), { addSuffix: true })})
                   </p>
                 )}
               </div>
             )}
             
-            {alert.silenceURL && (
+            {alert.status === 'silenced' && (
               <div className="bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 p-3 rounded-md">
-                <h3 className="text-sm font-medium text-purple-800 dark:text-purple-300">Silenced</h3>
-                <p className="text-xs text-purple-600 dark:text-purple-400 mt-1">
-                  This alert is currently silenced. Notifications are suppressed.
-                </p>
+                <h3 className="text-sm font-medium text-purple-800 dark:text-purple-300 flex items-center">
+                  <Volume2 className="mr-2 h-4 w-4" />
+                  Silenced
+                </h3>
+                <p className="mt-1 text-sm">By {alert.silencedBy}</p>
+                {alert.silencedAt && (
+                  <p className="text-xs text-purple-600 dark:text-purple-400 mt-1">
+                    {formatTimestamp(alert.silencedAt)} ({formatDistanceToNow(new Date(alert.silencedAt), { addSuffix: true })})
+                  </p>
+                )}
+                {alert.silenceDuration && (
+                  <p className="text-xs text-purple-600 dark:text-purple-400 mt-1">
+                    Duration: {alert.silenceDuration} hours
+                  </p>
+                )}
+                {alert.silenceComment && (
+                  <div className="mt-2 bg-purple-100 dark:bg-purple-900/30 p-2 rounded text-xs text-purple-700 dark:text-purple-300">
+                    <p className="font-medium">Comment:</p>
+                    <p>{alert.silenceComment}</p>
+                  </div>
+                )}
                 {alert.silenceURL && (
                   <Button variant="link" size="sm" className="p-0 h-auto mt-1" asChild>
                     <a 
@@ -211,17 +240,14 @@ export const AlertDetail: React.FC<AlertDetailProps> = ({
               </div>
             </div>
             
-            {alert.status !== 'resolved' && (
+            {alert.status !== 'resolved' && alert.status !== 'acknowledged' && alert.status !== 'silenced' && (
               <div className="mt-6 space-x-2">
-                <Button 
-                  onClick={() => onAcknowledge(alert.id)}
-                  disabled={!!alert.acknowledgedBy}
-                >
+                <Button onClick={handleAcknowledge}>
                   Acknowledge
                 </Button>
                 <Button 
                   variant="outline"
-                  onClick={() => onSilence(alert.id)}
+                  onClick={handleSilence}
                 >
                   Silence
                 </Button>

@@ -1,6 +1,5 @@
-
 export type AlertSeverity = 'critical' | 'high' | 'medium' | 'low' | 'info';
-export type AlertStatus = 'firing' | 'pending' | 'resolved';
+export type AlertStatus = 'firing' | 'pending' | 'resolved' | 'acknowledged' | 'silenced';
 
 export interface Alert {
   id: string;
@@ -23,6 +22,10 @@ export interface Alert {
   value?: string;
   acknowledgedBy?: string;
   acknowledgedAt?: string;
+  silencedBy?: string;
+  silencedAt?: string;
+  silenceDuration?: number;
+  silenceComment?: string;
 }
 
 export interface AlertsAPIResponse {

@@ -2,7 +2,7 @@
 import React from 'react';
 import { Badge } from '@/components/ui/badge';
 import { AlertSeverity, AlertStatus } from '@/api/types/alerts';
-import { Clock, Volume2, CheckCircle } from 'lucide-react';
+import { Clock, Volume2, CheckCircle, UserCheck } from 'lucide-react';
 
 interface SeverityBadgeProps {
   severity: AlertSeverity;
@@ -32,6 +32,8 @@ export const StatusBadge: React.FC<StatusBadgeProps> = ({ status }) => {
   const styles = {
     firing: "border-red-500 text-red-500 bg-red-50 dark:bg-red-950/30",
     pending: "border-amber-500 text-amber-500 bg-amber-50 dark:bg-amber-950/30",
+    acknowledged: "border-blue-500 text-blue-500 bg-blue-50 dark:bg-blue-950/30",
+    silenced: "border-purple-500 text-purple-500 bg-purple-50 dark:bg-purple-950/30",
     resolved: "border-green-500 text-green-500 bg-green-50 dark:bg-green-950/30",
   };
 
@@ -57,7 +59,7 @@ export const StateBadge: React.FC<StateBadgeProps> = ({ state, by }) => {
       className: "border-purple-500 text-purple-500 bg-purple-50 dark:bg-purple-950/30"
     },
     acknowledged: {
-      icon: <CheckCircle className="mr-1 h-3 w-3" />,
+      icon: <UserCheck className="mr-1 h-3 w-3" />,
       label: "Acknowledged",
       className: "border-blue-500 text-blue-500 bg-blue-50 dark:bg-blue-950/30"
     }

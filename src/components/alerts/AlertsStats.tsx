@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { AlertTriangle, CheckCircle, Clock } from 'lucide-react';
+import { AlertTriangle, CheckCircle, Clock, UserCheck, Volume2 } from 'lucide-react';
 import { AlertStats } from '@/api/types/alerts';
 
 interface AlertsStatsProps {
@@ -15,7 +15,7 @@ export const AlertsStats: React.FC<AlertsStatsProps> = ({ stats, isLoading }) =>
   }
 
   return (
-    <div className="grid gap-4 md:grid-cols-4">
+    <div className="grid gap-4 md:grid-cols-5">
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-sm font-medium">Critical Alerts</CardTitle>
@@ -44,7 +44,33 @@ export const AlertsStats: React.FC<AlertsStatsProps> = ({ stats, isLoading }) =>
       
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Recently Resolved</CardTitle>
+          <CardTitle className="text-sm font-medium">Acknowledged</CardTitle>
+          <UserCheck className="h-4 w-4 text-blue-500" />
+        </CardHeader>
+        <CardContent>
+          <div className="text-2xl font-bold">{stats.acknowledged || 0}</div>
+          <p className="text-xs text-muted-foreground mt-1">
+            Being worked on
+          </p>
+        </CardContent>
+      </Card>
+      
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardTitle className="text-sm font-medium">Silenced</CardTitle>
+          <Volume2 className="h-4 w-4 text-purple-500" />
+        </CardHeader>
+        <CardContent>
+          <div className="text-2xl font-bold">{stats.silenced || 0}</div>
+          <p className="text-xs text-muted-foreground mt-1">
+            Notifications suppressed
+          </p>
+        </CardContent>
+      </Card>
+      
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardTitle className="text-sm font-medium">Resolved</CardTitle>
           <CheckCircle className="h-4 w-4 text-green-500" />
         </CardHeader>
         <CardContent>
@@ -54,27 +80,14 @@ export const AlertsStats: React.FC<AlertsStatsProps> = ({ stats, isLoading }) =>
           </p>
         </CardContent>
       </Card>
-      
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Pending</CardTitle>
-          <Clock className="h-4 w-4 text-amber-500" />
-        </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold">{stats.pending}</div>
-          <p className="text-xs text-muted-foreground mt-1">
-            Awaiting confirmation
-          </p>
-        </CardContent>
-      </Card>
     </div>
   );
 };
 
 export const AlertsStatsSkeleton = () => {
   return (
-    <div className="grid gap-4 md:grid-cols-4">
-      {[...Array(4)].map((_, i) => (
+    <div className="grid gap-4 md:grid-cols-5">
+      {[...Array(5)].map((_, i) => (
         <Card key={i}>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <div className="h-5 w-24 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>

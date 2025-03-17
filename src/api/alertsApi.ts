@@ -64,7 +64,9 @@ export const fetchAlertStats = async (): Promise<AlertStats> => {
     total: mockAlerts.length,
     firing: 0,
     pending: 0,
-    resolved: 0
+    resolved: 0,
+    acknowledged: 0,
+    silenced: 0
   };
   
   // Count by severity and status
@@ -77,13 +79,34 @@ export const fetchAlertStats = async (): Promise<AlertStats> => {
 };
 
 // This would be connected to the actual Alertmanager API
-export const silenceAlert = async (alertId: string, duration: number, comment: string): Promise<{ success: boolean, message: string }> => {
+export const silenceAlert = async (alertId: string, duration: number, comment: string, by: string): Promise<{ success: boolean, message: string }> => {
   await delay(800);
-  return { success: true, message: `Alert ${alertId} silenced for ${duration} hours` };
+  
+  // Find the alert in our mock data and update its status
+  const alertIndex = mockAlerts.findIndex(alert => alert.id === alertId);
+  if (alertIndex !== -1) {
+    mockAlerts[alertIndex].status = 'silenced';
+    mockAlerts[alertIndex].silencedBy = by;
+    mockAlerts[alertIndex].silencedAt = new Date().toISOString();
+    mockAlerts[alertIndex].silenceDuration = duration;
+    mockAlerts[alertIndex].silenceComment = comment;
+    mockAlerts[alertIndex].silenceURL = `https://alertmanager.example.com/silence/${alertId}`;
+  }
+  
+  return { success: true, message: `Alert ${alertId} silenced for ${duration} hours by ${by}` };
 };
 
-export const acknowledgeAlert = async (alertId: string, by: string): Promise<{ success: boolean, message: string }> => {
+export const acknowledgeAlert = async (alertId: string, by: string, comment?: string): Promise<{ success: boolean, message: string }> => {
   await delay(800);
+  
+  // Find the alert in our mock data and update its status
+  const alertIndex = mockAlerts.findIndex(alert => alert.id === alertId);
+  if (alertIndex !== -1) {
+    mockAlerts[alertIndex].status = 'acknowledged';
+    mockAlerts[alertIndex].acknowledgedBy = by;
+    mockAlerts[alertIndex].acknowledgedAt = new Date().toISOString();
+  }
+  
   return { success: true, message: `Alert ${alertId} acknowledged by ${by}` };
 };
 

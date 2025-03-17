@@ -24,6 +24,7 @@ import {
 } from '@/components/ui/select';
 
 const formSchema = z.object({
+  name: z.string().min(2, { message: "Name must be at least 2 characters" }),
   duration: z.string().min(1, { message: "Duration is required" }),
   comment: z.string().min(5, { message: "Comment must be at least 5 characters" }),
 });
@@ -37,18 +38,41 @@ export const SilenceForm: React.FC<SilenceFormProps> = ({ onSubmit, onCancel }) 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
+      name: localStorage.getItem('userName') || "",
       duration: "2",
       comment: "",
     },
   });
 
   const handleSubmit = (values: z.infer<typeof formSchema>) => {
+    localStorage.setItem('userName', values.name);
     onSubmit(parseInt(values.duration), values.comment);
+  };
+
+  const handleCancel = () => {
+    document.body.style.overflow = 'auto';
+    onCancel();
   };
 
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
+        <FormField
+          control={form.control}
+          name="name"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Your Name</FormLabel>
+              <FormControl>
+                <Input placeholder="John Doe" {...field} />
+              </FormControl>
+              <FormDescription>
+                This will be recorded as the person who silenced the alert.
+              </FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
         <FormField
           control={form.control}
           name="duration"
@@ -101,7 +125,7 @@ export const SilenceForm: React.FC<SilenceFormProps> = ({ onSubmit, onCancel }) 
           )}
         />
         <div className="flex justify-end space-x-2">
-          <Button type="button" variant="outline" onClick={onCancel}>
+          <Button type="button" variant="outline" onClick={handleCancel}>
             Cancel
           </Button>
           <Button type="submit">

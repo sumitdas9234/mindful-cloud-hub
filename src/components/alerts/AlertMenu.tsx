@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { MoreVertical, Bell, CheckCircle, Volume2, ExternalLink, Clipboard } from 'lucide-react';
+import { MoreVertical, Bell, CheckCircle, Volume2, ExternalLink, Clipboard, UserCheck } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -27,6 +27,7 @@ export const AlertMenu: React.FC<AlertMenuProps> = ({
   const handleItemClick = (e: React.MouseEvent, callback: Function) => {
     e.preventDefault();
     e.stopPropagation();
+    document.body.style.overflow = 'auto';
     callback();
   };
 
@@ -41,34 +42,24 @@ export const AlertMenu: React.FC<AlertMenuProps> = ({
       <DropdownMenuContent align="end">
         <DropdownMenuLabel>Actions</DropdownMenuLabel>
         
-        {alert.status !== 'resolved' && (
-          <>
-            <DropdownMenuItem 
-              onClick={(e) => handleItemClick(e, () => onAcknowledge(alert.id))}
-              disabled={!!alert.acknowledgedBy}
-              className="cursor-pointer"
-            >
-              <CheckCircle className="mr-2 h-4 w-4" />
-              <span>Acknowledge</span>
-              {alert.acknowledgedBy && (
-                <span className="ml-2 text-xs text-muted-foreground">
-                  (By {alert.acknowledgedBy})
-                </span>
-              )}
-            </DropdownMenuItem>
-            
-            <DropdownMenuItem 
-              onClick={(e) => handleItemClick(e, () => onSilence(alert.id))}
-              disabled={!!alert.silenceURL}
-              className="cursor-pointer"
-            >
-              <Volume2 className="mr-2 h-4 w-4" />
-              <span>Silence</span>
-              {alert.silenceURL && (
-                <span className="ml-2 text-xs text-muted-foreground">(Already silenced)</span>
-              )}
-            </DropdownMenuItem>
-          </>
+        {(alert.status !== 'resolved' && alert.status !== 'acknowledged') && (
+          <DropdownMenuItem 
+            onClick={(e) => handleItemClick(e, () => onAcknowledge(alert.id))}
+            className="cursor-pointer"
+          >
+            <UserCheck className="mr-2 h-4 w-4" />
+            <span>Acknowledge</span>
+          </DropdownMenuItem>
+        )}
+        
+        {(alert.status !== 'resolved' && alert.status !== 'silenced') && (
+          <DropdownMenuItem 
+            onClick={(e) => handleItemClick(e, () => onSilence(alert.id))}
+            className="cursor-pointer"
+          >
+            <Volume2 className="mr-2 h-4 w-4" />
+            <span>Silence</span>
+          </DropdownMenuItem>
         )}
         
         <DropdownMenuSeparator />

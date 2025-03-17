@@ -89,6 +89,10 @@ export const AlertsTabs: React.FC<AlertsTabsProps> = ({
           return alert.status === 'firing';
         case 'pending':
           return alert.status === 'pending';
+        case 'acknowledged':
+          return alert.status === 'acknowledged';
+        case 'silenced':
+          return alert.status === 'silenced';
         case 'resolved':
           return alert.status === 'resolved';
         case 'all':
@@ -104,44 +108,40 @@ export const AlertsTabs: React.FC<AlertsTabsProps> = ({
   };
 
   const handleSilenceButtonClick = (alertId: string) => {
-    // Prevent body scroll when dialog opens
-    if (typeof document !== 'undefined') {
-      document.body.style.overflow = 'auto';
-    }
+    document.body.style.overflow = 'auto';
     setActionAlertId(alertId);
     setSilenceOpen(true);
   };
 
   const handleAcknowledgeButtonClick = (alertId: string) => {
-    // Prevent body scroll when dialog opens
-    if (typeof document !== 'undefined') {
-      document.body.style.overflow = 'auto';
-    }
+    document.body.style.overflow = 'auto';
     setActionAlertId(alertId);
     setAcknowledgeOpen(true);
   };
 
   const onSilenceSubmit = (duration: number, comment: string) => {
     if (actionAlertId) {
+      const by = localStorage.getItem('userName') || 'Anonymous';
       handleSilence(actionAlertId, duration, comment);
       setSilenceOpen(false);
       setActionAlertId(null);
+      document.body.style.overflow = 'auto';
     }
   };
 
   const onAcknowledgeSubmit = (by: string, comment: string) => {
     if (actionAlertId) {
+      localStorage.setItem('userName', by); // Save username for later use
       handleAcknowledge(actionAlertId, by, comment);
       setAcknowledgeOpen(false);
       setActionAlertId(null);
+      document.body.style.overflow = 'auto';
     }
   };
 
   // Update dialog open/close handlers to manage body scroll
   const handleDialogOpenChange = (open: boolean, setOpenState: React.Dispatch<React.SetStateAction<boolean>>) => {
-    if (typeof document !== 'undefined') {
-      document.body.style.overflow = open ? 'auto' : 'auto';
-    }
+    document.body.style.overflow = 'auto';
     setOpenState(open);
   };
 
@@ -171,10 +171,12 @@ export const AlertsTabs: React.FC<AlertsTabsProps> = ({
         onValueChange={setSelectedTab}
         className="w-full"
       >
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-6">
           <TabsTrigger value="all">All Alerts</TabsTrigger>
           <TabsTrigger value="firing">Firing</TabsTrigger>
           <TabsTrigger value="pending">Pending</TabsTrigger>
+          <TabsTrigger value="acknowledged">Acknowledged</TabsTrigger>
+          <TabsTrigger value="silenced">Silenced</TabsTrigger>
           <TabsTrigger value="resolved">Resolved</TabsTrigger>
         </TabsList>
         
@@ -199,6 +201,26 @@ export const AlertsTabs: React.FC<AlertsTabsProps> = ({
         </TabsContent>
         
         <TabsContent value="pending" className="mt-4">
+          <AlertsTable 
+            alerts={filteredAlerts} 
+            isLoading={isLoading}
+            onAcknowledge={handleAcknowledgeButtonClick}
+            onSilence={handleSilenceButtonClick}
+            onViewDetails={openAlertDetail}
+          />
+        </TabsContent>
+        
+        <TabsContent value="acknowledged" className="mt-4">
+          <AlertsTable 
+            alerts={filteredAlerts} 
+            isLoading={isLoading}
+            onAcknowledge={handleAcknowledgeButtonClick}
+            onSilence={handleSilenceButtonClick}
+            onViewDetails={openAlertDetail}
+          />
+        </TabsContent>
+        
+        <TabsContent value="silenced" className="mt-4">
           <AlertsTable 
             alerts={filteredAlerts} 
             isLoading={isLoading}
