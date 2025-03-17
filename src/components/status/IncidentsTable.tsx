@@ -9,7 +9,6 @@ import {
   TableCell 
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { TablePagination } from '@/components/compute/TablePagination';
 import { Skeleton } from '@/components/ui/skeleton';
 
@@ -74,12 +73,15 @@ export const IncidentsTable: React.FC<IncidentsTableProps> = ({
             <TableHead>System</TableHead>
             <TableHead>Status</TableHead>
             <TableHead>Started</TableHead>
-            <TableHead className="text-right">Actions</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {incidents.map((incident) => (
-            <TableRow key={incident.id}>
+            <TableRow 
+              key={incident.id} 
+              className="cursor-pointer hover:bg-muted/50"
+              onClick={() => onViewIncident(incident)}
+            >
               <TableCell>
                 <div className="font-medium">{incident.title}</div>
                 <div className="text-sm text-muted-foreground truncate max-w-xs">
@@ -90,22 +92,13 @@ export const IncidentsTable: React.FC<IncidentsTableProps> = ({
               <TableCell>
                 <Badge 
                   variant="outline" 
-                  className="capitalize flex items-center gap-1"
+                  className="capitalize inline-flex items-center gap-1 w-fit"
                 >
                   <span className={`w-2 h-2 rounded-full ${getStatusColor(incident.status)}`}></span>
                   {incident.status}
                 </Badge>
               </TableCell>
               <TableCell>{incident.started}</TableCell>
-              <TableCell className="text-right">
-                <Button 
-                  variant="ghost" 
-                  size="sm"
-                  onClick={() => onViewIncident(incident)}
-                >
-                  View Details
-                </Button>
-              </TableCell>
             </TableRow>
           ))}
         </TableBody>
@@ -131,7 +124,6 @@ const IncidentTableSkeleton = () => {
             <TableHead>System</TableHead>
             <TableHead>Status</TableHead>
             <TableHead>Started</TableHead>
-            <TableHead className="text-right">Actions</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -150,9 +142,6 @@ const IncidentTableSkeleton = () => {
               <TableCell>
                 <Skeleton className="h-5 w-24" />
               </TableCell>
-              <TableCell className="text-right">
-                <Skeleton className="h-8 w-24 ml-auto" />
-              </TableCell>
             </TableRow>
           ))}
         </TableBody>
@@ -170,3 +159,4 @@ const IncidentTableSkeleton = () => {
     </div>
   );
 };
+

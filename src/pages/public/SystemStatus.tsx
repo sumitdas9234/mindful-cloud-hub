@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { AlertTriangle, CheckCircle, Clock, Server, Bell } from 'lucide-react';
 import { StatusIndicator } from '@/components/compute/StatusIndicator';
@@ -20,23 +19,20 @@ import { useQuery } from '@tanstack/react-query';
 import { fetchAlerts, fetchAlertStats } from '@/api/alertsApi';
 import { UptimeGraph } from '@/components/status/UptimeGraph';
 import { TablePagination } from '@/components/compute/TablePagination';
-import { SystemStatusCard, SystemStatus } from '@/components/status/SystemStatusCard';
+import { SystemStatusCard, SystemStatus as SystemStatusType } from '@/components/status/SystemStatusCard';
 import { IncidentsTable, Incident } from '@/components/status/IncidentsTable';
 import { SystemDetailSheet } from '@/components/status/SystemDetailSheet';
 import { IncidentDetailSheet } from '@/components/status/IncidentDetailSheet';
 import { PageSkeleton } from '@/components/ui/skeleton';
 
-// Mock data for uptime graphs
 const generateUptimeData = (days = 45, status = 'healthy') => {
   const data = [];
   for (let i = 0; i < days; i++) {
     const date = new Date();
     date.setDate(date.getDate() - (days - i - 1));
     
-    // Generate mostly 'up' status with occasional issues
     let pointStatus: 'up' | 'degraded' | 'down' = 'up';
     
-    // For warning/error statuses, add some degraded or down days
     if (status === 'warning' && (i === 15 || i === 35)) {
       pointStatus = 'degraded';
     } else if (status === 'error' && (i === 20 || i === 21)) {
@@ -54,20 +50,16 @@ const generateUptimeData = (days = 45, status = 'healthy') => {
 };
 
 const SystemStatus: React.FC = () => {
-  // State for pagination
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
   
-  // State for details sheets
-  const [selectedSystem, setSelectedSystem] = useState<SystemStatus | null>(null);
+  const [selectedSystem, setSelectedSystem] = useState<SystemStatusType | null>(null);
   const [selectedIncident, setSelectedIncident] = useState<Incident | null>(null);
   const [systemDetailOpen, setSystemDetailOpen] = useState(false);
   const [incidentDetailOpen, setIncidentDetailOpen] = useState(false);
   
-  // Loading state
   const [isLoading, setIsLoading] = useState(true);
   
-  // Fetch alerts data
   const { data: alertsData, isLoading: alertsLoading } = useQuery({
     queryKey: ['alerts', 'status-page'],
     queryFn: () => fetchAlerts(['firing']),
@@ -78,7 +70,6 @@ const SystemStatus: React.FC = () => {
     queryFn: fetchAlertStats,
   });
 
-  // Mock systems data
   const systems = [
     { 
       id: '1', 
@@ -136,7 +127,6 @@ const SystemStatus: React.FC = () => {
     },
   ];
 
-  // Mock incidents data
   const incidents = [
     { 
       id: '1', 
@@ -196,25 +186,20 @@ const SystemStatus: React.FC = () => {
     },
   ];
 
-  // Filter active incidents
   const activeIncidents = incidents.filter(incident => incident.status !== 'resolved');
   
-  // Paginate incidents
   const paginatedIncidents = incidents.slice(
     (currentPage - 1) * itemsPerPage, 
     currentPage * itemsPerPage
   );
   
-  // Get total pages
   const totalIncidentPages = Math.ceil(incidents.length / itemsPerPage);
 
-  // Get relevant alerts for degraded systems
   const relevantAlerts = alertsData?.data.filter(alert => 
     alert.status === 'firing' && 
     (alert.labels.service === 'storage' || alert.labels.service === 'backup')
   ) || [];
 
-  // Simulate loading state
   useEffect(() => {
     const timer = setTimeout(() => {
       setIsLoading(false);
@@ -223,7 +208,7 @@ const SystemStatus: React.FC = () => {
     return () => clearTimeout(timer);
   }, []);
 
-  const handleSystemClick = (system: SystemStatus) => {
+  const handleSystemClick = (system: SystemStatusType) => {
     setSelectedSystem(system);
     setSystemDetailOpen(true);
   };
@@ -233,12 +218,10 @@ const SystemStatus: React.FC = () => {
     setIncidentDetailOpen(true);
   };
 
-  // Find related incidents for a system
   const getRelatedIncidents = (systemName: string) => {
     return incidents.filter(incident => incident.system === systemName);
   };
 
-  // Find related alerts for a system
   const getRelatedAlerts = (systemName: string) => {
     return alertsData?.data.filter(alert => {
       const service = alert.labels.service?.toLowerCase() || '';
@@ -246,12 +229,10 @@ const SystemStatus: React.FC = () => {
     }) || [];
   };
 
-  // Find affected systems for an incident
   const getAffectedSystems = (incident: Incident) => {
     return systems.filter(system => system.name === incident.system);
   };
 
-  // If loading, show skeleton UI
   if (isLoading || alertsLoading || statsLoading) {
     return (
       <div className="min-h-screen bg-background">
@@ -274,7 +255,6 @@ const SystemStatus: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Public header with minimal navigation */}
       <header className="border-b border-border">
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
           <div className="flex items-center space-x-2">
@@ -317,7 +297,6 @@ const SystemStatus: React.FC = () => {
       </header>
 
       <main className="container mx-auto px-4 py-8 space-y-8 animate-fade-in">
-        {/* Current status summary */}
         <div className="space-y-4">
           <div className="flex justify-between items-center">
             <h2 className="text-2xl font-bold">Current Status</h2>
@@ -347,7 +326,6 @@ const SystemStatus: React.FC = () => {
           )}
         </div>
 
-        {/* System grid */}
         <div>
           <h2 className="text-xl font-semibold mb-4">Systems</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -361,7 +339,6 @@ const SystemStatus: React.FC = () => {
           </div>
         </div>
 
-        {/* Current incidents */}
         <div>
           <h2 className="text-xl font-semibold mb-4">Active Incidents</h2>
           <IncidentsTable 
@@ -375,7 +352,6 @@ const SystemStatus: React.FC = () => {
           />
         </div>
 
-        {/* Related alerts */}
         {relevantAlerts.length > 0 && (
           <div>
             <h2 className="text-xl font-semibold mb-4">Related Alerts</h2>
@@ -399,7 +375,6 @@ const SystemStatus: React.FC = () => {
         )}
       </main>
 
-      {/* Detail sheets */}
       <SystemDetailSheet 
         system={selectedSystem} 
         open={systemDetailOpen} 
