@@ -50,7 +50,6 @@ export const SilenceForm: React.FC<SilenceFormProps> = ({ onSubmit, onCancel }) 
   };
 
   const handleCancel = () => {
-    document.body.style.overflow = 'auto';
     onCancel();
   };
 

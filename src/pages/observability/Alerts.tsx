@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Bell, Plus } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
@@ -16,6 +16,13 @@ const Alerts = () => {
   const [selectedTab, setSelectedTab] = useState('all');
   const [selectedStatuses, setSelectedStatuses] = useState<AlertStatus[]>([]);
   const [selectedSeverities, setSelectedSeverities] = useState<AlertSeverity[]>([]);
+
+  // Ensure body scroll is enabled when component unmounts
+  useEffect(() => {
+    return () => {
+      document.body.style.overflow = 'auto';
+    };
+  }, []);
 
   // Fetch alerts
   const { 
@@ -66,7 +73,6 @@ const Alerts = () => {
 
   const handleAcknowledge = async (alertId: string, by: string, comment: string) => {
     try {
-      document.body.style.overflow = 'auto';
       const result = await acknowledgeAlert(alertId, by, comment);
       if (result.success) {
         toast({
@@ -85,12 +91,14 @@ const Alerts = () => {
         description: error instanceof Error ? error.message : "Failed to acknowledge alert",
         variant: "destructive"
       });
+    } finally {
+      // Ensure body scroll is enabled
+      document.body.style.overflow = 'auto';
     }
   };
 
   const handleSilence = async (alertId: string, duration: number, comment: string) => {
     try {
-      document.body.style.overflow = 'auto';
       const by = localStorage.getItem('userName') || 'Anonymous';
       const result = await silenceAlert(alertId, duration, comment, by);
       if (result.success) {
@@ -110,6 +118,9 @@ const Alerts = () => {
         description: error instanceof Error ? error.message : "Failed to silence alert",
         variant: "destructive"
       });
+    } finally {
+      // Ensure body scroll is enabled
+      document.body.style.overflow = 'auto';
     }
   };
 

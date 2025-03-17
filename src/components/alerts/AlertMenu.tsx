@@ -27,7 +27,6 @@ export const AlertMenu: React.FC<AlertMenuProps> = ({
   const handleItemClick = (e: React.MouseEvent, callback: Function) => {
     e.preventDefault();
     e.stopPropagation();
-    document.body.style.overflow = 'auto';
     callback();
   };
 

@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { AlertsTable } from './AlertsTable';
@@ -108,13 +107,11 @@ export const AlertsTabs: React.FC<AlertsTabsProps> = ({
   };
 
   const handleSilenceButtonClick = (alertId: string) => {
-    document.body.style.overflow = 'auto';
     setActionAlertId(alertId);
     setSilenceOpen(true);
   };
 
   const handleAcknowledgeButtonClick = (alertId: string) => {
-    document.body.style.overflow = 'auto';
     setActionAlertId(alertId);
     setAcknowledgeOpen(true);
   };
@@ -125,7 +122,6 @@ export const AlertsTabs: React.FC<AlertsTabsProps> = ({
       handleSilence(actionAlertId, duration, comment);
       setSilenceOpen(false);
       setActionAlertId(null);
-      document.body.style.overflow = 'auto';
     }
   };
 
@@ -135,13 +131,11 @@ export const AlertsTabs: React.FC<AlertsTabsProps> = ({
       handleAcknowledge(actionAlertId, by, comment);
       setAcknowledgeOpen(false);
       setActionAlertId(null);
-      document.body.style.overflow = 'auto';
     }
   };
 
   // Update dialog open/close handlers to manage body scroll
   const handleDialogOpenChange = (open: boolean, setOpenState: React.Dispatch<React.SetStateAction<boolean>>) => {
-    document.body.style.overflow = 'auto';
     setOpenState(open);
   };
 

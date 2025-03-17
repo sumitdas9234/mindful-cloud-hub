@@ -82,32 +82,40 @@ export const fetchAlertStats = async (): Promise<AlertStats> => {
 export const silenceAlert = async (alertId: string, duration: number, comment: string, by: string): Promise<{ success: boolean, message: string }> => {
   await delay(800);
   
-  // Find the alert in our mock data and update its status
-  const alertIndex = mockAlerts.findIndex(alert => alert.id === alertId);
-  if (alertIndex !== -1) {
-    mockAlerts[alertIndex].status = 'silenced';
-    mockAlerts[alertIndex].silencedBy = by;
-    mockAlerts[alertIndex].silencedAt = new Date().toISOString();
-    mockAlerts[alertIndex].silenceDuration = duration;
-    mockAlerts[alertIndex].silenceComment = comment;
-    mockAlerts[alertIndex].silenceURL = `https://alertmanager.example.com/silence/${alertId}`;
+  try {
+    // Find the alert in our mock data and update its status
+    const alertIndex = mockAlerts.findIndex(alert => alert.id === alertId);
+    if (alertIndex !== -1) {
+      mockAlerts[alertIndex].status = 'silenced';
+      mockAlerts[alertIndex].silencedBy = by;
+      mockAlerts[alertIndex].silencedAt = new Date().toISOString();
+      mockAlerts[alertIndex].silenceDuration = duration;
+      mockAlerts[alertIndex].silenceComment = comment;
+      mockAlerts[alertIndex].silenceURL = `https://alertmanager.example.com/silence/${alertId}`;
+    }
+    
+    return { success: true, message: `Alert ${alertId} silenced for ${duration} hours by ${by}` };
+  } catch (error) {
+    return { success: false, message: `Failed to silence alert: ${error instanceof Error ? error.message : 'Unknown error'}` };
   }
-  
-  return { success: true, message: `Alert ${alertId} silenced for ${duration} hours by ${by}` };
 };
 
 export const acknowledgeAlert = async (alertId: string, by: string, comment?: string): Promise<{ success: boolean, message: string }> => {
   await delay(800);
   
-  // Find the alert in our mock data and update its status
-  const alertIndex = mockAlerts.findIndex(alert => alert.id === alertId);
-  if (alertIndex !== -1) {
-    mockAlerts[alertIndex].status = 'acknowledged';
-    mockAlerts[alertIndex].acknowledgedBy = by;
-    mockAlerts[alertIndex].acknowledgedAt = new Date().toISOString();
+  try {
+    // Find the alert in our mock data and update its status
+    const alertIndex = mockAlerts.findIndex(alert => alert.id === alertId);
+    if (alertIndex !== -1) {
+      mockAlerts[alertIndex].status = 'acknowledged';
+      mockAlerts[alertIndex].acknowledgedBy = by;
+      mockAlerts[alertIndex].acknowledgedAt = new Date().toISOString();
+    }
+    
+    return { success: true, message: `Alert ${alertId} acknowledged by ${by}` };
+  } catch (error) {
+    return { success: false, message: `Failed to acknowledge alert: ${error instanceof Error ? error.message : 'Unknown error'}` };
   }
-  
-  return { success: true, message: `Alert ${alertId} acknowledged by ${by}` };
 };
 
 export const getAlertmanagerConfig = async (): Promise<AlertManagerConfig[]> => {
