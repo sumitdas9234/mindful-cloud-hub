@@ -1,8 +1,9 @@
 
 import axios from 'axios';
 import { User, UserListResponse, UserStats, UserFilters } from './types/users';
+import env from '@/config/env';
 
-const API_URL = 'https://run.mocky.io/v3/6b5efe7c-d587-4847-a50c-b652618752a4';
+const API_URL = env.USERS_API_URL;
 
 // API functions
 export const fetchUsers = async (
@@ -38,9 +39,11 @@ export const fetchUsers = async (
     }
     
     if (filters.role) {
-      users = users.filter(user => 
-        (user.roles || []).includes(filters.role as string)
-      );
+      // Fix for filtering by role - ensure we check each role in the array
+      users = users.filter(user => {
+        const userRoles = user.roles || [];
+        return userRoles.includes(filters.role as string);
+      });
     }
     
     if (filters.org) {
@@ -55,13 +58,16 @@ export const fetchUsers = async (
       );
     }
     
+    // Get the total count before pagination
+    const totalFilteredUsers = users.length;
+    
     // Paginate results
     const startIndex = (page - 1) * limit;
     const paginatedUsers = users.slice(startIndex, startIndex + limit);
     
     return {
       data: paginatedUsers,
-      total: users.length
+      total: totalFilteredUsers
     };
   } catch (error) {
     console.error("Error fetching users:", error);
