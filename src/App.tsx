@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -20,6 +19,7 @@ import RoutesPage from "./pages/infrastructure/Routes";
 import ClustersPage from "./pages/infrastructure/Clusters";
 import StorageManagement from "./pages/infrastructure/StorageManagement";
 import Alerts from "./pages/observability/Alerts";
+import UsersPage from "./pages/administration/Users";
 
 const queryClient = new QueryClient();
 
@@ -166,7 +166,7 @@ const App = () => (
             path="/users" 
             element={
               <Layout title="User Management">
-                <ComingSoon feature="User" />
+                <UsersPage />
               </Layout>
             } 
           />

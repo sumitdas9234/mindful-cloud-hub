@@ -1,280 +1,275 @@
 
-import React from 'react';
-import { PlaceholderPage } from '@/components/layout/PlaceholderPage';
-import { Users as UsersIcon, UserPlus, UserCheck, Shield, Lock, User } from 'lucide-react';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
+import React, { useState, useEffect, useMemo } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { toast } from '@/components/ui/use-toast';
+import { PageHeader } from '@/components/compute/PageHeader';
+import { UsersTable } from '@/components/users/UsersTable';
+import { UsersFilters } from '@/components/users/UsersFilters';
+import { UsersStats } from '@/components/users/UsersStats';
+import { UserDetailSheet } from '@/components/users/UserDetailSheet';
+import { CreateUserDialog } from '@/components/users/CreateUserDialog';
+import { fetchUsers, fetchUserStats, createUser, updateUser, deleteUser } from '@/api/usersApi';
+import { User, UserFilters } from '@/api/types/users';
+import { 
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import { Separator } from '@/components/ui/separator';
+import { Users as UsersIcon, UserPlus } from 'lucide-react';
 
-interface UserData {
-  id: string;
-  name: string;
-  email: string;
-  role: string;
-  status: 'active' | 'inactive' | 'pending';
-  lastActive: string;
-  avatarUrl?: string;
-}
+const UsersPage: React.FC = () => {
+  // State
+  const [currentPage, setCurrentPage] = useState(1);
+  const [filters, setFilters] = useState<UserFilters>({});
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [userDetailOpen, setUserDetailOpen] = useState(false);
+  const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [userToDelete, setUserToDelete] = useState<User | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-const users: UserData[] = [
-  {
-    id: 'user-001',
-    name: 'John Smith',
-    email: 'john.smith@example.com',
-    role: 'Administrator',
-    status: 'active',
-    lastActive: '2023-11-28T10:45:23Z',
-    avatarUrl: 'https://i.pravatar.cc/150?u=john'
-  },
-  {
-    id: 'user-002',
-    name: 'Sarah Johnson',
-    email: 'sarah.j@example.com',
-    role: 'Infrastructure Manager',
-    status: 'active',
-    lastActive: '2023-11-27T16:30:10Z',
-    avatarUrl: 'https://i.pravatar.cc/150?u=sarah'
-  },
-  {
-    id: 'user-003',
-    name: 'Michael Wong',
-    email: 'michael.w@example.com',
-    role: 'Network Engineer',
-    status: 'active',
-    lastActive: '2023-11-28T09:15:45Z',
-    avatarUrl: 'https://i.pravatar.cc/150?u=michael'
-  },
-  {
-    id: 'user-004',
-    name: 'Emily Davis',
-    email: 'emily.d@example.com',
-    role: 'Storage Administrator',
-    status: 'active',
-    lastActive: '2023-11-28T08:20:33Z',
-    avatarUrl: 'https://i.pravatar.cc/150?u=emily'
-  },
-  {
-    id: 'user-005',
-    name: 'Robert Chen',
-    email: 'robert.c@example.com',
-    role: 'Security Engineer',
-    status: 'inactive',
-    lastActive: '2023-11-10T14:22:18Z',
-    avatarUrl: 'https://i.pravatar.cc/150?u=robert'
-  },
-  {
-    id: 'user-006',
-    name: 'Jennifer Lee',
-    email: 'jennifer.l@example.com',
-    role: 'DevOps Engineer',
-    status: 'pending',
-    lastActive: '2023-11-26T11:05:09Z',
-    avatarUrl: 'https://i.pravatar.cc/150?u=jennifer'
-  }
-];
+  // Queries
+  const { 
+    data: usersData, 
+    isLoading: isLoadingUsers,
+    refetch: refetchUsers
+  } = useQuery({
+    queryKey: ['users', currentPage, filters],
+    queryFn: () => fetchUsers(currentPage, 10, filters),
+  });
+  
+  const { 
+    data: statsData, 
+    isLoading: isLoadingStats,
+    refetch: refetchStats
+  } = useQuery({
+    queryKey: ['user-stats'],
+    queryFn: () => fetchUserStats(),
+  });
 
-const getStatusBadge = (status: string) => {
-  switch (status) {
-    case 'active':
-      return <Badge className="bg-green-500">Active</Badge>;
-    case 'inactive':
-      return <Badge variant="outline" className="text-gray-500">Inactive</Badge>;
-    case 'pending':
-      return <Badge className="bg-amber-500">Pending</Badge>;
-    default:
-      return null;
-  }
-};
+  // Computed values for filter options
+  const availableRoles = useMemo(() => {
+    if (!statsData) return [];
+    return Object.keys(statsData.byRole);
+  }, [statsData]);
+  
+  const availableOrgs = useMemo(() => {
+    if (!statsData) return [];
+    return Object.keys(statsData.byOrg);
+  }, [statsData]);
+  
+  const availableBusinessUnits = useMemo(() => {
+    if (!statsData) return [];
+    return Object.keys(statsData.byBusinessUnit);
+  }, [statsData]);
+  
+  const availableManagers = useMemo(() => {
+    if (!usersData) return [];
+    return usersData.data
+      .filter(user => user.isManager)
+      .map(user => user.cn);
+  }, [usersData]);
 
-const formatDate = (dateString: string) => {
-  const options: Intl.DateTimeFormatOptions = {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit'
+  // Handlers
+  const handleRefresh = () => {
+    refetchUsers();
+    refetchStats();
   };
-  return new Date(dateString).toLocaleDateString(undefined, options);
-};
-
-const UsersTab = () => (
-  <div className="space-y-4">
-    <div className="flex justify-between items-center">
-      <div className="relative w-80">
-        <Input
-          type="search"
-          placeholder="Search users..."
-          className="w-full rounded-md"
-        />
-      </div>
-      <Button className="gap-1">
-        <UserPlus className="h-4 w-4" />
-        Add User
-      </Button>
-    </div>
+  
+  const handleViewUser = (user: User) => {
+    setSelectedUser(user);
+    setUserDetailOpen(true);
+  };
+  
+  const handleEditUser = (user: User) => {
+    // In a real app, this would open an edit dialog
+    toast({
+      title: "Edit User",
+      description: `You would now edit ${user.cn}`,
+    });
+  };
+  
+  const handleDeleteUser = (user: User) => {
+    setUserToDelete(user);
+    setDeleteDialogOpen(true);
+  };
+  
+  const confirmDeleteUser = async () => {
+    if (!userToDelete) return;
     
-    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-      {users.map((user) => (
-        <Card key={user.id} className="h-full">
-          <CardHeader className="pb-2">
-            <div className="flex justify-between">
-              <div className="flex items-center space-x-4">
-                <Avatar className="h-10 w-10">
-                  {user.avatarUrl && <AvatarImage src={user.avatarUrl} alt={user.name} />}
-                  <AvatarFallback>{user.name.charAt(0)}{user.name.split(' ')[1]?.charAt(0)}</AvatarFallback>
-                </Avatar>
-                <div>
-                  <CardTitle className="text-base">{user.name}</CardTitle>
-                  <CardDescription className="text-xs">{user.email}</CardDescription>
-                </div>
-              </div>
-              {getStatusBadge(user.status)}
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-2 text-sm">
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Role:</span>
-                <span className="font-medium">{user.role}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Last active:</span>
-                <span>{formatDate(user.lastActive)}</span>
-              </div>
-            </div>
-          </CardContent>
-          <CardFooter className="flex gap-2 pt-0">
-            <Button size="sm" variant="outline" className="flex-1">Profile</Button>
-            <Button size="sm" variant="outline" className="flex-1">Permissions</Button>
-            {user.status === 'active' ? (
-              <Button size="sm" variant="outline" className="flex-1">Disable</Button>
-            ) : (
-              <Button size="sm" variant="outline" className="flex-1">Enable</Button>
-            )}
-          </CardFooter>
-        </Card>
-      ))}
-    </div>
-  </div>
-);
+    try {
+      await deleteUser(userToDelete._id);
+      toast({
+        title: "User Deleted",
+        description: `${userToDelete.cn} has been deleted successfully.`,
+      });
+      setDeleteDialogOpen(false);
+      setUserToDelete(null);
+      setUserDetailOpen(false);
+      refetchUsers();
+      refetchStats();
+    } catch (error) {
+      console.error("Error deleting user:", error);
+      toast({
+        title: "Error",
+        description: "Failed to delete user. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+  
+  const handleToggleUserStatus = async (user: User, newStatus: boolean) => {
+    try {
+      await updateUser(user._id, { isActive: newStatus });
+      toast({
+        title: newStatus ? "User Activated" : "User Deactivated",
+        description: `${user.cn} has been ${newStatus ? "activated" : "deactivated"} successfully.`,
+      });
+      refetchUsers();
+      refetchStats();
+      
+      // Update the selected user if it's the one being toggled
+      if (selectedUser && selectedUser._id === user._id) {
+        setSelectedUser({
+          ...selectedUser,
+          isActive: newStatus
+        });
+      }
+    } catch (error) {
+      console.error("Error updating user status:", error);
+      toast({
+        title: "Error",
+        description: "Failed to update user status. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+  
+  const handleCreateUser = async (userData: Omit<User, 'lastLoggedIn' | 'lastRatingSubmittedOn'>) => {
+    setIsSubmitting(true);
+    try {
+      await createUser(userData as any); // Type casting to match API
+      toast({
+        title: "User Created",
+        description: `${userData.cn} has been created successfully.`,
+      });
+      setCreateDialogOpen(false);
+      refetchUsers();
+      refetchStats();
+    } catch (error) {
+      console.error("Error creating user:", error);
+      toast({
+        title: "Error",
+        description: "Failed to create user. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+  
+  const handleResetFilters = () => {
+    setFilters({});
+    setCurrentPage(1);
+  };
 
-const RolesTab = () => (
-  <Card>
-    <CardHeader>
-      <CardTitle>User Roles</CardTitle>
-      <CardDescription>Manage role-based access control</CardDescription>
-    </CardHeader>
-    <CardContent>
-      <div className="space-y-4">
-        <div className="border rounded-lg p-4">
-          <div className="flex justify-between items-center mb-3">
-            <div>
-              <h3 className="font-medium flex items-center gap-2">
-                <Shield className="h-4 w-4 text-primary" />
-                Administrator
-              </h3>
-              <p className="text-sm text-muted-foreground">Full system access</p>
-            </div>
-            <Badge className="bg-primary">3 Users</Badge>
-          </div>
-          <p className="text-sm mb-3">Can manage all aspects of the system including user management, security settings, and infrastructure configuration.</p>
-          <Button size="sm" variant="outline">Edit Permissions</Button>
-        </div>
-        
-        <div className="border rounded-lg p-4">
-          <div className="flex justify-between items-center mb-3">
-            <div>
-              <h3 className="font-medium flex items-center gap-2">
-                <User className="h-4 w-4 text-primary" />
-                Infrastructure Manager
-              </h3>
-              <p className="text-sm text-muted-foreground">Manage infrastructure</p>
-            </div>
-            <Badge className="bg-primary">2 Users</Badge>
-          </div>
-          <p className="text-sm mb-3">Can manage all infrastructure components but cannot modify system settings or user access.</p>
-          <Button size="sm" variant="outline">Edit Permissions</Button>
-        </div>
-        
-        <div className="border rounded-lg p-4">
-          <div className="flex justify-between items-center mb-3">
-            <div>
-              <h3 className="font-medium flex items-center gap-2">
-                <UserCheck className="h-4 w-4 text-primary" />
-                Operator
-              </h3>
-              <p className="text-sm text-muted-foreground">Day-to-day operations</p>
-            </div>
-            <Badge className="bg-primary">4 Users</Badge>
-          </div>
-          <p className="text-sm mb-3">Can monitor and make limited changes to infrastructure components. Cannot add or remove resources.</p>
-          <Button size="sm" variant="outline">Edit Permissions</Button>
-        </div>
-        
-        <div className="border rounded-lg p-4">
-          <div className="flex justify-between items-center mb-3">
-            <div>
-              <h3 className="font-medium flex items-center gap-2">
-                <UserCheck className="h-4 w-4 text-primary" />
-                Read-Only
-              </h3>
-              <p className="text-sm text-muted-foreground">Monitoring only</p>
-            </div>
-            <Badge className="bg-primary">7 Users</Badge>
-          </div>
-          <p className="text-sm mb-3">Can view all system components and monitoring data but cannot make any changes.</p>
-          <Button size="sm" variant="outline">Edit Permissions</Button>
-        </div>
-      </div>
-    </CardContent>
-    <CardFooter>
-      <Button variant="outline" className="w-full">Create New Role</Button>
-    </CardFooter>
-  </Card>
-);
-
-const tabs = [
-  { id: 'users', label: 'Users', content: <UsersTab /> },
-  { id: 'roles', label: 'Roles', content: <RolesTab /> },
-  { id: 'groups', label: 'Groups', content: (
-    <Card>
-      <CardHeader>
-        <CardTitle>User Groups</CardTitle>
-        <CardDescription>Manage user groups and team permissions</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <div className="h-60 flex items-center justify-center">
-          <p className="text-muted-foreground">User groups will be displayed here</p>
-        </div>
-      </CardContent>
-    </Card>
-  )},
-  { id: 'activity', label: 'Activity', content: (
-    <Card>
-      <CardHeader>
-        <CardTitle>User Activity</CardTitle>
-        <CardDescription>Monitor user login and system activity</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <div className="h-60 flex items-center justify-center">
-          <p className="text-muted-foreground">User activity logs will be displayed here</p>
-        </div>
-      </CardContent>
-    </Card>
-  )},
-];
-
-const UsersPage = () => {
   return (
-    <PlaceholderPage
-      title="User Management"
-      description="Manage users, roles, and permissions"
-      icon={<UsersIcon className="h-6 w-6" />}
-      tabs={tabs}
-      actionLabel="Add User"
-    />
+    <div className="space-y-6">
+      <PageHeader
+        title="User Management"
+        description="Manage user accounts, permissions, and organization details"
+        onRefresh={handleRefresh}
+        onAdd={() => setCreateDialogOpen(true)}
+        addButtonText="Add User"
+      >
+        <div className="flex items-center mt-2">
+          <UsersIcon className="h-5 w-5 text-muted-foreground mr-2" />
+          <span className="text-sm text-muted-foreground">
+            {statsData?.totalUsers || 0} Users • {statsData?.activeUsers || 0} Active
+          </span>
+        </div>
+      </PageHeader>
+      
+      <UsersStats 
+        stats={statsData || {
+          totalUsers: 0,
+          activeUsers: 0,
+          inactiveUsers: 0,
+          byRole: {},
+          byOrg: {},
+          byBusinessUnit: {}
+        }} 
+        isLoading={isLoadingStats} 
+      />
+      
+      <Separator />
+      
+      <UsersFilters
+        filters={filters}
+        setFilters={setFilters}
+        onResetFilters={handleResetFilters}
+        roleOptions={availableRoles}
+        orgOptions={availableOrgs}
+        businessUnitOptions={availableBusinessUnits}
+      />
+      
+      <UsersTable
+        users={usersData?.data || []}
+        isLoading={isLoadingUsers}
+        onEditUser={handleEditUser}
+        onViewUser={handleViewUser}
+        onDeleteUser={handleDeleteUser}
+        onToggleUserStatus={handleToggleUserStatus}
+        searchQuery={filters.search}
+      />
+      
+      <UserDetailSheet
+        user={selectedUser}
+        open={userDetailOpen}
+        onOpenChange={setUserDetailOpen}
+        onEdit={handleEditUser}
+        onDelete={handleDeleteUser}
+        onToggleStatus={handleToggleUserStatus}
+      />
+      
+      <CreateUserDialog
+        open={createDialogOpen}
+        onOpenChange={setCreateDialogOpen}
+        onSubmit={handleCreateUser}
+        availableRoles={availableRoles}
+        availableOrgs={availableOrgs}
+        availableBusinessUnits={availableBusinessUnits}
+        availableManagers={availableManagers}
+        isSubmitting={isSubmitting}
+      />
+      
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete {userToDelete?.cn}'s account and remove all their data from the system.
+              This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={confirmDeleteUser}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </div>
   );
 };
 
