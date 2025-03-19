@@ -72,6 +72,14 @@ export function DataTable<T>({
     );
   }
 
+  // Handle row click with event propagation prevention
+  const handleRowClick = (item: T, e: React.MouseEvent) => {
+    if (onRowClick) {
+      e.stopPropagation();
+      onRowClick(item);
+    }
+  };
+
   return (
     <div className="rounded-md border">
       <div className="overflow-auto">
@@ -94,7 +102,7 @@ export function DataTable<T>({
                   "bg-white dark:bg-secondary/20",
                   onRowClick ? "cursor-pointer hover:bg-muted/50" : ""
                 )}
-                onClick={onRowClick ? () => onRowClick(item) : undefined}
+                onClick={onRowClick ? (e) => handleRowClick(item, e) : undefined}
               >
                 {columns.map((column) => (
                   <TableCell 

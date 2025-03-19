@@ -53,6 +53,16 @@ export const UsersTable: React.FC<UsersTableProps> = ({
       .toUpperCase();
   };
 
+  // Handle dropdown menu actions with event propagation prevention
+  const handleAction = (
+    e: React.MouseEvent,
+    action: (user: User) => void, 
+    user: User
+  ) => {
+    e.stopPropagation();
+    action(user);
+  };
+
   const columns: Column<User>[] = [
     {
       key: 'name',
@@ -122,23 +132,31 @@ export const UsersTable: React.FC<UsersTableProps> = ({
       cell: (user) => (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" className="h-8 w-8">
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="h-8 w-8"
+              onClick={(e) => e.stopPropagation()}
+            >
               <MoreVertical className="h-4 w-4" />
               <span className="sr-only">Actions</span>
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={() => onViewUser(user)}>
+          <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
+            <DropdownMenuItem onClick={(e) => handleAction(e, onViewUser, user)}>
               View Details
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => onEditUser(user)}>
+            <DropdownMenuItem onClick={(e) => handleAction(e, onEditUser, user)}>
               <FileEdit className="h-4 w-4 mr-2" />
               Edit User
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             {user.isActive ? (
               <DropdownMenuItem 
-                onClick={() => onToggleUserStatus(user, false)}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onToggleUserStatus(user, false);
+                }}
                 className="text-amber-600"
               >
                 <XCircle className="h-4 w-4 mr-2" />
@@ -146,7 +164,10 @@ export const UsersTable: React.FC<UsersTableProps> = ({
               </DropdownMenuItem>
             ) : (
               <DropdownMenuItem 
-                onClick={() => onToggleUserStatus(user, true)}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onToggleUserStatus(user, true);
+                }}
                 className="text-green-600"
               >
                 <Check className="h-4 w-4 mr-2" />
@@ -155,7 +176,7 @@ export const UsersTable: React.FC<UsersTableProps> = ({
             )}
             <DropdownMenuSeparator />
             <DropdownMenuItem 
-              onClick={() => onDeleteUser(user)}
+              onClick={(e) => handleAction(e, onDeleteUser, user)}
               className="text-red-600"
             >
               <Trash2 className="h-4 w-4 mr-2" />
