@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Search, X } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { 
@@ -31,22 +31,33 @@ export const UsersFilters: React.FC<UsersFiltersProps> = ({
 }) => {
   // Local state for search input to debounce
   const [searchInput, setSearchInput] = useState(filters.search || '');
+  const [isSearching, setIsSearching] = useState(false);
 
   // Update local search state when filters change externally
   useEffect(() => {
-    setSearchInput(filters.search || '');
-  }, [filters.search]);
+    if (!isSearching) {
+      setSearchInput(filters.search || '');
+    }
+  }, [filters.search, isSearching]);
 
-  // Debounce search input
-  useEffect(() => {
+  // Debounce search input with useCallback for better performance
+  const debouncedSearch = useCallback((value: string) => {
+    setIsSearching(true);
     const timer = setTimeout(() => {
-      if (searchInput !== filters.search) {
-        setFilters({ ...filters, search: searchInput });
-      }
-    }, 500);
+      setFilters({ ...filters, search: value.trim() });
+      setIsSearching(false);
+    }, 300);
 
-    return () => clearTimeout(timer);
-  }, [searchInput, filters, setFilters]);
+    return () => {
+      clearTimeout(timer);
+    };
+  }, [filters, setFilters]);
+
+  // Apply debounced search
+  useEffect(() => {
+    const cleanup = debouncedSearch(searchInput);
+    return cleanup;
+  }, [searchInput, debouncedSearch]);
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchInput(e.target.value);
@@ -58,6 +69,11 @@ export const UsersFilters: React.FC<UsersFiltersProps> = ({
 
   const handleOrgChange = (value: string) => {
     setFilters({ ...filters, org: value === "all" ? undefined : value });
+  };
+
+  const handleClearSearch = () => {
+    setSearchInput('');
+    setFilters({ ...filters, search: '' });
   };
 
   const hasActiveFilters = filters.search || filters.role || filters.org || filters.isActive !== undefined;
@@ -73,6 +89,17 @@ export const UsersFilters: React.FC<UsersFiltersProps> = ({
           value={searchInput}
           onChange={handleSearchChange}
         />
+        {searchInput && (
+          <Button
+            variant="ghost"
+            size="sm"
+            className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7 p-0"
+            onClick={handleClearSearch}
+          >
+            <X className="h-3.5 w-3.5" />
+            <span className="sr-only">Clear search</span>
+          </Button>
+        )}
       </div>
       
       <Select

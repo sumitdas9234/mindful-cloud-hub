@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { toast } from '@/components/ui/use-toast';
 import { PageHeader } from '@/components/compute/PageHeader';
@@ -34,18 +34,23 @@ const UsersPage: React.FC = () => {
   const [userToDelete, setUserToDelete] = useState<User | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Improved filters handling with useCallback
+  const updateFilters = useCallback((newFilters: UserFilters) => {
+    setFilters(newFilters);
+    // Reset to page 1 when filters change
+    setCurrentPage(1);
+  }, []);
+
   // Debounce filter changes to reduce API calls
   useEffect(() => {
     const timer = setTimeout(() => {
       setDebouncedFilters(filters);
-      // Reset to page 1 when filters change
-      setCurrentPage(1);
-    }, 300);
+    }, 200);
     
     return () => clearTimeout(timer);
   }, [filters]);
 
-  // Queries - now using debouncedFilters instead of filters
+  // Queries - using debouncedFilters
   const { 
     data: usersData, 
     isLoading: isLoadingUsers,
@@ -53,6 +58,7 @@ const UsersPage: React.FC = () => {
   } = useQuery({
     queryKey: ['users', currentPage, itemsPerPage, debouncedFilters],
     queryFn: () => fetchUsers(currentPage, itemsPerPage, debouncedFilters),
+    staleTime: 60000, // Cache data for 1 minute
   });
   
   const { 
@@ -62,6 +68,7 @@ const UsersPage: React.FC = () => {
   } = useQuery({
     queryKey: ['user-stats'],
     queryFn: () => fetchUserStats(),
+    staleTime: 300000, // Cache stats for 5 minutes
   });
 
   // Calculate total pages
@@ -70,7 +77,7 @@ const UsersPage: React.FC = () => {
     return Math.ceil(usersData.total / itemsPerPage);
   }, [usersData?.total, itemsPerPage]);
 
-  // Computed values for filter options
+  // Compute filter options with useMemo for performance
   const availableRoles = useMemo(() => {
     if (!statsData) return [];
     return Object.keys(statsData.byRole);
@@ -94,30 +101,29 @@ const UsersPage: React.FC = () => {
   }, [usersData]);
 
   // Handlers
-  const handleRefresh = () => {
+  const handleRefresh = useCallback(() => {
     refetchUsers();
     refetchStats();
-  };
+  }, [refetchUsers, refetchStats]);
   
-  const handleViewUser = (user: User) => {
+  const handleViewUser = useCallback((user: User) => {
     setSelectedUser(user);
     setUserDetailOpen(true);
-  };
+  }, []);
   
-  const handleEditUser = (user: User) => {
-    // In a real app, this would open an edit dialog
+  const handleEditUser = useCallback((user: User) => {
     toast({
       title: "Edit User",
       description: `You would now edit ${user.cn}`,
     });
-  };
+  }, []);
   
-  const handleDeleteUser = (user: User) => {
+  const handleDeleteUser = useCallback((user: User) => {
     setUserToDelete(user);
     setDeleteDialogOpen(true);
-  };
+  }, []);
   
-  const confirmDeleteUser = async () => {
+  const confirmDeleteUser = useCallback(async () => {
     if (!userToDelete) return;
     
     try {
@@ -139,9 +145,9 @@ const UsersPage: React.FC = () => {
         variant: "destructive",
       });
     }
-  };
+  }, [userToDelete, refetchUsers, refetchStats]);
   
-  const handleToggleUserStatus = async (user: User, newStatus: boolean) => {
+  const handleToggleUserStatus = useCallback(async (user: User, newStatus: boolean) => {
     try {
       await updateUser(user._id, { isActive: newStatus });
       toast({
@@ -166,9 +172,9 @@ const UsersPage: React.FC = () => {
         variant: "destructive",
       });
     }
-  };
+  }, [selectedUser, refetchUsers, refetchStats]);
   
-  const handleCreateUser = async (userData: Omit<User, 'lastLoggedIn' | 'lastRatingSubmittedOn'>) => {
+  const handleCreateUser = useCallback(async (userData: Omit<User, 'lastLoggedIn' | 'lastRatingSubmittedOn'>) => {
     setIsSubmitting(true);
     try {
       // Add the missing required fields before sending to API
@@ -196,16 +202,16 @@ const UsersPage: React.FC = () => {
     } finally {
       setIsSubmitting(false);
     }
-  };
+  }, [refetchUsers, refetchStats]);
   
-  const handleResetFilters = () => {
+  const handleResetFilters = useCallback(() => {
     setFilters({});
     setCurrentPage(1);
-  };
+  }, []);
 
-  const handlePageChange = (page: number) => {
+  const handlePageChange = useCallback((page: number) => {
     setCurrentPage(page);
-  };
+  }, []);
 
   return (
     <div className="space-y-6">
@@ -233,7 +239,7 @@ const UsersPage: React.FC = () => {
       
       <UsersFilters
         filters={filters}
-        setFilters={setFilters}
+        setFilters={updateFilters}
         onResetFilters={handleResetFilters}
         roleOptions={availableRoles}
         orgOptions={availableOrgs}

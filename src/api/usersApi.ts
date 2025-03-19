@@ -25,21 +25,47 @@ export const fetchUsers = async (
       sequenceValue: user.sequenceValue || 0
     }));
     
-    // Apply filters
+    // Apply filters - optimize search by creating a single toLowerCase operation
     if (filters.search) {
-      const searchLower = filters.search.toLowerCase();
-      users = users.filter(user => 
-        user.cn.toLowerCase().includes(searchLower) ||
-        user._id.toLowerCase().includes(searchLower) ||
-        user.email.toLowerCase().includes(searchLower) ||
-        (user.slackUsername && user.slackUsername.toLowerCase().includes(searchLower)) ||
-        (user.manager && user.manager.toLowerCase().includes(searchLower)) ||
-        (user.businessUnit && user.businessUnit.toLowerCase().includes(searchLower))
-      );
+      const searchLower = filters.search.toLowerCase().trim();
+      
+      // Optimize search by creating separate arrays for direct matches and partial matches
+      // This way we prioritize exact matches in the results
+      const directMatches: User[] = [];
+      const partialMatches: User[] = [];
+      
+      users.forEach(user => {
+        // Check for exact matches first (more efficient)
+        if (
+          user._id.toLowerCase() === searchLower ||
+          user.email.toLowerCase() === searchLower ||
+          user.cn.toLowerCase() === searchLower
+        ) {
+          directMatches.push(user);
+          return;
+        }
+        
+        // Then check for partial matches (less efficient but necessary)
+        if (
+          user.cn.toLowerCase().includes(searchLower) ||
+          user._id.toLowerCase().includes(searchLower) ||
+          user.email.toLowerCase().includes(searchLower) ||
+          (user.slackUsername && user.slackUsername.toLowerCase().includes(searchLower)) ||
+          (user.manager && user.manager.toLowerCase().includes(searchLower)) ||
+          (user.businessUnit && user.businessUnit.toLowerCase().includes(searchLower))
+        ) {
+          partialMatches.push(user);
+        }
+      });
+      
+      // Combine direct and partial matches with direct matches first
+      users = [...directMatches, ...partialMatches];
+      
+      console.log(`Search found ${directMatches.length} direct matches and ${partialMatches.length} partial matches`);
     }
     
+    // Apply other filters
     if (filters.role) {
-      // Fix for filtering by role - ensure we check each role in the array
       users = users.filter(user => {
         const userRoles = user.roles || [];
         return userRoles.includes(filters.role as string);
@@ -65,7 +91,7 @@ export const fetchUsers = async (
     const startIndex = (page - 1) * limit;
     const paginatedUsers = users.slice(startIndex, startIndex + limit);
     
-    console.log(`Fetched ${totalFilteredUsers} total users, showing page ${page} with ${paginatedUsers.length} users`);
+    console.log(`Fetched ${users.length} total users, filtered to ${totalFilteredUsers}, showing page ${page} with ${paginatedUsers.length} users`);
     
     return {
       data: paginatedUsers,
