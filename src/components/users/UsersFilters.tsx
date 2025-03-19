@@ -27,6 +27,7 @@ export const UsersFilters: React.FC<UsersFiltersProps> = ({
   onResetFilters,
   roleOptions,
   orgOptions,
+  businessUnitOptions,
 }) => {
   // Local state for search input to debounce
   const [searchInput, setSearchInput] = useState(filters.search || '');
@@ -67,7 +68,7 @@ export const UsersFilters: React.FC<UsersFiltersProps> = ({
         <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
         <Input
           type="search"
-          placeholder="Search users..."
+          placeholder="Search users by name, ID, email..."
           className="pl-8"
           value={searchInput}
           onChange={handleSearchChange}
