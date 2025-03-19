@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
@@ -30,11 +31,12 @@ import {
 } from '@/components/ui/select';
 import { User } from '@/api/types/users';
 
+// Define a schema that ensures all required fields are provided
 const userFormSchema = z.object({
   _id: z.string().min(3, "Username must be at least 3 characters"),
   cn: z.string().min(2, "Full name is required"),
   email: z.string().email("Invalid email format"),
-  manager: z.string().optional(),
+  manager: z.string().optional().default(""),
   org: z.string().min(1, "Organization is required"),
   slackUsername: z.string().startsWith('@', "Slack username must start with @"),
   isManager: z.boolean().default(false),
@@ -44,6 +46,7 @@ const userFormSchema = z.object({
   sequenceValue: z.number().int().positive()
 });
 
+// Use the schema to define the form values type
 type UserFormValues = z.infer<typeof userFormSchema>;
 
 interface CreateUserDialogProps {
@@ -85,7 +88,9 @@ export const CreateUserDialog: React.FC<CreateUserDialogProps> = ({
   });
 
   const handleSubmit = (values: UserFormValues) => {
-    onSubmit(values);
+    // The form validation ensures all required fields are present
+    // Explicitly cast to the required type to satisfy TypeScript
+    onSubmit(values as Omit<User, 'lastLoggedIn' | 'lastRatingSubmittedOn'>);
   };
 
   return (
