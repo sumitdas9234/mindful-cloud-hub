@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { toast } from '@/components/ui/use-toast';
@@ -154,7 +153,14 @@ const UsersPage: React.FC = () => {
   const handleCreateUser = async (userData: Omit<User, 'lastLoggedIn' | 'lastRatingSubmittedOn'>) => {
     setIsSubmitting(true);
     try {
-      await createUser(userData as any); // Type casting to match API
+      // Add the missing required fields before sending to API
+      const userWithDates = {
+        ...userData,
+        lastLoggedIn: new Date().toISOString(),
+        lastRatingSubmittedOn: new Date().toISOString()
+      };
+      
+      await createUser(userWithDates);
       toast({
         title: "User Created",
         description: `${userData.cn} has been created successfully.`,

@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
@@ -86,11 +85,7 @@ export const CreateUserDialog: React.FC<CreateUserDialogProps> = ({
   });
 
   const handleSubmit = (values: UserFormValues) => {
-    onSubmit({
-      ...values,
-      lastLoggedIn: new Date().toISOString(),
-      lastRatingSubmittedOn: new Date().toISOString()
-    });
+    onSubmit(values);
   };
 
   return (
