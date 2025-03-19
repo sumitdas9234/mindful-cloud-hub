@@ -15,8 +15,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Separator } from '@/components/ui/separator';
-import { Card, CardContent } from '@/components/ui/card';
-import { FileEdit, Check, XCircle, AtSign, Building, CalendarClock, Users } from 'lucide-react';
+import { AtSign, Building, CalendarClock, Users, FileEdit, Check, XCircle } from 'lucide-react';
 
 interface UserDetailSheetProps {
   user: User | null;
@@ -85,113 +84,113 @@ export const UserDetailSheet: React.FC<UserDetailSheetProps> = ({
 
           <Separator />
 
-          <div className="space-y-4">
-            <Card className="bg-muted/20 border-none shadow-sm">
-              <CardContent className="pt-4">
-                <div className="space-y-4">
-                  <div className="flex items-start gap-3">
-                    <Building className="h-5 w-5 text-primary mt-0.5" />
-                    <div>
-                      <h4 className="text-sm font-medium mb-1">Organization</h4>
-                      <p className="text-sm">{user.org}</p>
-                      <p className="text-xs text-muted-foreground mt-1">{user.businessUnit}</p>
-                    </div>
-                  </div>
-                
-                  <div className="flex items-start gap-3">
-                    <Users className="h-5 w-5 text-primary mt-0.5" />
-                    <div>
-                      <h4 className="text-sm font-medium mb-1">Reports To</h4>
-                      <p className="text-sm">{user.manager || 'No Manager'}</p>
-                    </div>
-                  </div>
-                
-                  {user.slackUsername && (
-                    <div className="flex items-start gap-3">
-                      <span className="flex-shrink-0 h-5 w-5 flex items-center justify-center text-primary mt-0.5 font-bold text-lg">
-                        #
-                      </span>
-                      <div>
-                        <h4 className="text-sm font-medium mb-1">Slack</h4>
-                        <p className="text-sm">{user.slackUsername}</p>
-                      </div>
-                    </div>
-                  )}
+          <div className="space-y-5">
+            {/* Organization */}
+            <div className="rounded-md p-4 bg-card shadow-sm border border-border/50">
+              <div className="flex items-start gap-3">
+                <Building className="h-5 w-5 text-primary mt-0.5 shrink-0" />
+                <div className="flex-1">
+                  <h4 className="text-sm font-medium mb-1">Organization</h4>
+                  <p className="text-sm">{user.org}</p>
+                  <p className="text-xs text-muted-foreground mt-1">{user.businessUnit}</p>
                 </div>
-              </CardContent>
-            </Card>
-
-            <Card className="bg-muted/20 border-none shadow-sm">
-              <CardContent className="pt-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <h4 className="text-sm font-medium mb-1">Is Manager</h4>
-                    <p className="text-sm">{user.isManager ? 'Yes' : 'No'}</p>
-                  </div>
-                  {user.sequenceValue !== undefined && (
-                    <div>
-                      <h4 className="text-sm font-medium mb-1">Sequence</h4>
-                      <p className="text-sm">{user.sequenceValue}</p>
-                    </div>
-                  )}
+              </div>
+            </div>
+            
+            {/* Manager */}
+            <div className="rounded-md p-4 bg-card shadow-sm border border-border/50">
+              <div className="flex items-start gap-3">
+                <Users className="h-5 w-5 text-primary mt-0.5 shrink-0" />
+                <div className="flex-1">
+                  <h4 className="text-sm font-medium mb-1">Reports To</h4>
+                  <p className="text-sm">{user.manager || 'No Manager'}</p>
                 </div>
-              </CardContent>
-            </Card>
-
-            <Card className="bg-muted/20 border-none shadow-sm">
-              <CardContent className="pt-4">
+              </div>
+            </div>
+            
+            {/* Slack */}
+            {user.slackUsername && (
+              <div className="rounded-md p-4 bg-card shadow-sm border border-border/50">
                 <div className="flex items-start gap-3">
-                  <CalendarClock className="h-5 w-5 text-primary mt-0.5" />
-                  <div className="w-full">
-                    <h4 className="text-sm font-medium mb-2">Activity</h4>
-                    <div className="space-y-2">
-                      <div className="flex justify-between text-sm">
-                        <span className="text-muted-foreground">Last Login:</span>
-                        <span>{formatDate(user.lastLoggedIn)}</span>
-                      </div>
-                      {user.lastRatingSubmittedOn && (
-                        <div className="flex justify-between text-sm">
-                          <span className="text-muted-foreground">Last Rating:</span>
-                          <span>{formatDate(user.lastRatingSubmittedOn)}</span>
-                        </div>
-                      )}
-                    </div>
+                  <span className="flex-shrink-0 h-5 w-5 flex items-center justify-center text-primary mt-0.5 font-bold text-lg">
+                    #
+                  </span>
+                  <div className="flex-1">
+                    <h4 className="text-sm font-medium mb-1">Slack</h4>
+                    <p className="text-sm">{user.slackUsername}</p>
                   </div>
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+            )}
+            
+            {/* User Status */}
+            <div className="rounded-md p-4 bg-card shadow-sm border border-border/50">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <h4 className="text-sm font-medium mb-1">Is Manager</h4>
+                  <p className="text-sm">{user.isManager ? 'Yes' : 'No'}</p>
+                </div>
+                {user.sequenceValue !== undefined && (
+                  <div>
+                    <h4 className="text-sm font-medium mb-1">Sequence</h4>
+                    <p className="text-sm">{user.sequenceValue}</p>
+                  </div>
+                )}
+              </div>
+            </div>
+            
+            {/* Activity */}
+            <div className="rounded-md p-4 bg-card shadow-sm border border-border/50">
+              <div className="flex items-start gap-3">
+                <CalendarClock className="h-5 w-5 text-primary mt-0.5 shrink-0" />
+                <div className="w-full">
+                  <h4 className="text-sm font-medium mb-2">Activity</h4>
+                  <div className="space-y-2">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">Last Login:</span>
+                      <span>{formatDate(user.lastLoggedIn)}</span>
+                    </div>
+                    {user.lastRatingSubmittedOn && (
+                      <div className="flex justify-between text-sm">
+                        <span className="text-muted-foreground">Last Rating:</span>
+                        <span>{formatDate(user.lastRatingSubmittedOn)}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
-        <SheetFooter className="pt-4">
-          <div className="flex space-x-2 w-full">
+        <SheetFooter className="pt-4 flex-col space-y-2">
+          <Button 
+            className="w-full"
+            onClick={() => onEdit(user)}
+          >
+            <FileEdit className="h-4 w-4 mr-2" />
+            Edit User
+          </Button>
+          
+          {user.isActive ? (
             <Button 
-              className="flex-1"
-              onClick={() => onEdit(user)}
+              variant="outline" 
+              className="w-full"
+              onClick={() => onToggleStatus(user, false)}
             >
-              <FileEdit className="h-4 w-4 mr-2" />
-              Edit User
+              <XCircle className="h-4 w-4 mr-2" />
+              Deactivate
             </Button>
-            {user.isActive ? (
-              <Button 
-                variant="outline" 
-                className="flex-1"
-                onClick={() => onToggleStatus(user, false)}
-              >
-                <XCircle className="h-4 w-4 mr-2" />
-                Deactivate
-              </Button>
-            ) : (
-              <Button 
-                variant="outline" 
-                className="flex-1"
-                onClick={() => onToggleStatus(user, true)}
-              >
-                <Check className="h-4 w-4 mr-2" />
-                Activate
-              </Button>
-            )}
-          </div>
+          ) : (
+            <Button 
+              variant="outline" 
+              className="w-full"
+              onClick={() => onToggleStatus(user, true)}
+            >
+              <Check className="h-4 w-4 mr-2" />
+              Activate
+            </Button>
+          )}
         </SheetFooter>
       </SheetContent>
     </Sheet>

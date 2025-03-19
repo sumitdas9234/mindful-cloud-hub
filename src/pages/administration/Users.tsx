@@ -184,6 +184,7 @@ const UsersPage: React.FC = () => {
     setCurrentPage(1);
   };
 
+  // Updated the render to fix the UserDetailSheet props
   return (
     <div className="space-y-6">
       <PageHeader
@@ -232,7 +233,6 @@ const UsersPage: React.FC = () => {
         open={userDetailOpen}
         onOpenChange={setUserDetailOpen}
         onEdit={handleEditUser}
-        onDelete={handleDeleteUser}
         onToggleStatus={handleToggleUserStatus}
       />
       

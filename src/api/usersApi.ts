@@ -71,6 +71,18 @@ export const fetchUserStats = async (): Promise<UserStats> => {
     const response = await axios.get(API_URL);
     const users = response.data as User[];
     
+    // Default values in case the array is empty
+    if (!users || users.length === 0) {
+      return {
+        totalUsers: 0,
+        activeUsers: 0,
+        inactiveUsers: 0,
+        byRole: {},
+        byOrg: {},
+        byBusinessUnit: {}
+      };
+    }
+    
     const activeUsers = users.filter(user => user.isActive).length;
     const inactiveUsers = users.length - activeUsers;
     
@@ -80,15 +92,20 @@ export const fetchUserStats = async (): Promise<UserStats> => {
     
     users.forEach(user => {
       // Count by role
-      user.roles.forEach(role => {
+      const roles = user.roles || ['user'];
+      roles.forEach(role => {
         byRole[role] = (byRole[role] || 0) + 1;
       });
       
       // Count by org
-      byOrg[user.org] = (byOrg[user.org] || 0) + 1;
+      if (user.org) {
+        byOrg[user.org] = (byOrg[user.org] || 0) + 1;
+      }
       
       // Count by business unit
-      byBusinessUnit[user.businessUnit] = (byBusinessUnit[user.businessUnit] || 0) + 1;
+      if (user.businessUnit) {
+        byBusinessUnit[user.businessUnit] = (byBusinessUnit[user.businessUnit] || 0) + 1;
+      }
     });
     
     return {

@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Search } from 'lucide-react';
+import { Search, X } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { 
   Select,
@@ -40,10 +40,12 @@ export const UsersFilters: React.FC<UsersFiltersProps> = ({
     setFilters({ ...filters, org: value === "all" ? undefined : value });
   };
 
+  const hasActiveFilters = filters.search || filters.role || filters.org || filters.isActive !== undefined;
+
   return (
-    <div className="space-y-4 bg-muted/20 p-4 rounded-lg border">
-      <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
-        <div className="relative">
+    <div className="bg-muted/20 p-4 rounded-lg border">
+      <div className="flex flex-wrap gap-3 items-center">
+        <div className="relative flex-1 min-w-[200px]">
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
             type="search"
@@ -58,7 +60,7 @@ export const UsersFilters: React.FC<UsersFiltersProps> = ({
           value={filters.role || 'all'}
           onValueChange={handleRoleChange}
         >
-          <SelectTrigger>
+          <SelectTrigger className="w-[160px]">
             <SelectValue placeholder="Role: All" />
           </SelectTrigger>
           <SelectContent>
@@ -73,7 +75,7 @@ export const UsersFilters: React.FC<UsersFiltersProps> = ({
           value={filters.org || 'all'}
           onValueChange={handleOrgChange}
         >
-          <SelectTrigger>
+          <SelectTrigger className="w-[180px]">
             <SelectValue placeholder="Organization: All" />
           </SelectTrigger>
           <SelectContent>
@@ -83,16 +85,18 @@ export const UsersFilters: React.FC<UsersFiltersProps> = ({
             ))}
           </SelectContent>
         </Select>
-      </div>
-      
-      <div className="flex justify-end">
-        <Button 
-          variant="outline" 
-          size="sm" 
-          onClick={onResetFilters}
-        >
-          Reset Filters
-        </Button>
+        
+        {hasActiveFilters && (
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={onResetFilters}
+            className="ml-auto flex items-center gap-1"
+          >
+            <X className="h-3.5 w-3.5" />
+            Reset
+          </Button>
+        )}
       </div>
     </div>
   );
