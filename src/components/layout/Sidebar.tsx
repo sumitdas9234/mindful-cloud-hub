@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
@@ -20,6 +19,7 @@ import {
   Network,
   Activity
 } from 'lucide-react';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface SidebarItemProps {
   icon: React.ElementType;
@@ -139,7 +139,7 @@ export const Sidebar = () => {
   return (
     <div 
       className={cn(
-        "h-screen flex flex-col bg-card border-r border-border transition-all duration-300 ease-in-out fixed",
+        "h-screen flex flex-col bg-card border-r border-border transition-all duration-300 ease-in-out sticky top-0",
         collapsed ? "w-[70px]" : "w-[240px]"
       )}
     >
@@ -167,7 +167,7 @@ export const Sidebar = () => {
       </div>
       
       {/* Navigation */}
-      <div className="flex-1 overflow-y-auto py-4 px-3 scrollbar-none">
+      <ScrollArea className="flex-1 overflow-y-auto py-4 px-3">
         <SidebarSection title="Overview" collapsed={collapsed}>
           <SidebarItem 
             icon={LayoutDashboard} 
@@ -274,7 +274,7 @@ export const Sidebar = () => {
             external={true}
           />
         </SidebarSection>
-      </div>
+      </ScrollArea>
       
       {/* Status */}
       <div className={cn(
