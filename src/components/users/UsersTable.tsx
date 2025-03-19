@@ -35,13 +35,13 @@ export const UsersTable: React.FC<UsersTableProps> = ({
   onToggleUserStatus,
   searchQuery
 }) => {
-  const formatDate = (dateString: string | Date) => {
+  const formatDate = (dateString?: string | Date) => {
     if (!dateString) return 'Never';
     try {
       const date = typeof dateString === 'string' ? parseISO(dateString) : dateString;
       return format(date, 'MMM d, yyyy HH:mm');
     } catch (error) {
-      return 'Invalid date';
+      return 'Never';
     }
   };
 
@@ -76,7 +76,7 @@ export const UsersTable: React.FC<UsersTableProps> = ({
       header: 'Roles',
       cell: (user) => (
         <div className="flex flex-wrap gap-1">
-          {user.roles.map((role) => (
+          {(user.roles || ['user']).map((role) => (
             <UserRoleBadge key={role} role={role} size="sm" />
           ))}
         </div>

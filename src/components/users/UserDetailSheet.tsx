@@ -15,14 +15,14 @@ import {
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Separator } from '@/components/ui/separator';
-import { FileEdit, Check, XCircle, AtSign, Building, CalendarClock } from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
+import { FileEdit, Check, XCircle, AtSign, Building, CalendarClock, Users } from 'lucide-react';
 
 interface UserDetailSheetProps {
   user: User | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onEdit: (user: User) => void;
-  onDelete: (user: User) => void;
   onToggleStatus: (user: User, newStatus: boolean) => void;
 }
 
@@ -35,13 +35,13 @@ export const UserDetailSheet: React.FC<UserDetailSheetProps> = ({
 }) => {
   if (!user) return null;
 
-  const formatDate = (dateString: string | Date) => {
+  const formatDate = (dateString?: string | Date | null) => {
     if (!dateString) return 'Never';
     try {
       const date = typeof dateString === 'string' ? parseISO(dateString) : dateString;
       return format(date, 'PPpp');
     } catch (error) {
-      return 'Invalid date';
+      return 'Never';
     }
   };
 
@@ -58,14 +58,14 @@ export const UserDetailSheet: React.FC<UserDetailSheetProps> = ({
       <SheetContent className="sm:max-w-md overflow-y-auto">
         <SheetHeader className="pb-4">
           <div className="flex items-center space-x-4">
-            <Avatar className="h-12 w-12">
+            <Avatar className="h-14 w-14">
               <AvatarFallback className="bg-primary/10 text-primary text-lg">
                 {getInitials(user.cn)}
               </AvatarFallback>
             </Avatar>
             <div>
-              <SheetTitle>{user.cn}</SheetTitle>
-              <SheetDescription className="flex items-center">
+              <SheetTitle className="text-xl">{user.cn}</SheetTitle>
+              <SheetDescription className="flex items-center mt-1">
                 <AtSign className="h-3 w-3 mr-1" />
                 {user.email}
               </SheetDescription>
@@ -77,7 +77,7 @@ export const UserDetailSheet: React.FC<UserDetailSheetProps> = ({
           <div className="flex justify-between items-center">
             <UserStatusBadge isActive={user.isActive} />
             <div className="flex gap-2">
-              {user.roles.map(role => (
+              {(user.roles || ['user']).map(role => (
                 <UserRoleBadge key={role} role={role} />
               ))}
             </div>
@@ -86,59 +86,85 @@ export const UserDetailSheet: React.FC<UserDetailSheetProps> = ({
           <Separator />
 
           <div className="space-y-4">
-            <div>
-              <h4 className="text-sm font-medium mb-1">Organization</h4>
-              <div className="flex items-start">
-                <Building className="h-4 w-4 mr-2 mt-0.5 text-muted-foreground" />
-                <div>
-                  <p>{user.org}</p>
-                  <p className="text-sm text-muted-foreground">{user.businessUnit}</p>
+            <Card className="bg-muted/20 border-none shadow-sm">
+              <CardContent className="pt-4">
+                <div className="space-y-4">
+                  <div className="flex items-start gap-3">
+                    <Building className="h-5 w-5 text-primary mt-0.5" />
+                    <div>
+                      <h4 className="text-sm font-medium mb-1">Organization</h4>
+                      <p className="text-sm">{user.org}</p>
+                      <p className="text-xs text-muted-foreground mt-1">{user.businessUnit}</p>
+                    </div>
+                  </div>
+                
+                  <div className="flex items-start gap-3">
+                    <Users className="h-5 w-5 text-primary mt-0.5" />
+                    <div>
+                      <h4 className="text-sm font-medium mb-1">Reports To</h4>
+                      <p className="text-sm">{user.manager || 'No Manager'}</p>
+                    </div>
+                  </div>
+                
+                  {user.slackUsername && (
+                    <div className="flex items-start gap-3">
+                      <span className="flex-shrink-0 h-5 w-5 flex items-center justify-center text-primary mt-0.5 font-bold text-lg">
+                        #
+                      </span>
+                      <div>
+                        <h4 className="text-sm font-medium mb-1">Slack</h4>
+                        <p className="text-sm">{user.slackUsername}</p>
+                      </div>
+                    </div>
+                  )}
                 </div>
-              </div>
-            </div>
+              </CardContent>
+            </Card>
 
-            <div>
-              <h4 className="text-sm font-medium mb-1">Reports To</h4>
-              <p>{user.manager || 'No Manager'}</p>
-            </div>
-
-            <div>
-              <h4 className="text-sm font-medium mb-1">Slack</h4>
-              <p>{user.slackUsername}</p>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <h4 className="text-sm font-medium mb-1">Is Manager</h4>
-                <p>{user.isManager ? 'Yes' : 'No'}</p>
-              </div>
-              <div>
-                <h4 className="text-sm font-medium mb-1">Sequence</h4>
-                <p>{user.sequenceValue}</p>
-              </div>
-            </div>
-
-            <div>
-              <h4 className="text-sm font-medium mb-1 flex items-center">
-                <CalendarClock className="h-4 w-4 mr-1" />
-                Activity
-              </h4>
-              <div className="space-y-2 mt-2">
-                <div className="text-sm">
-                  <span className="text-muted-foreground">Last Login: </span>
-                  {formatDate(user.lastLoggedIn)}
+            <Card className="bg-muted/20 border-none shadow-sm">
+              <CardContent className="pt-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <h4 className="text-sm font-medium mb-1">Is Manager</h4>
+                    <p className="text-sm">{user.isManager ? 'Yes' : 'No'}</p>
+                  </div>
+                  {user.sequenceValue !== undefined && (
+                    <div>
+                      <h4 className="text-sm font-medium mb-1">Sequence</h4>
+                      <p className="text-sm">{user.sequenceValue}</p>
+                    </div>
+                  )}
                 </div>
-                <div className="text-sm">
-                  <span className="text-muted-foreground">Last Rating: </span>
-                  {formatDate(user.lastRatingSubmittedOn)}
+              </CardContent>
+            </Card>
+
+            <Card className="bg-muted/20 border-none shadow-sm">
+              <CardContent className="pt-4">
+                <div className="flex items-start gap-3">
+                  <CalendarClock className="h-5 w-5 text-primary mt-0.5" />
+                  <div className="w-full">
+                    <h4 className="text-sm font-medium mb-2">Activity</h4>
+                    <div className="space-y-2">
+                      <div className="flex justify-between text-sm">
+                        <span className="text-muted-foreground">Last Login:</span>
+                        <span>{formatDate(user.lastLoggedIn)}</span>
+                      </div>
+                      {user.lastRatingSubmittedOn && (
+                        <div className="flex justify-between text-sm">
+                          <span className="text-muted-foreground">Last Rating:</span>
+                          <span>{formatDate(user.lastRatingSubmittedOn)}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </div>
+              </CardContent>
+            </Card>
           </div>
         </div>
 
-        <SheetFooter className="flex flex-col space-y-2 pt-4">
-          <div className="flex space-x-2">
+        <SheetFooter className="pt-4">
+          <div className="flex space-x-2 w-full">
             <Button 
               className="flex-1"
               onClick={() => onEdit(user)}

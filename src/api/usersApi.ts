@@ -2,7 +2,7 @@
 import axios from 'axios';
 import { User, UserListResponse, UserStats, UserFilters } from './types/users';
 
-const API_URL = 'https://run.mocky.io/v3/2f8a7400-c7db-494a-8732-32bb15436def';
+const API_URL = 'https://run.mocky.io/v3/6b5efe7c-d587-4847-a50c-b652618752a4';
 
 // API functions
 export const fetchUsers = async (
@@ -14,6 +14,15 @@ export const fetchUsers = async (
     // Fetch all users from the API
     const response = await axios.get(API_URL);
     let users = response.data as User[];
+    
+    // Ensure all users have the required fields
+    users = users.map(user => ({
+      ...user,
+      roles: user.roles || ['user'],
+      lastLoggedIn: user.lastLoggedIn || new Date().toISOString(),
+      lastRatingSubmittedOn: user.lastRatingSubmittedOn || null,
+      sequenceValue: user.sequenceValue || 0
+    }));
     
     // Apply filters
     if (filters.search) {
@@ -27,19 +36,13 @@ export const fetchUsers = async (
     
     if (filters.role) {
       users = users.filter(user => 
-        user.roles.includes(filters.role as string)
+        (user.roles || []).includes(filters.role as string)
       );
     }
     
     if (filters.org) {
       users = users.filter(user => 
         user.org === filters.org
-      );
-    }
-    
-    if (filters.businessUnit) {
-      users = users.filter(user => 
-        user.businessUnit === filters.businessUnit
       );
     }
     

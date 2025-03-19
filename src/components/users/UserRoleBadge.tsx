@@ -17,6 +17,18 @@ export const UserRoleBadge: React.FC<UserRoleBadgeProps> = ({ role, size = 'defa
           label: 'Admin',
           variant: 'destructive' as const
         };
+      case 'cluster-admin':
+        return { 
+          icon: <Database className="h-3 w-3 mr-1" />, 
+          label: 'Cluster Admin',
+          variant: 'default' as const
+        };
+      case 'user':
+        return { 
+          icon: <User className="h-3 w-3 mr-1" />, 
+          label: 'User',
+          variant: 'secondary' as const
+        };
       case 'manager':
         return { 
           icon: <Users className="h-3 w-3 mr-1" />, 

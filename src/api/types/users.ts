@@ -7,12 +7,12 @@ export interface User {
   org: string;
   slackUsername: string;
   isManager: boolean;
-  roles: string[];
   isActive: boolean;
   businessUnit: string;
-  sequenceValue: number;
-  lastLoggedIn: string | Date;
-  lastRatingSubmittedOn: string | Date;
+  roles?: string[];
+  sequenceValue?: number;
+  lastLoggedIn?: string | Date;
+  lastRatingSubmittedOn?: string | Date | null;
   bannerInfo?: Record<string, string | Date>;
 }
 
@@ -25,7 +25,6 @@ export interface UserFilters {
   search?: string;
   role?: string;
   org?: string;
-  businessUnit?: string;
   isActive?: boolean;
 }
 
