@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { format, parseISO } from 'date-fns';
 import { DataTable, Column } from '@/components/compute/DataTable';
@@ -14,7 +13,7 @@ import {
   DropdownMenuSeparator
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
-import { Check, FileEdit, MoreVertical, Trash2, XCircle } from 'lucide-react';
+import { Check, ChevronLeft, ChevronRight, FileEdit, MoreVertical, Trash2, XCircle } from 'lucide-react';
 
 interface UsersTableProps {
   users: User[];
@@ -24,6 +23,10 @@ interface UsersTableProps {
   onDeleteUser: (user: User) => void;
   onToggleUserStatus: (user: User, newStatus: boolean) => void;
   searchQuery?: string;
+  currentPage: number;
+  totalPages: number;
+  totalItems: number;
+  onPageChange: (page: number) => void;
 }
 
 export const UsersTable: React.FC<UsersTableProps> = ({
@@ -33,7 +36,11 @@ export const UsersTable: React.FC<UsersTableProps> = ({
   onViewUser,
   onDeleteUser,
   onToggleUserStatus,
-  searchQuery
+  searchQuery,
+  currentPage,
+  totalPages,
+  totalItems,
+  onPageChange
 }) => {
   const formatDate = (dateString?: string | Date) => {
     if (!dateString) return 'Never';
@@ -53,7 +60,6 @@ export const UsersTable: React.FC<UsersTableProps> = ({
       .toUpperCase();
   };
 
-  // Handle dropdown menu actions with event propagation prevention
   const handleAction = (
     e: React.MouseEvent,
     action: (user: User) => void, 
@@ -189,6 +195,39 @@ export const UsersTable: React.FC<UsersTableProps> = ({
     },
   ];
 
+  const renderPagination = () => (
+    <div className="flex items-center justify-between p-2 border-t">
+      <div className="text-xs text-muted-foreground">
+        Showing {totalItems > 0 ? (currentPage - 1) * 10 + 1 : 0} to {Math.min(currentPage * 10, totalItems)} of {totalItems} entries
+      </div>
+      <div className="flex items-center space-x-2">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => onPageChange(currentPage - 1)}
+          disabled={currentPage === 1}
+          className="h-7 w-7 p-0"
+        >
+          <ChevronLeft className="h-4 w-4" />
+          <span className="sr-only">Previous Page</span>
+        </Button>
+        <div className="text-xs">
+          Page {currentPage} of {totalPages || 1}
+        </div>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => onPageChange(currentPage + 1)}
+          disabled={currentPage >= totalPages}
+          className="h-7 w-7 p-0"
+        >
+          <ChevronRight className="h-4 w-4" />
+          <span className="sr-only">Next Page</span>
+        </Button>
+      </div>
+    </div>
+  );
+
   return (
     <DataTable
       data={users}
@@ -199,6 +238,8 @@ export const UsersTable: React.FC<UsersTableProps> = ({
       emptyDescription="Try adjusting your search or filters."
       searchQuery={searchQuery}
       onRowClick={onViewUser}
+      renderPagination={renderPagination}
+      disableInternalPagination={true}
     />
   );
 };

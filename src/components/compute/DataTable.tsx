@@ -29,6 +29,8 @@ interface DataTableProps<T> {
   searchQuery?: string;
   onRowClick?: (item: T) => void;
   actionColumn?: (item: T) => ReactNode;
+  renderPagination?: () => ReactNode;
+  disableInternalPagination?: boolean;
 }
 
 export function DataTable<T>({
@@ -40,16 +42,18 @@ export function DataTable<T>({
   emptyDescription = "No items match your criteria.",
   searchQuery = "",
   onRowClick,
-  actionColumn
+  actionColumn,
+  renderPagination,
+  disableInternalPagination = false
 }: DataTableProps<T>) {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
-  // Calculate pagination
-  const totalPages = Math.ceil(data.length / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = startIndex + itemsPerPage;
-  const currentPageData = data.slice(startIndex, endIndex);
+  // Calculate pagination only if internal pagination is enabled
+  const totalPages = !disableInternalPagination ? Math.ceil(data.length / itemsPerPage) : 1;
+  const startIndex = !disableInternalPagination ? (currentPage - 1) * itemsPerPage : 0;
+  const endIndex = !disableInternalPagination ? startIndex + itemsPerPage : data.length;
+  const currentPageData = !disableInternalPagination ? data.slice(startIndex, endIndex) : data;
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
@@ -122,13 +126,16 @@ export function DataTable<T>({
           </TableBody>
         </Table>
       </div>
-      <TablePagination
-        currentPage={currentPage}
-        totalPages={totalPages}
-        itemsPerPage={itemsPerPage}
-        totalItems={data.length}
-        onPageChange={handlePageChange}
-      />
+      {!disableInternalPagination && !renderPagination && (
+        <TablePagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          itemsPerPage={itemsPerPage}
+          totalItems={data.length}
+          onPageChange={handlePageChange}
+        />
+      )}
+      {renderPagination && renderPagination()}
     </div>
   );
 }

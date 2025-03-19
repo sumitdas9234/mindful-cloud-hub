@@ -65,6 +65,8 @@ export const fetchUsers = async (
     const startIndex = (page - 1) * limit;
     const paginatedUsers = users.slice(startIndex, startIndex + limit);
     
+    console.log(`Fetched ${totalFilteredUsers} total users, showing page ${page} with ${paginatedUsers.length} users`);
+    
     return {
       data: paginatedUsers,
       total: totalFilteredUsers

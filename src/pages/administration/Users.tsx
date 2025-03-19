@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { toast } from '@/components/ui/use-toast';
@@ -25,6 +24,7 @@ import { Separator } from '@/components/ui/separator';
 const UsersPage: React.FC = () => {
   // State
   const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(10); // Fixed page size
   const [filters, setFilters] = useState<UserFilters>({});
   const [debouncedFilters, setDebouncedFilters] = useState<UserFilters>(filters);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
@@ -38,6 +38,8 @@ const UsersPage: React.FC = () => {
   useEffect(() => {
     const timer = setTimeout(() => {
       setDebouncedFilters(filters);
+      // Reset to page 1 when filters change
+      setCurrentPage(1);
     }, 300);
     
     return () => clearTimeout(timer);
@@ -49,8 +51,8 @@ const UsersPage: React.FC = () => {
     isLoading: isLoadingUsers,
     refetch: refetchUsers
   } = useQuery({
-    queryKey: ['users', currentPage, debouncedFilters],
-    queryFn: () => fetchUsers(currentPage, 10, debouncedFilters),
+    queryKey: ['users', currentPage, itemsPerPage, debouncedFilters],
+    queryFn: () => fetchUsers(currentPage, itemsPerPage, debouncedFilters),
   });
   
   const { 
@@ -61,6 +63,12 @@ const UsersPage: React.FC = () => {
     queryKey: ['user-stats'],
     queryFn: () => fetchUserStats(),
   });
+
+  // Calculate total pages
+  const totalPages = useMemo(() => {
+    if (!usersData?.total) return 0;
+    return Math.ceil(usersData.total / itemsPerPage);
+  }, [usersData?.total, itemsPerPage]);
 
   // Computed values for filter options
   const availableRoles = useMemo(() => {
@@ -195,6 +203,10 @@ const UsersPage: React.FC = () => {
     setCurrentPage(1);
   };
 
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
+
   return (
     <div className="space-y-6">
       <PageHeader
@@ -236,6 +248,10 @@ const UsersPage: React.FC = () => {
         onDeleteUser={handleDeleteUser}
         onToggleUserStatus={handleToggleUserStatus}
         searchQuery={filters.search}
+        currentPage={currentPage}
+        totalPages={totalPages}
+        totalItems={usersData?.total || 0}
+        onPageChange={handlePageChange}
       />
       
       <UserDetailSheet
