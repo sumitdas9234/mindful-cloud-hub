@@ -83,7 +83,7 @@ export const UsersFilters: React.FC<UsersFiltersProps> = ({
       <div className="relative flex-1 min-w-[200px]">
         <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
         <Input
-          type="search"
+          type="text" 
           placeholder="Search users by name, ID, email..."
           className="pl-8"
           value={searchInput}
@@ -95,9 +95,9 @@ export const UsersFilters: React.FC<UsersFiltersProps> = ({
             size="sm"
             className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7 p-0"
             onClick={handleClearSearch}
+            aria-label="Clear search"
           >
             <X className="h-3.5 w-3.5" />
-            <span className="sr-only">Clear search</span>
           </Button>
         )}
       </div>
