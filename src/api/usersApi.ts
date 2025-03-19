@@ -1,4 +1,3 @@
-
 import axios from 'axios';
 import { User, UserListResponse, UserStats, UserFilters } from './types/users';
 import env from '@/config/env';
@@ -29,30 +28,35 @@ export const fetchUsers = async (
     if (filters.search) {
       const searchLower = filters.search.toLowerCase().trim();
       
-      // Optimize search by creating separate arrays for direct matches and partial matches
-      // This way we prioritize exact matches in the results
       const directMatches: User[] = [];
       const partialMatches: User[] = [];
       
       users.forEach(user => {
-        // Check for exact matches first (more efficient)
+        const userId = user._id?.toLowerCase() || '';
+        const userEmail = user.email?.toLowerCase() || '';
+        const userCn = user.cn?.toLowerCase() || '';
+        const userSlackUsername = user.slackUsername?.toLowerCase() || '';
+        const userManager = user.manager?.toLowerCase() || '';
+        const userBusinessUnit = user.businessUnit?.toLowerCase() || '';
+        
+        // Check for exact matches first
         if (
-          user._id.toLowerCase() === searchLower ||
-          user.email.toLowerCase() === searchLower ||
-          user.cn.toLowerCase() === searchLower
+          userId === searchLower ||
+          userEmail === searchLower ||
+          userCn === searchLower
         ) {
           directMatches.push(user);
           return;
         }
         
-        // Then check for partial matches (less efficient but necessary)
+        // Then check for partial matches
         if (
-          user.cn.toLowerCase().includes(searchLower) ||
-          user._id.toLowerCase().includes(searchLower) ||
-          user.email.toLowerCase().includes(searchLower) ||
-          (user.slackUsername && user.slackUsername.toLowerCase().includes(searchLower)) ||
-          (user.manager && user.manager.toLowerCase().includes(searchLower)) ||
-          (user.businessUnit && user.businessUnit.toLowerCase().includes(searchLower))
+          userCn.includes(searchLower) ||
+          userId.includes(searchLower) ||
+          userEmail.includes(searchLower) ||
+          userSlackUsername.includes(searchLower) ||
+          userManager.includes(searchLower) ||
+          userBusinessUnit.includes(searchLower)
         ) {
           partialMatches.push(user);
         }
