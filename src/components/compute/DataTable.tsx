@@ -10,6 +10,7 @@ import {
 } from '@/components/ui/table';
 import { EmptyState } from './EmptyState';
 import { TablePagination } from './TablePagination';
+import { cn } from "@/lib/utils";
 
 export interface Column<T> {
   key: string;
@@ -123,6 +124,3 @@ export function DataTable<T>({
     </div>
   );
 }
-
-// Need to import cn
-import { cn } from "@/lib/utils";

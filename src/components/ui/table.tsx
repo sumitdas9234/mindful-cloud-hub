@@ -1,3 +1,4 @@
+
 import * as React from "react"
 
 import { cn } from "@/lib/utils"
@@ -6,7 +7,17 @@ const Table = React.forwardRef<
   HTMLTableElement,
   React.HTMLAttributes<HTMLTableElement>
 >(({ className, ...props }, ref) => (
-  <div className="relative w-full overflow-auto">
+  <div className="relative w-full overflow-auto" onWheel={(e) => {
+    // Prevent scroll propagation when reaching boundaries
+    const container = e.currentTarget;
+    const { scrollTop, scrollHeight, clientHeight } = container;
+    
+    // Check if scroll has reached the top or bottom of the container
+    if ((scrollTop <= 0 && e.deltaY < 0) || 
+        (scrollTop + clientHeight >= scrollHeight && e.deltaY > 0)) {
+      e.stopPropagation();
+    }
+  }}>
     <table
       ref={ref}
       className={cn("w-full caption-bottom text-sm", className)}

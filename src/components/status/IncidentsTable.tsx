@@ -64,45 +64,53 @@ export const IncidentsTable: React.FC<IncidentsTableProps> = ({
     }
   };
 
+  // Wrap the click handler to prevent propagation when clicking table rows
+  const handleViewIncident = (incident: Incident, e: React.MouseEvent) => {
+    e.stopPropagation(); // Stop event propagation
+    onViewIncident(incident);
+  };
+
   return (
     <div className="border rounded-md">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Incident</TableHead>
-            <TableHead>System</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead>Started</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {incidents.map((incident) => (
-            <TableRow 
-              key={incident.id} 
-              className="cursor-pointer hover:bg-muted/50"
-              onClick={() => onViewIncident(incident)}
-            >
-              <TableCell>
-                <div className="font-medium">{incident.title}</div>
-                <div className="text-sm text-muted-foreground truncate max-w-xs">
-                  {incident.description}
-                </div>
-              </TableCell>
-              <TableCell>{incident.system}</TableCell>
-              <TableCell>
-                <Badge 
-                  variant="outline" 
-                  className="capitalize inline-flex items-center gap-1 w-fit"
-                >
-                  <span className={`w-2 h-2 rounded-full ${getStatusColor(incident.status)}`}></span>
-                  {incident.status}
-                </Badge>
-              </TableCell>
-              <TableCell>{incident.started}</TableCell>
+      <div className="overflow-auto">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Incident</TableHead>
+              <TableHead>System</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead>Started</TableHead>
             </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+          </TableHeader>
+          <TableBody>
+            {incidents.map((incident) => (
+              <TableRow 
+                key={incident.id} 
+                className="cursor-pointer hover:bg-muted/50"
+                onClick={(e) => handleViewIncident(incident, e)}
+              >
+                <TableCell>
+                  <div className="font-medium">{incident.title}</div>
+                  <div className="text-sm text-muted-foreground truncate max-w-xs">
+                    {incident.description}
+                  </div>
+                </TableCell>
+                <TableCell>{incident.system}</TableCell>
+                <TableCell>
+                  <Badge 
+                    variant="outline" 
+                    className="capitalize inline-flex items-center gap-1 w-fit"
+                  >
+                    <span className={`w-2 h-2 rounded-full ${getStatusColor(incident.status)}`}></span>
+                    {incident.status}
+                  </Badge>
+                </TableCell>
+                <TableCell>{incident.started}</TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
       <TablePagination
         currentPage={currentPage}
         totalPages={totalPages}
@@ -159,4 +167,3 @@ const IncidentTableSkeleton = () => {
     </div>
   );
 };
-
