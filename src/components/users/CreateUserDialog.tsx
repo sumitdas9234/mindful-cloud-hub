@@ -36,7 +36,7 @@ const userFormSchema = z.object({
   _id: z.string().min(3, "Username must be at least 3 characters"),
   cn: z.string().min(2, "Full name is required"),
   email: z.string().email("Invalid email format"),
-  manager: z.string().optional().default(""),
+  manager: z.string().optional().default("none"), // Changed default to "none" instead of empty string
   org: z.string().min(1, "Organization is required"),
   slackUsername: z.string().startsWith('@', "Slack username must start with @"),
   isManager: z.boolean().default(false),
@@ -76,7 +76,7 @@ export const CreateUserDialog: React.FC<CreateUserDialogProps> = ({
       _id: '',
       cn: '',
       email: '',
-      manager: '',
+      manager: 'none', // Changed default to "none" instead of empty string
       org: '',
       slackUsername: '@',
       isManager: false,
@@ -88,9 +88,15 @@ export const CreateUserDialog: React.FC<CreateUserDialogProps> = ({
   });
 
   const handleSubmit = (values: UserFormValues) => {
+    // Process the manager field to convert "none" to empty string if needed
+    const processedValues = {
+      ...values,
+      manager: values.manager === 'none' ? '' : values.manager
+    };
+    
     // The form validation ensures all required fields are present
     // Explicitly cast to the required type to satisfy TypeScript
-    onSubmit(values as Omit<User, 'lastLoggedIn' | 'lastRatingSubmittedOn'>);
+    onSubmit(processedValues as Omit<User, 'lastLoggedIn' | 'lastRatingSubmittedOn'>);
   };
 
   return (
@@ -218,7 +224,7 @@ export const CreateUserDialog: React.FC<CreateUserDialogProps> = ({
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="">No Manager</SelectItem>
+                      <SelectItem value="none">No Manager</SelectItem>
                       {availableManagers.map(manager => (
                         <SelectItem key={manager} value={manager}>{manager}</SelectItem>
                       ))}

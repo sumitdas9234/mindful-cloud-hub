@@ -34,15 +34,15 @@ export const UsersFilters: React.FC<UsersFiltersProps> = ({
   };
 
   const handleRoleChange = (value: string) => {
-    setFilters({ ...filters, role: value || undefined });
+    setFilters({ ...filters, role: value === "all" ? undefined : value });
   };
 
   const handleOrgChange = (value: string) => {
-    setFilters({ ...filters, org: value || undefined });
+    setFilters({ ...filters, org: value === "all" ? undefined : value });
   };
 
   const handleBusinessUnitChange = (value: string) => {
-    setFilters({ ...filters, businessUnit: value || undefined });
+    setFilters({ ...filters, businessUnit: value === "all" ? undefined : value });
   };
 
   const handleStatusChange = (value: string) => {
@@ -69,14 +69,14 @@ export const UsersFilters: React.FC<UsersFiltersProps> = ({
         </div>
         
         <Select
-          value={filters.role || ''}
+          value={filters.role || 'all'}
           onValueChange={handleRoleChange}
         >
           <SelectTrigger>
             <SelectValue placeholder="Role: All" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">All Roles</SelectItem>
+            <SelectItem value="all">All Roles</SelectItem>
             {roleOptions.map(role => (
               <SelectItem key={role} value={role}>{role}</SelectItem>
             ))}
@@ -84,14 +84,14 @@ export const UsersFilters: React.FC<UsersFiltersProps> = ({
         </Select>
         
         <Select
-          value={filters.org || ''}
+          value={filters.org || 'all'}
           onValueChange={handleOrgChange}
         >
           <SelectTrigger>
             <SelectValue placeholder="Organization: All" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">All Organizations</SelectItem>
+            <SelectItem value="all">All Organizations</SelectItem>
             {orgOptions.map(org => (
               <SelectItem key={org} value={org}>{org}</SelectItem>
             ))}
@@ -99,14 +99,14 @@ export const UsersFilters: React.FC<UsersFiltersProps> = ({
         </Select>
         
         <Select
-          value={filters.businessUnit || ''}
+          value={filters.businessUnit || 'all'}
           onValueChange={handleBusinessUnitChange}
         >
           <SelectTrigger>
             <SelectValue placeholder="Business Unit: All" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">All Business Units</SelectItem>
+            <SelectItem value="all">All Business Units</SelectItem>
             {businessUnitOptions.map(bu => (
               <SelectItem key={bu} value={bu}>{bu}</SelectItem>
             ))}
