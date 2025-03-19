@@ -6,7 +6,6 @@ import { User } from '@/api/types/users';
 import { UserRoleBadge } from './UserRoleBadge';
 import { UserStatusBadge } from './UserStatusBadge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { Badge } from '@/components/ui/badge';
 import { 
   DropdownMenu,
   DropdownMenuContent,
@@ -179,51 +178,6 @@ export const UsersTable: React.FC<UsersTableProps> = ({
       emptyDescription="Try adjusting your search or filters."
       searchQuery={searchQuery}
       onRowClick={onViewUser}
-      actionColumn={(user) => (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" className="h-8 w-8">
-              <MoreVertical className="h-4 w-4" />
-              <span className="sr-only">Actions</span>
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={() => onViewUser(user)}>
-              View Details
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => onEditUser(user)}>
-              <FileEdit className="h-4 w-4 mr-2" />
-              Edit User
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            {user.isActive ? (
-              <DropdownMenuItem 
-                onClick={() => onToggleUserStatus(user, false)}
-                className="text-amber-600"
-              >
-                <XCircle className="h-4 w-4 mr-2" />
-                Deactivate
-              </DropdownMenuItem>
-            ) : (
-              <DropdownMenuItem 
-                onClick={() => onToggleUserStatus(user, true)}
-                className="text-green-600"
-              >
-                <Check className="h-4 w-4 mr-2" />
-                Activate
-              </DropdownMenuItem>
-            )}
-            <DropdownMenuSeparator />
-            <DropdownMenuItem 
-              onClick={() => onDeleteUser(user)}
-              className="text-red-600"
-            >
-              <Trash2 className="h-4 w-4 mr-2" />
-              Delete User
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      )}
     />
   );
 };

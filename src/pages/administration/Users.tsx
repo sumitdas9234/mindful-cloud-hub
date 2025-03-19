@@ -20,7 +20,6 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { Separator } from '@/components/ui/separator';
-import { Users as UsersIcon, UserPlus } from 'lucide-react';
 
 const UsersPage: React.FC = () => {
   // State
@@ -193,14 +192,7 @@ const UsersPage: React.FC = () => {
         onRefresh={handleRefresh}
         onAdd={() => setCreateDialogOpen(true)}
         addButtonText="Add User"
-      >
-        <div className="flex items-center mt-2">
-          <UsersIcon className="h-5 w-5 text-muted-foreground mr-2" />
-          <span className="text-sm text-muted-foreground">
-            {statsData?.totalUsers || 0} Users • {statsData?.activeUsers || 0} Active
-          </span>
-        </div>
-      </PageHeader>
+      />
       
       <UsersStats 
         stats={statsData || {

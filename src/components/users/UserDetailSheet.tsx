@@ -11,12 +11,11 @@ import {
   SheetTitle,
   SheetDescription,
   SheetFooter,
-  SheetClose,
 } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Separator } from '@/components/ui/separator';
-import { FileEdit, Trash2, Check, XCircle, AtSign, Building, CalendarClock } from 'lucide-react';
+import { FileEdit, Check, XCircle, AtSign, Building, CalendarClock } from 'lucide-react';
 
 interface UserDetailSheetProps {
   user: User | null;
@@ -32,7 +31,6 @@ export const UserDetailSheet: React.FC<UserDetailSheetProps> = ({
   open,
   onOpenChange,
   onEdit,
-  onDelete,
   onToggleStatus
 }) => {
   if (!user) return null;
@@ -139,7 +137,7 @@ export const UserDetailSheet: React.FC<UserDetailSheetProps> = ({
           </div>
         </div>
 
-        <SheetFooter className="flex-col space-y-2 sm:space-y-2 mt-4">
+        <SheetFooter className="flex flex-col space-y-2 pt-4">
           <div className="flex space-x-2">
             <Button 
               className="flex-1"
@@ -168,19 +166,6 @@ export const UserDetailSheet: React.FC<UserDetailSheetProps> = ({
               </Button>
             )}
           </div>
-          <Button 
-            variant="destructive"
-            className="w-full" 
-            onClick={() => onDelete(user)}
-          >
-            <Trash2 className="h-4 w-4 mr-2" />
-            Delete User
-          </Button>
-          <SheetClose asChild>
-            <Button variant="outline" className="w-full">
-              Close
-            </Button>
-          </SheetClose>
         </SheetFooter>
       </SheetContent>
     </Sheet>
