@@ -139,7 +139,7 @@ export const Sidebar = () => {
   return (
     <div 
       className={cn(
-        "h-screen flex flex-col bg-card border-r border-border transition-all duration-300 ease-in-out relative",
+        "h-screen flex flex-col bg-card border-r border-border transition-all duration-300 ease-in-out fixed",
         collapsed ? "w-[70px]" : "w-[240px]"
       )}
     >

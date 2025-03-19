@@ -43,61 +43,59 @@ export const UsersFilters: React.FC<UsersFiltersProps> = ({
   const hasActiveFilters = filters.search || filters.role || filters.org || filters.isActive !== undefined;
 
   return (
-    <div className="bg-muted/20 p-4 rounded-lg border">
-      <div className="flex flex-wrap gap-3 items-center">
-        <div className="relative flex-1 min-w-[200px]">
-          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-          <Input
-            type="search"
-            placeholder="Search users..."
-            className="pl-8"
-            value={filters.search || ''}
-            onChange={handleSearchChange}
-          />
-        </div>
-        
-        <Select
-          value={filters.role || 'all'}
-          onValueChange={handleRoleChange}
-        >
-          <SelectTrigger className="w-[160px]">
-            <SelectValue placeholder="Role: All" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Roles</SelectItem>
-            {roleOptions.map(role => (
-              <SelectItem key={role} value={role}>{role}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        
-        <Select
-          value={filters.org || 'all'}
-          onValueChange={handleOrgChange}
-        >
-          <SelectTrigger className="w-[180px]">
-            <SelectValue placeholder="Organization: All" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Organizations</SelectItem>
-            {orgOptions.map(org => (
-              <SelectItem key={org} value={org}>{org}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        
-        {hasActiveFilters && (
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={onResetFilters}
-            className="ml-auto flex items-center gap-1"
-          >
-            <X className="h-3.5 w-3.5" />
-            Reset
-          </Button>
-        )}
+    <div className="flex flex-wrap gap-3 items-center">
+      <div className="relative flex-1 min-w-[200px]">
+        <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+        <Input
+          type="search"
+          placeholder="Search users..."
+          className="pl-8"
+          value={filters.search || ''}
+          onChange={handleSearchChange}
+        />
       </div>
+      
+      <Select
+        value={filters.role || 'all'}
+        onValueChange={handleRoleChange}
+      >
+        <SelectTrigger className="w-[160px]">
+          <SelectValue placeholder="Role: All" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="all">All Roles</SelectItem>
+          {roleOptions.map(role => (
+            <SelectItem key={role} value={role}>{role}</SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+      
+      <Select
+        value={filters.org || 'all'}
+        onValueChange={handleOrgChange}
+      >
+        <SelectTrigger className="w-[180px]">
+          <SelectValue placeholder="Organization: All" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="all">All Organizations</SelectItem>
+          {orgOptions.map(org => (
+            <SelectItem key={org} value={org}>{org}</SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+      
+      {hasActiveFilters && (
+        <Button 
+          variant="outline" 
+          size="sm" 
+          onClick={onResetFilters}
+          className="ml-auto flex items-center gap-1"
+        >
+          <X className="h-3.5 w-3.5" />
+          Reset
+        </Button>
+      )}
     </div>
   );
 };

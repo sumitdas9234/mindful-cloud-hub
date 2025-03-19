@@ -9,7 +9,6 @@ import { SelectionControls } from '@/components/dashboard/SelectionControls';
 import { StatCardSkeleton, ChartSkeleton, ResourceCardSkeleton } from '@/components/ui/skeleton';
 import { fetchStatsData, fetchResourceUsageData, fetchSystemLoad } from '@/api/dashboardApi';
 import { Separator } from '@/components/ui/separator';
-import { ManagedServices } from '@/components/dashboard/sections/ManagedServices';
 
 const Index = () => {
   const [selectedVCenter, setSelectedVCenter] = useState<string>('');
@@ -138,12 +137,6 @@ const Index = () => {
           tagIds={selectedTags}
         />
       </div>
-      
-      <ManagedServices
-        vCenterId={selectedVCenter}
-        clusterId={selectedCluster}
-        tagIds={selectedTags}
-      />
     </div>
   );
 };
