@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { toast } from '@/components/ui/use-toast';
@@ -25,6 +26,7 @@ const UsersPage: React.FC = () => {
   // State
   const [currentPage, setCurrentPage] = useState(1);
   const [filters, setFilters] = useState<UserFilters>({});
+  const [debouncedFilters, setDebouncedFilters] = useState<UserFilters>(filters);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [userDetailOpen, setUserDetailOpen] = useState(false);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
@@ -32,14 +34,23 @@ const UsersPage: React.FC = () => {
   const [userToDelete, setUserToDelete] = useState<User | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Queries
+  // Debounce filter changes to reduce API calls
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedFilters(filters);
+    }, 300);
+    
+    return () => clearTimeout(timer);
+  }, [filters]);
+
+  // Queries - now using debouncedFilters instead of filters
   const { 
     data: usersData, 
     isLoading: isLoadingUsers,
     refetch: refetchUsers
   } = useQuery({
-    queryKey: ['users', currentPage, filters],
-    queryFn: () => fetchUsers(currentPage, 10, filters),
+    queryKey: ['users', currentPage, debouncedFilters],
+    queryFn: () => fetchUsers(currentPage, 10, debouncedFilters),
   });
   
   const { 
@@ -184,7 +195,6 @@ const UsersPage: React.FC = () => {
     setCurrentPage(1);
   };
 
-  // Updated the render to fix the UserDetailSheet props
   return (
     <div className="space-y-6">
       <PageHeader

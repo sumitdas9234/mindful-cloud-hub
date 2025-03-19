@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Search, X } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { 
@@ -28,8 +28,27 @@ export const UsersFilters: React.FC<UsersFiltersProps> = ({
   roleOptions,
   orgOptions,
 }) => {
+  // Local state for search input to debounce
+  const [searchInput, setSearchInput] = useState(filters.search || '');
+
+  // Update local search state when filters change externally
+  useEffect(() => {
+    setSearchInput(filters.search || '');
+  }, [filters.search]);
+
+  // Debounce search input
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (searchInput !== filters.search) {
+        setFilters({ ...filters, search: searchInput });
+      }
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [searchInput, filters, setFilters]);
+
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFilters({ ...filters, search: e.target.value });
+    setSearchInput(e.target.value);
   };
 
   const handleRoleChange = (value: string) => {
@@ -50,7 +69,7 @@ export const UsersFilters: React.FC<UsersFiltersProps> = ({
           type="search"
           placeholder="Search users..."
           className="pl-8"
-          value={filters.search || ''}
+          value={searchInput}
           onChange={handleSearchChange}
         />
       </div>

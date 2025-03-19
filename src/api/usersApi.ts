@@ -30,7 +30,10 @@ export const fetchUsers = async (
       users = users.filter(user => 
         user.cn.toLowerCase().includes(searchLower) ||
         user._id.toLowerCase().includes(searchLower) ||
-        user.email.toLowerCase().includes(searchLower)
+        user.email.toLowerCase().includes(searchLower) ||
+        (user.slackUsername && user.slackUsername.toLowerCase().includes(searchLower)) ||
+        (user.manager && user.manager.toLowerCase().includes(searchLower)) ||
+        (user.businessUnit && user.businessUnit.toLowerCase().includes(searchLower))
       );
     }
     
