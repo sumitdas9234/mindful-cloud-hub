@@ -1,4 +1,3 @@
-
 export interface ServerData {
   id: number;
   name: string;
@@ -41,6 +40,14 @@ export interface SystemLoadData {
     used: string;
     total: string;
   };
+}
+
+export interface VCenterClusterData {
+  [vcenter: string]: string[];
+}
+
+export interface CountResponse {
+  count: number;
 }
 
 export interface VCenterData {

@@ -1,77 +1,74 @@
-import { ServerData, ResourceUsageData, StatsData, SystemLoadData, VCenterData, ClusterData, InfraTagData } from './types';
+import axios from 'axios';
+import { ServerData, ResourceUsageData, StatsData, SystemLoadData, VCenterClusterData, CountResponse } from './types';
 
-// Mock data for vCenters
-const mockVCenters: VCenterData[] = [
-  { id: 'vc1', name: 'vCenter East' },
-  { id: 'vc2', name: 'vCenter West' },
-  { id: 'vc3', name: 'vCenter Central' }
-];
-
-// Mock data for infra tags
-const mockInfraTags: InfraTagData[] = [
-  { id: 'tag1', name: 'Production' },
-  { id: 'tag2', name: 'Development' },
-  { id: 'tag3', name: 'Testing' },
-  { id: 'tag4', name: 'Staging' },
-  { id: 'tag5', name: 'Backup' }
-];
-
-// Mock data for clusters with tags
-const mockClusters: ClusterData[] = [
-  { id: 'cl1', name: 'Production Cluster', vCenterId: 'vc1', tags: ['tag1'] },
-  { id: 'cl2', name: 'Development Cluster', vCenterId: 'vc1', tags: ['tag2'] },
-  { id: 'cl3', name: 'Testing Cluster', vCenterId: 'vc2', tags: ['tag3'] },
-  { id: 'cl4', name: 'Staging Cluster', vCenterId: 'vc2', tags: ['tag4'] },
-  { id: 'cl5', name: 'Main Cluster', vCenterId: 'vc3', tags: ['tag1', 'tag5'] },
-  { id: 'cl6', name: 'Backup Cluster', vCenterId: 'vc3', tags: ['tag5'] }
-];
-
-// Fetch vCenters
-export const fetchVCenters = async (): Promise<VCenterData[]> => {
-  // Simulate API delay
-  await new Promise(resolve => setTimeout(resolve, 300));
-  return mockVCenters;
+// Fetch vCenters and clusters from API
+export const fetchVCentersAndClusters = async (): Promise<VCenterClusterData> => {
+  try {
+    const response = await axios.get('https://run.mocky.io/v3/9713f896-51bc-4dec-b1cb-4cbe4274a472');
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching vCenters and clusters:", error);
+    return {};
+  }
 };
 
-// Fetch clusters for a specific vCenter and/or tags
-export const fetchClusters = async (vCenterId: string, tagIds?: string[]): Promise<ClusterData[]> => {
-  // Simulate API delay
-  await new Promise(resolve => setTimeout(resolve, 300));
-  
-  let filteredClusters = mockClusters.filter(cluster => cluster.vCenterId === vCenterId);
-  
-  // Further filter by tags if provided
-  if (tagIds && tagIds.length > 0) {
-    filteredClusters = filteredClusters.filter(cluster => 
-      cluster.tags?.some(tag => tagIds.includes(tag))
-    );
+// Fetch count data from API
+export const fetchCountData = async (metric: string): Promise<number> => {
+  try {
+    const response = await axios.get<CountResponse>('https://run.mocky.io/v3/01ca9fcf-80b5-4855-adc1-5d8f156233a4');
+    return response.data.count;
+  } catch (error) {
+    console.error(`Error fetching ${metric} count:`, error);
+    return 0;
   }
-  
-  return filteredClusters;
+};
+
+// Modified function to fetch vCenters
+export const fetchVCenters = async (): Promise<{ id: string; name: string }[]> => {
+  try {
+    const vcenterData = await fetchVCentersAndClusters();
+    return Object.keys(vcenterData).map(vcenter => ({
+      id: vcenter,
+      name: vcenter
+    }));
+  } catch (error) {
+    console.error("Error fetching vCenters:", error);
+    return [];
+  }
+};
+
+// Modified function to fetch clusters for a specific vCenter
+export const fetchClusters = async (vCenterId: string, tagIds?: string[]): Promise<{ id: string; name: string; vCenterId: string; tags?: string[] }[]> => {
+  try {
+    const vcenterData = await fetchVCentersAndClusters();
+    const clusters = vcenterData[vCenterId] || [];
+    
+    return clusters.map(cluster => ({
+      id: cluster,
+      name: cluster,
+      vCenterId,
+      tags: []
+    }));
+  } catch (error) {
+    console.error("Error fetching clusters:", error);
+    return [];
+  }
 };
 
 // Fetch all infra tags
-export const fetchInfraTags = async (): Promise<InfraTagData[]> => {
+export const fetchInfraTags = async (): Promise<{ id: string; name: string }[]> => {
   // Simulate API delay
   await new Promise(resolve => setTimeout(resolve, 300));
-  return mockInfraTags;
+  return [
+    { id: 'tag1', name: 'Production' },
+    { id: 'tag2', name: 'Development' },
+    { id: 'tag3', name: 'Testing' },
+    { id: 'tag4', name: 'Staging' },
+    { id: 'tag5', name: 'Backup' }
+  ];
 };
 
-// Fetch clusters for specific tags across all vCenters
-export const fetchClustersByTags = async (tagIds: string[]): Promise<ClusterData[]> => {
-  if (!tagIds || tagIds.length === 0) {
-    return [];
-  }
-  
-  // Simulate API delay
-  await new Promise(resolve => setTimeout(resolve, 300));
-  
-  return mockClusters.filter(cluster => 
-    cluster.tags?.some(tag => tagIds.includes(tag))
-  );
-};
-
-// Updated function signature to accept an object parameter
+// Updated function to fetch resource usage data
 export const fetchResourceUsageData = async (params: { vCenterId?: string, clusterId?: string, tagIds?: string[] }): Promise<ResourceUsageData[]> => {
   // Simulate API delay
   await new Promise(resolve => setTimeout(resolve, 300));
@@ -80,8 +77,8 @@ export const fetchResourceUsageData = async (params: { vCenterId?: string, clust
   const data: ResourceUsageData[] = [];
   
   // Create a seeded random factor based on vCenter and cluster
-  const seedFactor = params.vCenterId === 'vc1' ? 1.2 : params.vCenterId === 'vc2' ? 0.8 : 1;
-  const clusterFactor = params.clusterId ? parseFloat(params.clusterId.replace('cl', '')) / 3 : 1;
+  const seedFactor = params.vCenterId ? 1.2 : 1;
+  const clusterFactor = params.clusterId ? 1.5 : 1;
   
   for (let i = 23; i >= 0; i--) {
     const time = new Date(now);
@@ -99,7 +96,96 @@ export const fetchResourceUsageData = async (params: { vCenterId?: string, clust
   return data;
 };
 
-// Updated function signature to accept an object parameter with category
+// Updated function to fetch stats data using the count API
+export const fetchStatsData = async (params: { vCenterId?: string, clusterId?: string, tagIds?: string[] }): Promise<StatsData[]> => {
+  try {
+    const count = await fetchCountData('stats');
+    
+    return [
+      {
+        title: "Total ESXI Hosts",
+        value: count.toString(),
+        description: "Active infrastructure",
+        trend: "up",
+        trendValue: "+2 from last month"
+      },
+      {
+        title: "Total Routes",
+        value: count.toString(),
+        description: "Network routes",
+        trend: "neutral",
+        trendValue: "No change"
+      },
+      {
+        title: "Total Testbeds",
+        value: count.toString(),
+        description: "Dev and test environments",
+        trend: "up",
+        trendValue: "+3 from last month"
+      },
+      {
+        title: "Total VMs",
+        value: count.toString(),
+        description: "Virtual machines",
+        trend: "up",
+        trendValue: "+5 from last month"
+      }
+    ];
+  } catch (error) {
+    console.error("Error fetching stats data:", error);
+    return [];
+  }
+};
+
+// Updated function to fetch system load
+export const fetchSystemLoad = async (params: { vCenterId?: string, clusterId?: string, tagIds?: string[] }): Promise<SystemLoadData> => {
+  try {
+    const count = await fetchCountData('sessions');
+    
+    return {
+      cpu: 72,
+      memory: {
+        value: 64,
+        used: "32 GB",
+        total: "50 GB"
+      },
+      storage: {
+        value: 43,
+        used: "4.2 TB",
+        total: "10 TB"
+      },
+      network: {
+        value: 58,
+        used: count.toString(),
+        total: "1600 active"
+      }
+    };
+  } catch (error) {
+    console.error("Error fetching system load:", error);
+    return {
+      cpu: 0,
+      memory: { value: 0, used: "0 GB", total: "0 GB" },
+      storage: { value: 0, used: "0 TB", total: "0 TB" },
+      network: { value: 0, used: "0", total: "0 active" }
+    };
+  }
+};
+
+// Fetch clusters for specific tags across all vCenters
+export const fetchClustersByTags = async (tagIds: string[]): Promise<{ id: string; name: string; vCenterId: string; tags?: string[] }[]> => {
+  if (!tagIds || tagIds.length === 0) {
+    return [];
+  }
+  
+  // Simulate API delay
+  await new Promise(resolve => setTimeout(resolve, 300));
+  
+  return mockClusters.filter(cluster => 
+    cluster.tags?.some(tag => tagIds.includes(tag))
+  );
+};
+
+// Fetch servers
 export const fetchServers = async (params: { 
   vCenterId?: string, 
   clusterId?: string, 
@@ -160,147 +246,4 @@ export const fetchServers = async (params: {
   }
   
   return servers;
-};
-
-// Updated function signature to accept an object parameter
-export const fetchStatsData = async (params: { vCenterId?: string, clusterId?: string, tagIds?: string[] }): Promise<StatsData[]> => {
-  // Simulate API delay
-  await new Promise(resolve => setTimeout(resolve, 200));
-  
-  // Default stats with updated titles
-  let stats: StatsData[] = [
-    {
-      title: "Total ESXI Hosts",
-      value: "12",
-      description: "Active infrastructure",
-      trend: "up",
-      trendValue: "+2 from last month"
-    },
-    {
-      title: "Total Routes",
-      value: "8",
-      description: "Network routes",
-      trend: "neutral",
-      trendValue: "No change"
-    },
-    {
-      title: "Total Testbeds",
-      value: "25",
-      description: "Dev and test environments",
-      trend: "up",
-      trendValue: "+3 from last month"
-    },
-    {
-      title: "Total VMs",
-      value: "42",
-      description: "Virtual machines",
-      trend: "up",
-      trendValue: "+5 from last month"
-    }
-  ];
-  
-  // Modify stats based on vCenter
-  if (params.vCenterId === 'vc1') {
-    stats[0].value = "14";
-    stats[1].value = "10";
-    stats[2].value = "32";
-    stats[3].value = "48";
-  } else if (params.vCenterId === 'vc2') {
-    stats[0].value = "9";
-    stats[1].value = "6";
-    stats[2].value = "18";
-    stats[3].value = "35";
-  } else if (params.vCenterId === 'vc3') {
-    stats[0].value = "11";
-    stats[1].value = "7";
-    stats[2].value = "22";
-    stats[3].value = "40";
-  }
-  
-  // Further adjust based on cluster
-  if (params.clusterId) {
-    const clusterNum = parseInt(params.clusterId.replace('cl', ''));
-    stats[0].value = (parseInt(stats[0].value) - (clusterNum % 3)).toString();
-    stats[1].value = (parseInt(stats[1].value) - (clusterNum % 2)).toString();
-    stats[2].value = (parseInt(stats[2].value) - (clusterNum * 2)).toString();
-  }
-  
-  return stats;
-};
-
-// Updated function signature to accept an object parameter
-export const fetchSystemLoad = async (params: { vCenterId?: string, clusterId?: string, tagIds?: string[] }): Promise<SystemLoadData> => {
-  // Simulate API delay
-  await new Promise(resolve => setTimeout(resolve, 400));
-  
-  // Base system load data
-  let systemLoad: SystemLoadData = {
-    cpu: 72,
-    memory: {
-      value: 64,
-      used: "32 GB",
-      total: "50 GB"
-    },
-    storage: {
-      value: 43,
-      used: "4.2 TB",
-      total: "10 TB"
-    },
-    network: {
-      value: 58,
-      used: "580",
-      total: "1600 active"
-    }
-  };
-  
-  // Modify based on vCenter
-  if (params.vCenterId === 'vc1') {
-    systemLoad.cpu = 78;
-    systemLoad.memory.value = 70;
-    systemLoad.memory.used = "35 GB";
-    systemLoad.storage.value = 48;
-    systemLoad.storage.used = "4.8 TB";
-    systemLoad.network.value = 65;
-    systemLoad.network.used = "650";
-  } else if (params.vCenterId === 'vc2') {
-    systemLoad.cpu = 62;
-    systemLoad.memory.value = 55;
-    systemLoad.memory.used = "27.5 GB";
-    systemLoad.storage.value = 38;
-    systemLoad.storage.used = "3.8 TB";
-    systemLoad.network.value = 48;
-    systemLoad.network.used = "480";
-  } else if (params.vCenterId === 'vc3') {
-    systemLoad.cpu = 68;
-    systemLoad.memory.value = 60;
-    systemLoad.memory.used = "30 GB";
-    systemLoad.storage.value = 40;
-    systemLoad.storage.used = "4.0 TB";
-    systemLoad.network.value = 55;
-    systemLoad.network.used = "550";
-  }
-  
-  // Further adjust based on cluster
-  if (params.clusterId) {
-    const clusterNum = parseInt(params.clusterId.replace('cl', ''));
-    systemLoad.cpu = Math.min(95, systemLoad.cpu + (clusterNum * 2));
-    systemLoad.memory.value = Math.min(95, systemLoad.memory.value + (clusterNum % 4));
-    systemLoad.storage.value = Math.min(90, systemLoad.storage.value + (clusterNum % 3));
-    systemLoad.network.value = Math.min(90, systemLoad.network.value + (clusterNum % 5));
-    
-    // Update the used values proportionally
-    const memTotal = parseFloat(systemLoad.memory.total.replace(' GB', ''));
-    const memUsed = (memTotal * systemLoad.memory.value / 100).toFixed(1);
-    systemLoad.memory.used = `${memUsed} GB`;
-    
-    const storageTotal = parseFloat(systemLoad.storage.total.replace(' TB', ''));
-    const storageUsed = (storageTotal * systemLoad.storage.value / 100).toFixed(1);
-    systemLoad.storage.used = `${storageUsed} TB`;
-    
-    const networkTotal = 1600;
-    const networkUsed = Math.round(networkTotal * systemLoad.network.value / 100);
-    systemLoad.network.used = `${networkUsed}`;
-  }
-  
-  return systemLoad;
 };
