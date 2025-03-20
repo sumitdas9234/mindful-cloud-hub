@@ -22,21 +22,53 @@ export const fetchUsers = async (
   filters: UserFilters = {}
 ): Promise<UserListResponse> => {
   try {
-    // Fetch users from the API with pagination and filtering params
-    const response = await apiClient.get(USERS_ENDPOINT, {
-      params: {
-        page,
-        limit,
-        ...filters
-      }
-    });
+    // Fetch all users from the API (no pagination params since API doesn't support it)
+    const response = await apiClient.get(USERS_ENDPOINT);
     
     console.log(`Fetched users from API: page ${page}, limit ${limit}, filters:`, filters);
     
-    // Process the response
+    // Get the raw user data
+    let allUsers: User[] = response.data.data || response.data;
+    
+    // Apply filtering in the client
+    if (filters.search) {
+      const searchLower = filters.search.toLowerCase();
+      allUsers = allUsers.filter(user => 
+        (user.cn?.toLowerCase().includes(searchLower)) || 
+        (user.email?.toLowerCase().includes(searchLower))
+      );
+    }
+    
+    if (filters.role) {
+      allUsers = allUsers.filter(user => 
+        user.roles?.includes(filters.role as string)
+      );
+    }
+    
+    if (filters.org) {
+      allUsers = allUsers.filter(user => 
+        user.org === filters.org
+      );
+    }
+    
+    if (filters.isActive !== undefined) {
+      allUsers = allUsers.filter(user => 
+        user.isActive === filters.isActive
+      );
+    }
+    
+    // Calculate total before pagination
+    const total = allUsers.length;
+    
+    // Apply pagination in the client
+    const startIndex = (page - 1) * limit;
+    const endIndex = startIndex + limit;
+    const paginatedUsers = allUsers.slice(startIndex, endIndex);
+    
+    // Return paginated results and total count
     return {
-      data: response.data.data || response.data,
-      total: response.data.total || response.data.length
+      data: paginatedUsers,
+      total: total
     };
   } catch (error) {
     console.error("Error fetching users:", error);

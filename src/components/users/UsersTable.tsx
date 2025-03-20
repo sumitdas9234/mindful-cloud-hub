@@ -52,7 +52,9 @@ export const UsersTable: React.FC<UsersTableProps> = ({
     }
   };
 
-  const getInitials = (name: string) => {
+  const getInitials = (name?: string) => {
+    if (!name) return 'U'; // Return 'U' (for User) if name is undefined
+    
     return name
       .split(' ')
       .map(part => part.charAt(0))
@@ -81,8 +83,8 @@ export const UsersTable: React.FC<UsersTableProps> = ({
             </AvatarFallback>
           </Avatar>
           <div>
-            <div className="font-medium">{user.cn}</div>
-            <div className="text-xs text-muted-foreground">{user.email}</div>
+            <div className="font-medium">{user.cn || 'Unknown User'}</div>
+            <div className="text-xs text-muted-foreground">{user.email || 'No email'}</div>
           </div>
         </div>
       ),
