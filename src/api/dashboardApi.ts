@@ -5,14 +5,7 @@ import env from '@/config/env';
 // Base API URL from environment config
 const BASE_API_URL = env.API_BASE_URL;
 
-// Resource usage API URLs
-const RESOURCE_URLS = {
-  cpu: 'https://run.mocky.io/v3/017f8e99-9d68-4fe2-8872-df0f393a5825',
-  memory: 'https://run.mocky.io/v3/b01b3418-b832-4cad-9051-464b1de82f4a',
-  storage: 'https://run.mocky.io/v3/260d19e4-bbac-4528-8722-7941e2d04d4d'
-};
-
-// Types for the new resource API response
+// Types for the resource API response
 interface ResourceUsageResponse {
   usage: number;
   values: [number, string][];
@@ -108,9 +101,9 @@ export const fetchResourceUsageData = async (params: { vCenterId?: string, clust
     try {
       // Fetch data from all resource endpoints
       const [cpuResponse, memoryResponse, storageResponse] = await Promise.all([
-        axios.get<ResourceUsageResponse>(RESOURCE_URLS.cpu),
-        axios.get<ResourceUsageResponse>(RESOURCE_URLS.memory),
-        axios.get<ResourceUsageResponse>(RESOURCE_URLS.storage)
+        axios.get<ResourceUsageResponse>(`${BASE_API_URL}/cluster/${params.clusterId}/cpu`),
+        axios.get<ResourceUsageResponse>(`${BASE_API_URL}/cluster/${params.clusterId}/memory`),
+        axios.get<ResourceUsageResponse>(`${BASE_API_URL}/cluster/${params.clusterId}/storage`)
       ]);
       
       // Create a merged dataset with timestamps as keys
@@ -236,9 +229,9 @@ export const fetchSystemLoad = async (params: { vCenterId?: string, clusterId?: 
     try {
       // Fetch current usage data from all resource endpoints
       const [cpuResponse, memoryResponse, storageResponse] = await Promise.all([
-        axios.get<ResourceUsageResponse>(RESOURCE_URLS.cpu),
-        axios.get<ResourceUsageResponse>(RESOURCE_URLS.memory),
-        axios.get<ResourceUsageResponse>(RESOURCE_URLS.storage)
+        axios.get<ResourceUsageResponse>(`${BASE_API_URL}/cluster/${clusterName}/cpu`),
+        axios.get<ResourceUsageResponse>(`${BASE_API_URL}/cluster/${clusterName}/memory`),
+        axios.get<ResourceUsageResponse>(`${BASE_API_URL}/cluster/${clusterName}/storage`)
       ]);
       
       // Get session count from existing endpoint
@@ -329,3 +322,4 @@ export const fetchServers = async (params: {
     return [];
   }
 };
+
