@@ -1,6 +1,6 @@
 
 import axios from 'axios';
-import { User, UserListResponse, UserStats, UserFilters } from './types/users';
+import { User, UserListResponse, UserFilters } from './types/users';
 import env from '@/config/env';
 
 // Create axios instance with default config
@@ -40,16 +40,6 @@ export const fetchUsers = async (
     };
   } catch (error) {
     console.error("Error fetching users:", error);
-    throw error;
-  }
-};
-
-export const fetchUserStats = async (): Promise<UserStats> => {
-  try {
-    const response = await apiClient.get(`${USERS_ENDPOINT}/stats`);
-    return response.data;
-  } catch (error) {
-    console.error("Error fetching user stats:", error);
     throw error;
   }
 };
