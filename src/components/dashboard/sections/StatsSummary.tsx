@@ -31,7 +31,8 @@ export const StatsSummary: React.FC<StatsSummaryProps> = ({ vCenterId, clusterId
 
   const { data: stats, isLoading } = useQuery({
     queryKey: ['dashboardStats', vCenterId, clusterId, tagIds],
-    queryFn: () => fetchStatsData({ vCenterId, clusterId, tagIds })
+    queryFn: () => fetchStatsData({ vCenterId, clusterId, tagIds }),
+    enabled: !!clusterId,
   });
 
   const iconMap = {

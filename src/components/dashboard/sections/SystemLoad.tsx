@@ -33,6 +33,7 @@ export const SystemLoad: React.FC<SystemLoadProps> = ({ vCenterId, clusterId, ta
     queryKey: ['systemLoad', vCenterId, clusterId, tagIds],
     queryFn: () => fetchSystemLoad({ vCenterId, clusterId, tagIds }),
     refetchInterval: 30000, // Refetch every 30 seconds
+    enabled: !!clusterId,
   });
 
   return (

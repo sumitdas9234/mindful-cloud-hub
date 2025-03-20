@@ -15,6 +15,7 @@ export const ResourceUsageChart: React.FC<ResourceUsageChartProps> = ({ vCenterI
     queryKey: ['resourceUsage', vCenterId, clusterId, tagIds],
     queryFn: () => fetchResourceUsageData({ vCenterId, clusterId, tagIds }),
     refetchInterval: 60000, // Refetch every minute
+    enabled: !!clusterId,
   });
 
   return (
