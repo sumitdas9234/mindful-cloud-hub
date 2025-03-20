@@ -60,7 +60,7 @@ const RoutesPage: React.FC = () => {
   };
 
   return (
-    <div className="container mx-auto space-y-6 h-full overflow-auto">
+    <div className="container mx-auto space-y-6">
       <PageHeader 
         title="Route Management"
         description="Manage network routes and traffic paths."

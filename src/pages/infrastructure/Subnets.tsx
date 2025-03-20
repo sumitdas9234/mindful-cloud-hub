@@ -36,7 +36,7 @@ const SubnetsPage: React.FC = () => {
   };
 
   return (
-    <div className="container mx-auto space-y-6 h-full overflow-auto">
+    <div className="container mx-auto space-y-6">
       <PageHeader 
         title="Subnet Management"
         description="Manage your network subnets and address allocations."
