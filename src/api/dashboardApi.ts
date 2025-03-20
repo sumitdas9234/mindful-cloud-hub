@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { ServerData, ResourceUsageData, StatsData, SystemLoadData, VCenterClusterData, CountResponse } from './types';
+import { ServerData, ResourceUsageData, StatsData, SystemLoadData, VCenterClusterData, CountResponse, VCenterData, ClusterData, InfraTagData } from './types';
 
 // Fetch vCenters and clusters from API
 export const fetchVCentersAndClusters = async (): Promise<VCenterClusterData> => {
@@ -179,6 +179,16 @@ export const fetchClustersByTags = async (tagIds: string[]): Promise<{ id: strin
   
   // Simulate API delay
   await new Promise(resolve => setTimeout(resolve, 300));
+  
+  // Create mock clusters data with tags
+  const mockClusters = [
+    { id: 'clusterA', name: 'clusterA', vCenterId: 'pwx-vcsa.pwx.domain.com', tags: ['tag1', 'tag3'] },
+    { id: 'clusterB', name: 'clusterB', vCenterId: 'pwx-vcsa.pwx.domain.com', tags: ['tag2'] },
+    { id: 'clusterC', name: 'clusterC', vCenterId: 'vcsa.pwx.dev.domain.com', tags: ['tag1', 'tag5'] },
+    { id: 'clusterD', name: 'clusterD', vCenterId: 'vc-tanzu.pwx.dev.domain.com', tags: ['tag3', 'tag4'] },
+    { id: 'clusterE', name: 'clusterE', vCenterId: 'vc-tanzu.pwx.dev.domain.com', tags: ['tag2', 'tag5'] },
+    { id: 'clusterF', name: 'clusterF', vCenterId: 'vc-tanzu.pwx.dev.domain.com', tags: ['tag1'] }
+  ];
   
   return mockClusters.filter(cluster => 
     cluster.tags?.some(tag => tagIds.includes(tag))
