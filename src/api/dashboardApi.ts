@@ -1,5 +1,10 @@
+
 import axios from 'axios';
 import { ServerData, ResourceUsageData, StatsData, SystemLoadData, VCenterClusterData, CountResponse, VCenterData, ClusterData, InfraTagData } from './types';
+import env from '@/config/env';
+
+// Base API URL from environment config
+const BASE_API_URL = env.API_BASE_URL;
 
 // Fetch vCenters and clusters from API
 export const fetchVCentersAndClusters = async (): Promise<VCenterClusterData> => {
@@ -12,11 +17,48 @@ export const fetchVCentersAndClusters = async (): Promise<VCenterClusterData> =>
   }
 };
 
-// Fetch count data from API
-export const fetchCountData = async (metric: string): Promise<number> => {
+// Fetch count data from API with cluster-specific endpoint
+export const fetchCountData = async (metric: string, clusterName?: string): Promise<number> => {
   try {
-    const response = await axios.get<CountResponse>('https://run.mocky.io/v3/01ca9fcf-80b5-4855-adc1-5d8f156233a4');
-    return response.data.count;
+    if (!clusterName) {
+      // Fallback to generic count when no cluster is selected
+      const response = await axios.get<CountResponse>('https://run.mocky.io/v3/01ca9fcf-80b5-4855-adc1-5d8f156233a4');
+      return response.data.count;
+    }
+    
+    // Build the appropriate endpoint based on the metric
+    let endpoint = '';
+    switch (metric) {
+      case 'hosts':
+        endpoint = `${BASE_API_URL}/cluster/${clusterName}/hosts`;
+        break;
+      case 'vms':
+        endpoint = `${BASE_API_URL}/cluster/${clusterName}/vms`;
+        break;
+      case 'routes':
+        endpoint = `${BASE_API_URL}/cluster/${clusterName}/routes`;
+        break;
+      case 'testbeds':
+        endpoint = `${BASE_API_URL}/cluster/${clusterName}/testbeds`;
+        break;
+      case 'sessions':
+        endpoint = `${BASE_API_URL}/cluster/${clusterName}/sessions`;
+        break;
+      default:
+        // Default fallback
+        endpoint = `${BASE_API_URL}/cluster/${clusterName}/${metric}`;
+    }
+    
+    console.log(`Fetching ${metric} from endpoint: ${endpoint}`);
+    
+    try {
+      const response = await axios.get<CountResponse>(endpoint);
+      return response.data.count;
+    } catch (apiError) {
+      console.error(`Error fetching ${metric} from real API, falling back to mock:`, apiError);
+      const fallbackResponse = await axios.get<CountResponse>('https://run.mocky.io/v3/01ca9fcf-80b5-4855-adc1-5d8f156233a4');
+      return fallbackResponse.data.count;
+    }
   } catch (error) {
     console.error(`Error fetching ${metric} count:`, error);
     return 0;
@@ -96,36 +138,50 @@ export const fetchResourceUsageData = async (params: { vCenterId?: string, clust
   return data;
 };
 
-// Updated function to fetch stats data using the count API
+// Updated function to fetch stats data using the cluster-specific API endpoints
 export const fetchStatsData = async (params: { vCenterId?: string, clusterId?: string, tagIds?: string[] }): Promise<StatsData[]> => {
   try {
-    const count = await fetchCountData('stats');
+    // Get the actual cluster name if cluster ID is provided
+    let clusterName: string | undefined;
+    if (params.clusterId && params.vCenterId) {
+      const clusters = await fetchClusters(params.vCenterId);
+      const cluster = clusters.find(c => c.id === params.clusterId);
+      clusterName = cluster?.name;
+    }
+
+    // Fetch all count data in parallel for better performance
+    const [hostsCount, routesCount, testbedsCount, vmsCount] = await Promise.all([
+      fetchCountData('hosts', clusterName),
+      fetchCountData('routes', clusterName),
+      fetchCountData('testbeds', clusterName),
+      fetchCountData('vms', clusterName)
+    ]);
     
     return [
       {
         title: "Total ESXI Hosts",
-        value: count.toString(),
+        value: hostsCount.toString(),
         description: "Active infrastructure",
         trend: "up",
         trendValue: "+2 from last month"
       },
       {
         title: "Total Routes",
-        value: count.toString(),
+        value: routesCount.toString(),
         description: "Network routes",
         trend: "neutral",
         trendValue: "No change"
       },
       {
         title: "Total Testbeds",
-        value: count.toString(),
+        value: testbedsCount.toString(),
         description: "Dev and test environments",
         trend: "up",
         trendValue: "+3 from last month"
       },
       {
         title: "Total VMs",
-        value: count.toString(),
+        value: vmsCount.toString(),
         description: "Virtual machines",
         trend: "up",
         trendValue: "+5 from last month"
@@ -137,10 +193,18 @@ export const fetchStatsData = async (params: { vCenterId?: string, clusterId?: s
   }
 };
 
-// Updated function to fetch system load
+// Updated function to fetch system load with cluster-specific session data
 export const fetchSystemLoad = async (params: { vCenterId?: string, clusterId?: string, tagIds?: string[] }): Promise<SystemLoadData> => {
   try {
-    const count = await fetchCountData('sessions');
+    // Get the actual cluster name if cluster ID is provided
+    let clusterName: string | undefined;
+    if (params.clusterId && params.vCenterId) {
+      const clusters = await fetchClusters(params.vCenterId);
+      const cluster = clusters.find(c => c.id === params.clusterId);
+      clusterName = cluster?.name;
+    }
+    
+    const sessionCount = await fetchCountData('sessions', clusterName);
     
     return {
       cpu: 72,
@@ -156,7 +220,7 @@ export const fetchSystemLoad = async (params: { vCenterId?: string, clusterId?: 
       },
       network: {
         value: 58,
-        used: count.toString(),
+        used: sessionCount.toString(),
         total: "1600 active"
       }
     };
