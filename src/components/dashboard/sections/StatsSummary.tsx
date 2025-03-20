@@ -38,7 +38,7 @@ export const StatsSummary: React.FC<StatsSummaryProps> = ({ vCenterId, clusterId
             title={stat.title} 
             value={stat.value}
             description={stat.description}
-            icon={iconMap[stat.title as keyof typeof iconMap]}
+            icon={iconMap[stat.title as keyof typeof iconMap] || Monitor}
             trend={stat.trend}
             trendValue={stat.trendValue}
           />

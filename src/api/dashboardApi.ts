@@ -191,9 +191,9 @@ export const fetchStatsData = async (params: { vCenterId?: string, clusterId?: s
       trendValue: "+3 from last month"
     },
     {
-      title: "Users",
+      title: "Total VMs",
       value: "42",
-      description: "Active team members",
+      description: "Virtual machines",
       trend: "up",
       trendValue: "+5 from last month"
     }
