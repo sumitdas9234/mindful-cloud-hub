@@ -1,8 +1,19 @@
+
 import axios from 'axios';
 import { User, UserListResponse, UserStats, UserFilters } from './types/users';
 import env from '@/config/env';
 
-const API_URL = env.USERS_API_URL;
+// Create axios instance with default config
+const apiClient = axios.create({
+  baseURL: env.API_BASE_URL,
+  timeout: 10000,
+  headers: {
+    'Content-Type': 'application/json',
+  }
+});
+
+// API endpoints
+const USERS_ENDPOINT = '/users';
 
 // API functions
 export const fetchUsers = async (
@@ -12,7 +23,7 @@ export const fetchUsers = async (
 ): Promise<UserListResponse> => {
   try {
     // Fetch all users from the API
-    const response = await axios.get(API_URL);
+    const response = await axios.get(env.USERS_API_URL);
     let users = response.data as User[];
     
     // Ensure all users have the required fields
@@ -109,7 +120,7 @@ export const fetchUsers = async (
 
 export const fetchUserStats = async (): Promise<UserStats> => {
   try {
-    const response = await axios.get(API_URL);
+    const response = await axios.get(env.USERS_API_URL);
     const users = response.data as User[];
     
     // Default values in case the array is empty
@@ -165,7 +176,7 @@ export const fetchUserStats = async (): Promise<UserStats> => {
 
 export const fetchUserById = async (id: string): Promise<User> => {
   try {
-    const response = await axios.get(API_URL);
+    const response = await axios.get(env.USERS_API_URL);
     const users = response.data as User[];
     const user = users.find(user => user._id === id);
     
