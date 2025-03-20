@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Monitor, Cpu, HardDrive, Wifi } from 'lucide-react';
+import { Monitor, Cpu, HardDrive, Users } from 'lucide-react';
 import { ResourceCard } from '@/components/dashboard/ResourceCard';
 import { fetchSystemLoad } from '@/api/dashboardApi';
 
@@ -51,11 +51,11 @@ export const SystemLoad: React.FC<SystemLoadProps> = ({ vCenterId, clusterId, ta
             icon={HardDrive}
           />
           <ResourceCard
-            title="Network"
+            title="Sessions"
             value={data?.network.value || 0}
-            subtitle={data ? `${data.network.used} / ${data.network.total}` : ''}
+            subtitle={data ? `${data.network.used} / 1600 active` : ''}
             color="bg-green-500"
-            icon={Wifi}
+            icon={Users}
           />
         </div>
       )}
