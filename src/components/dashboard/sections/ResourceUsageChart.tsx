@@ -18,6 +18,13 @@ export const ResourceUsageChart: React.FC<ResourceUsageChartProps> = ({ vCenterI
     enabled: !!clusterId,
   });
 
+  // Debug the data we're receiving
+  React.useEffect(() => {
+    if (data && data.length > 0) {
+      console.log("Resource usage data sample:", data.slice(0, 3));
+    }
+  }, [data]);
+
   return (
     <div className="h-full">
       {isLoading ? (
