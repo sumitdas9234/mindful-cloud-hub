@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { toast } from '@/components/ui/use-toast';
@@ -8,8 +7,8 @@ import { UsersFilters } from '@/components/users/UsersFilters';
 import { UsersStats } from '@/components/users/UsersStats';
 import { UserDetailSheet } from '@/components/users/UserDetailSheet';
 import { CreateUserDialog } from '@/components/users/CreateUserDialog';
-import { fetchUsers, createUser, updateUser, deleteUser } from '@/api/usersApi';
-import { User, UserFilters, UserStats } from '@/api/types/users';
+import { fetchUsers, fetchUserStats, createUser, updateUser, deleteUser } from '@/api/usersApi';
+import { User, UserFilters } from '@/api/types/users';
 import { 
   AlertDialog,
   AlertDialogAction,
@@ -51,87 +50,26 @@ const UsersPage: React.FC = () => {
     return () => clearTimeout(timer);
   }, [filters]);
 
-  // Query for user data
+  // Queries - using debouncedFilters
   const { 
     data: usersData, 
     isLoading: isLoadingUsers,
-    refetch: refetchUsers,
-    error: usersError
+    refetch: refetchUsers
   } = useQuery({
     queryKey: ['users', currentPage, itemsPerPage, debouncedFilters],
     queryFn: () => fetchUsers(currentPage, itemsPerPage, debouncedFilters),
     staleTime: 60000, // Cache data for 1 minute
   });
   
-  // Error handling for API failures
-  useEffect(() => {
-    if (usersError) {
-      console.error('Error fetching users:', usersError);
-      toast({
-        title: "Failed to load users",
-        description: "There was an error loading the user data. Please try again later.",
-        variant: "destructive",
-      });
-    }
-  }, [usersError]);
-
-  // Calculate user stats from fetched user data
-  const statsData = useMemo<UserStats>(() => {
-    // Default empty stats
-    const defaultStats: UserStats = {
-      totalUsers: 0,
-      activeUsers: 0,
-      inactiveUsers: 0,
-      byRole: {},
-      byOrg: {},
-      byBusinessUnit: {}
-    };
-    
-    // If no data is loaded yet, return default stats
-    if (!usersData?.data || usersData.data.length === 0) {
-      return defaultStats;
-    }
-    
-    // Initialize counters
-    let activeUsers = 0;
-    const byRole: Record<string, number> = {};
-    const byOrg: Record<string, number> = {};
-    const byBusinessUnit: Record<string, number> = {};
-    
-    // Process each user to build statistics
-    usersData.data.forEach(user => {
-      // Count active vs inactive users
-      if (user.isActive) {
-        activeUsers++;
-      }
-      
-      // Count by role
-      if (user.roles && user.roles.length > 0) {
-        user.roles.forEach(role => {
-          byRole[role] = (byRole[role] || 0) + 1;
-        });
-      }
-      
-      // Count by organization
-      if (user.org) {
-        byOrg[user.org] = (byOrg[user.org] || 0) + 1;
-      }
-      
-      // Count by business unit
-      if (user.businessUnit) {
-        byBusinessUnit[user.businessUnit] = (byBusinessUnit[user.businessUnit] || 0) + 1;
-      }
-    });
-    
-    return {
-      totalUsers: usersData.total || usersData.data.length,
-      activeUsers,
-      inactiveUsers: (usersData.total || usersData.data.length) - activeUsers,
-      byRole,
-      byOrg,
-      byBusinessUnit
-    };
-  }, [usersData]);
+  const { 
+    data: statsData, 
+    isLoading: isLoadingStats,
+    refetch: refetchStats
+  } = useQuery({
+    queryKey: ['user-stats'],
+    queryFn: () => fetchUserStats(),
+    staleTime: 300000, // Cache stats for 5 minutes
+  });
 
   // Calculate total pages
   const totalPages = useMemo(() => {
@@ -141,16 +79,19 @@ const UsersPage: React.FC = () => {
 
   // Compute filter options with useMemo for performance
   const availableRoles = useMemo(() => {
+    if (!statsData) return [];
     return Object.keys(statsData.byRole);
-  }, [statsData.byRole]);
+  }, [statsData]);
   
   const availableOrgs = useMemo(() => {
+    if (!statsData) return [];
     return Object.keys(statsData.byOrg);
-  }, [statsData.byOrg]);
+  }, [statsData]);
   
   const availableBusinessUnits = useMemo(() => {
+    if (!statsData) return [];
     return Object.keys(statsData.byBusinessUnit);
-  }, [statsData.byBusinessUnit]);
+  }, [statsData]);
   
   const availableManagers = useMemo(() => {
     if (!usersData) return [];
@@ -162,7 +103,8 @@ const UsersPage: React.FC = () => {
   // Handlers
   const handleRefresh = useCallback(() => {
     refetchUsers();
-  }, [refetchUsers]);
+    refetchStats();
+  }, [refetchUsers, refetchStats]);
   
   const handleViewUser = useCallback((user: User) => {
     setSelectedUser(user);
@@ -194,6 +136,7 @@ const UsersPage: React.FC = () => {
       setUserToDelete(null);
       setUserDetailOpen(false);
       refetchUsers();
+      refetchStats();
     } catch (error) {
       console.error("Error deleting user:", error);
       toast({
@@ -202,7 +145,7 @@ const UsersPage: React.FC = () => {
         variant: "destructive",
       });
     }
-  }, [userToDelete, refetchUsers]);
+  }, [userToDelete, refetchUsers, refetchStats]);
   
   const handleToggleUserStatus = useCallback(async (user: User, newStatus: boolean) => {
     try {
@@ -212,6 +155,7 @@ const UsersPage: React.FC = () => {
         description: `${user.cn} has been ${newStatus ? "activated" : "deactivated"} successfully.`,
       });
       refetchUsers();
+      refetchStats();
       
       // Update the selected user if it's the one being toggled
       if (selectedUser && selectedUser._id === user._id) {
@@ -228,7 +172,7 @@ const UsersPage: React.FC = () => {
         variant: "destructive",
       });
     }
-  }, [selectedUser, refetchUsers]);
+  }, [selectedUser, refetchUsers, refetchStats]);
   
   const handleCreateUser = useCallback(async (userData: Omit<User, 'lastLoggedIn' | 'lastRatingSubmittedOn'>) => {
     setIsSubmitting(true);
@@ -247,6 +191,7 @@ const UsersPage: React.FC = () => {
       });
       setCreateDialogOpen(false);
       refetchUsers();
+      refetchStats();
     } catch (error) {
       console.error("Error creating user:", error);
       toast({
@@ -257,7 +202,7 @@ const UsersPage: React.FC = () => {
     } finally {
       setIsSubmitting(false);
     }
-  }, [refetchUsers]);
+  }, [refetchUsers, refetchStats]);
   
   const handleResetFilters = useCallback(() => {
     setFilters({});
@@ -279,8 +224,15 @@ const UsersPage: React.FC = () => {
       />
       
       <UsersStats 
-        stats={statsData} 
-        isLoading={isLoadingUsers} 
+        stats={statsData || {
+          totalUsers: 0,
+          activeUsers: 0,
+          inactiveUsers: 0,
+          byRole: {},
+          byOrg: {},
+          byBusinessUnit: {}
+        }} 
+        isLoading={isLoadingStats} 
       />
       
       <Separator />

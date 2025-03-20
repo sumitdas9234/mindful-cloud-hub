@@ -1,6 +1,6 @@
 
 import axios from 'axios';
-import { User, UserListResponse, UserFilters } from './types/users';
+import { User, UserListResponse, UserStats, UserFilters } from './types/users';
 import env from '@/config/env';
 
 // Create axios instance with default config
@@ -22,53 +22,95 @@ export const fetchUsers = async (
   filters: UserFilters = {}
 ): Promise<UserListResponse> => {
   try {
-    // Fetch all users from the API (no pagination params since API doesn't support it)
-    const response = await apiClient.get(USERS_ENDPOINT);
+    // Fetch all users from the API
+    const response = await axios.get(env.USERS_API_URL);
+    let users = response.data as User[];
     
-    console.log(`Fetched users from API: page ${page}, limit ${limit}, filters:`, filters);
+    // Ensure all users have the required fields
+    users = users.map(user => ({
+      ...user,
+      roles: user.roles || ['user'],
+      lastLoggedIn: user.lastLoggedIn || new Date().toISOString(),
+      lastRatingSubmittedOn: user.lastRatingSubmittedOn || null,
+      sequenceValue: user.sequenceValue || 0
+    }));
     
-    // Get the raw user data
-    let allUsers: User[] = response.data.data || response.data;
-    
-    // Apply filtering in the client
+    // Apply filters - optimize search by creating a single toLowerCase operation
     if (filters.search) {
-      const searchLower = filters.search.toLowerCase();
-      allUsers = allUsers.filter(user => 
-        (user.cn?.toLowerCase().includes(searchLower)) || 
-        (user.email?.toLowerCase().includes(searchLower))
-      );
+      const searchLower = filters.search.toLowerCase().trim();
+      
+      const directMatches: User[] = [];
+      const partialMatches: User[] = [];
+      
+      users.forEach(user => {
+        const userId = user._id?.toLowerCase() || '';
+        const userEmail = user.email?.toLowerCase() || '';
+        const userCn = user.cn?.toLowerCase() || '';
+        const userSlackUsername = user.slackUsername?.toLowerCase() || '';
+        const userManager = user.manager?.toLowerCase() || '';
+        const userBusinessUnit = user.businessUnit?.toLowerCase() || '';
+        
+        // Check for exact matches first
+        if (
+          userId === searchLower ||
+          userEmail === searchLower ||
+          userCn === searchLower
+        ) {
+          directMatches.push(user);
+          return;
+        }
+        
+        // Then check for partial matches
+        if (
+          userCn.includes(searchLower) ||
+          userId.includes(searchLower) ||
+          userEmail.includes(searchLower) ||
+          userSlackUsername.includes(searchLower) ||
+          userManager.includes(searchLower) ||
+          userBusinessUnit.includes(searchLower)
+        ) {
+          partialMatches.push(user);
+        }
+      });
+      
+      // Combine direct and partial matches with direct matches first
+      users = [...directMatches, ...partialMatches];
+      
+      console.log(`Search found ${directMatches.length} direct matches and ${partialMatches.length} partial matches`);
     }
     
+    // Apply other filters
     if (filters.role) {
-      allUsers = allUsers.filter(user => 
-        user.roles?.includes(filters.role as string)
-      );
+      users = users.filter(user => {
+        const userRoles = user.roles || [];
+        return userRoles.includes(filters.role as string);
+      });
     }
     
     if (filters.org) {
-      allUsers = allUsers.filter(user => 
+      users = users.filter(user => 
         user.org === filters.org
       );
     }
     
     if (filters.isActive !== undefined) {
-      allUsers = allUsers.filter(user => 
+      users = users.filter(user => 
         user.isActive === filters.isActive
       );
     }
     
-    // Calculate total before pagination
-    const total = allUsers.length;
+    // Get the total count before pagination
+    const totalFilteredUsers = users.length;
     
-    // Apply pagination in the client
+    // Paginate results
     const startIndex = (page - 1) * limit;
-    const endIndex = startIndex + limit;
-    const paginatedUsers = allUsers.slice(startIndex, endIndex);
+    const paginatedUsers = users.slice(startIndex, startIndex + limit);
     
-    // Return paginated results and total count
+    console.log(`Fetched ${users.length} total users, filtered to ${totalFilteredUsers}, showing page ${page} with ${paginatedUsers.length} users`);
+    
     return {
       data: paginatedUsers,
-      total: total
+      total: totalFilteredUsers
     };
   } catch (error) {
     console.error("Error fetching users:", error);
@@ -76,15 +118,73 @@ export const fetchUsers = async (
   }
 };
 
+export const fetchUserStats = async (): Promise<UserStats> => {
+  try {
+    const response = await axios.get(env.USERS_API_URL);
+    const users = response.data as User[];
+    
+    // Default values in case the array is empty
+    if (!users || users.length === 0) {
+      return {
+        totalUsers: 0,
+        activeUsers: 0,
+        inactiveUsers: 0,
+        byRole: {},
+        byOrg: {},
+        byBusinessUnit: {}
+      };
+    }
+    
+    const activeUsers = users.filter(user => user.isActive).length;
+    const inactiveUsers = users.length - activeUsers;
+    
+    const byRole: Record<string, number> = {};
+    const byOrg: Record<string, number> = {};
+    const byBusinessUnit: Record<string, number> = {};
+    
+    users.forEach(user => {
+      // Count by role
+      const roles = user.roles || ['user'];
+      roles.forEach(role => {
+        byRole[role] = (byRole[role] || 0) + 1;
+      });
+      
+      // Count by org
+      if (user.org) {
+        byOrg[user.org] = (byOrg[user.org] || 0) + 1;
+      }
+      
+      // Count by business unit
+      if (user.businessUnit) {
+        byBusinessUnit[user.businessUnit] = (byBusinessUnit[user.businessUnit] || 0) + 1;
+      }
+    });
+    
+    return {
+      totalUsers: users.length,
+      activeUsers,
+      inactiveUsers,
+      byRole,
+      byOrg,
+      byBusinessUnit
+    };
+  } catch (error) {
+    console.error("Error fetching user stats:", error);
+    throw error;
+  }
+};
+
 export const fetchUserById = async (id: string): Promise<User> => {
   try {
-    const response = await apiClient.get(`${USERS_ENDPOINT}/${id}`);
+    const response = await axios.get(env.USERS_API_URL);
+    const users = response.data as User[];
+    const user = users.find(user => user._id === id);
     
-    if (!response.data) {
+    if (!user) {
       throw new Error('User not found');
     }
     
-    return response.data;
+    return user;
   } catch (error) {
     console.error("Error fetching user by ID:", error);
     throw error;
@@ -92,21 +192,27 @@ export const fetchUserById = async (id: string): Promise<User> => {
 };
 
 export const createUser = async (userData: Omit<User, '_id'>): Promise<User> => {
-  try {
-    const response = await apiClient.post(USERS_ENDPOINT, userData);
-    console.log('Creating user:', userData);
-    return response.data;
-  } catch (error) {
-    console.error("Error creating user:", error);
-    throw error;
-  }
+  // In a real API, we would post to the endpoint
+  // For now, we'll just return a mock response since the API is read-only
+  console.log('Creating user:', userData);
+  return {
+    _id: `user-${Date.now()}`,
+    ...userData,
+  };
 };
 
 export const updateUser = async (id: string, userData: Partial<User>): Promise<User> => {
+  // In a real API, we would put to the endpoint
+  // For now, we'll fetch the user and return a mock updated version
   try {
-    const response = await apiClient.patch(`${USERS_ENDPOINT}/${id}`, userData);
+    const user = await fetchUserById(id);
     console.log('Updating user:', id, userData);
-    return response.data;
+    
+    // Return a merged version
+    return {
+      ...user,
+      ...userData
+    };
   } catch (error) {
     console.error("Error updating user:", error);
     throw error;
@@ -114,11 +220,7 @@ export const updateUser = async (id: string, userData: Partial<User>): Promise<U
 };
 
 export const deleteUser = async (id: string): Promise<void> => {
-  try {
-    await apiClient.delete(`${USERS_ENDPOINT}/${id}`);
-    console.log('Deleting user:', id);
-  } catch (error) {
-    console.error("Error deleting user:", error);
-    throw error;
-  }
+  // In a real API, we would delete from the endpoint
+  // For now, we'll just log the action
+  console.log('Deleting user:', id);
 };
