@@ -53,7 +53,8 @@ export const SystemLoad: React.FC<SystemLoadProps> = ({ vCenterId, clusterId, ta
           <ResourceCard
             title="Sessions"
             value={data?.network.value || 0}
-            subtitle={data ? `${data.network.used} / 1600 active` : ''}
+            usageLabel={data?.network.used || '0'}
+            subtitle={data ? `${data.network.used} / ${data.network.total}` : ''}
             color="bg-green-500"
             icon={Users}
           />

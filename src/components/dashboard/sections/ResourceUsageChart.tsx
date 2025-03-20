@@ -28,7 +28,7 @@ export const ResourceUsageChart: React.FC<ResourceUsageChartProps> = ({ vCenterI
           dataKeys={[
             { key: 'cpu', name: 'CPU', color: 'hsl(var(--primary))' },
             { key: 'memory', name: 'Memory', color: 'hsl(280, 70%, 60%)' },
-            { key: 'storage', name: 'Storage (GB)', color: 'hsl(142, 71%, 45%)' },
+            { key: 'storage', name: 'Storage', color: 'hsl(142, 71%, 45%)' },
           ]}
         />
       )}

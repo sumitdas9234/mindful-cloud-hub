@@ -92,7 +92,7 @@ export const fetchResourceUsageData = async (params: { vCenterId?: string, clust
       name: `${time.getHours()}:00`,
       cpu: Math.floor(Math.random() * 30 * seedFactor * clusterFactor) + 30,
       memory: Math.floor(Math.random() * 25 * seedFactor * clusterFactor) + 40,
-      network: Math.floor(Math.random() * 80 * seedFactor * clusterFactor) + 100,
+      storage: Math.floor(Math.random() * 35 * seedFactor * clusterFactor) + 25,
     });
   }
   
@@ -248,8 +248,8 @@ export const fetchSystemLoad = async (params: { vCenterId?: string, clusterId?: 
     },
     network: {
       value: 58,
-      used: "580 Mbps",
-      total: "1 Gbps"
+      used: "580",
+      total: "1600 active"
     }
   };
   
@@ -261,7 +261,7 @@ export const fetchSystemLoad = async (params: { vCenterId?: string, clusterId?: 
     systemLoad.storage.value = 48;
     systemLoad.storage.used = "4.8 TB";
     systemLoad.network.value = 65;
-    systemLoad.network.used = "650 Mbps";
+    systemLoad.network.used = "650";
   } else if (params.vCenterId === 'vc2') {
     systemLoad.cpu = 62;
     systemLoad.memory.value = 55;
@@ -269,7 +269,7 @@ export const fetchSystemLoad = async (params: { vCenterId?: string, clusterId?: 
     systemLoad.storage.value = 38;
     systemLoad.storage.used = "3.8 TB";
     systemLoad.network.value = 48;
-    systemLoad.network.used = "480 Mbps";
+    systemLoad.network.used = "480";
   } else if (params.vCenterId === 'vc3') {
     systemLoad.cpu = 68;
     systemLoad.memory.value = 60;
@@ -277,7 +277,7 @@ export const fetchSystemLoad = async (params: { vCenterId?: string, clusterId?: 
     systemLoad.storage.value = 40;
     systemLoad.storage.used = "4.0 TB";
     systemLoad.network.value = 55;
-    systemLoad.network.used = "550 Mbps";
+    systemLoad.network.used = "550";
   }
   
   // Further adjust based on cluster
@@ -297,9 +297,9 @@ export const fetchSystemLoad = async (params: { vCenterId?: string, clusterId?: 
     const storageUsed = (storageTotal * systemLoad.storage.value / 100).toFixed(1);
     systemLoad.storage.used = `${storageUsed} TB`;
     
-    const networkTotal = parseFloat(systemLoad.network.total.replace(' Gbps', '')) * 1000;
+    const networkTotal = 1600;
     const networkUsed = Math.round(networkTotal * systemLoad.network.value / 100);
-    systemLoad.network.used = `${networkUsed} Mbps`;
+    systemLoad.network.used = `${networkUsed}`;
   }
   
   return systemLoad;
