@@ -13,7 +13,7 @@ export interface ResourceUsageData {
   name: string;
   cpu: number;
   memory: number;
-  network: number;
+  storage: number;
 }
 
 export interface StatsData {
