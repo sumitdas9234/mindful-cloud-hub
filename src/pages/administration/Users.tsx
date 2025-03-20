@@ -50,11 +50,12 @@ const UsersPage: React.FC = () => {
     return () => clearTimeout(timer);
   }, [filters]);
 
-  // Queries - using debouncedFilters
+  // Queries - using debouncedFilters and proper error handling
   const { 
     data: usersData, 
     isLoading: isLoadingUsers,
-    refetch: refetchUsers
+    refetch: refetchUsers,
+    error: usersError
   } = useQuery({
     queryKey: ['users', currentPage, itemsPerPage, debouncedFilters],
     queryFn: () => fetchUsers(currentPage, itemsPerPage, debouncedFilters),
@@ -64,12 +65,34 @@ const UsersPage: React.FC = () => {
   const { 
     data: statsData, 
     isLoading: isLoadingStats,
-    refetch: refetchStats
+    refetch: refetchStats,
+    error: statsError
   } = useQuery({
     queryKey: ['user-stats'],
     queryFn: () => fetchUserStats(),
     staleTime: 300000, // Cache stats for 5 minutes
   });
+
+  // Error handling for API failures
+  useEffect(() => {
+    if (usersError) {
+      console.error('Error fetching users:', usersError);
+      toast({
+        title: "Failed to load users",
+        description: "There was an error loading the user data. Please try again later.",
+        variant: "destructive",
+      });
+    }
+    
+    if (statsError) {
+      console.error('Error fetching user stats:', statsError);
+      toast({
+        title: "Failed to load statistics",
+        description: "There was an error loading the user statistics. Please try again later.",
+        variant: "destructive",
+      });
+    }
+  }, [usersError, statsError]);
 
   // Calculate total pages
   const totalPages = useMemo(() => {
