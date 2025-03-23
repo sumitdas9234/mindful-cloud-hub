@@ -17,7 +17,8 @@ import {
   GitBranch,
   Globe,
   Network,
-  Activity
+  Activity,
+  Layers
 } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
@@ -209,6 +210,13 @@ export const Sidebar = () => {
             path="/testbeds"
             collapsed={collapsed}
             active={location.pathname === '/testbeds'}
+          />
+          <SidebarItem 
+            icon={Layers} 
+            label="Templates" 
+            path="/templates"
+            collapsed={collapsed}
+            active={location.pathname === '/templates'}
           />
           <SidebarItem 
             icon={Network} 

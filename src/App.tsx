@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -18,6 +19,7 @@ import Subnets from "./pages/infrastructure/Subnets";
 import RoutesPage from "./pages/infrastructure/Routes";
 import ClustersPage from "./pages/infrastructure/Clusters";
 import StorageManagement from "./pages/infrastructure/StorageManagement";
+import Templates from "./pages/infrastructure/Templates";
 import Alerts from "./pages/observability/Alerts";
 import UsersPage from "./pages/administration/Users";
 
@@ -101,6 +103,14 @@ const App = () => (
             element={
               <Layout title="Testbed Management">
                 <Testbeds />
+              </Layout>
+            } 
+          />
+          <Route 
+            path="/templates" 
+            element={
+              <Layout title="VM Templates">
+                <Templates />
               </Layout>
             } 
           />
