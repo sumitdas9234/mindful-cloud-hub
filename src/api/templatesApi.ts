@@ -1,9 +1,18 @@
 
 import axios from 'axios';
-import { TemplateOS, TemplateStats, TemplateFilters } from './types/templates';
+import { TemplateOS, TemplateStats, TemplateFilters, VCenterAvailability } from './types/templates';
 import env from '@/config/env';
 
 const BASE_API_URL = env.API_BASE_URL;
+
+// Mock vCenter data
+const MOCK_VCENTERS: VCenterAvailability[] = [
+  { id: 'vc-1', name: 'vcenter-east-01', isAvailable: true },
+  { id: 'vc-2', name: 'vcenter-west-01', isAvailable: true },
+  { id: 'vc-3', name: 'vcenter-central-01', isAvailable: false },
+  { id: 'vc-4', name: 'vcenter-dev-01', isAvailable: true },
+  { id: 'vc-5', name: 'vcenter-test-01', isAvailable: false }
+];
 
 // Mock data for templates
 const MOCK_TEMPLATES: TemplateOS[] = [
@@ -14,6 +23,13 @@ const MOCK_TEMPLATES: TemplateOS[] = [
     logoUrl: '/placeholder.svg',
     category: 'linux',
     isPopular: true,
+    vCenterAvailability: [
+      { id: 'vc-1', name: 'vcenter-east-01', isAvailable: true },
+      { id: 'vc-2', name: 'vcenter-west-01', isAvailable: true },
+      { id: 'vc-3', name: 'vcenter-central-01', isAvailable: true },
+      { id: 'vc-4', name: 'vcenter-dev-01', isAvailable: true },
+      { id: 'vc-5', name: 'vcenter-test-01', isAvailable: true }
+    ],
     versions: [
       {
         version: '22.04 LTS',
@@ -48,6 +64,13 @@ const MOCK_TEMPLATES: TemplateOS[] = [
     logoUrl: '/placeholder.svg',
     category: 'linux',
     isPopular: true,
+    vCenterAvailability: [
+      { id: 'vc-1', name: 'vcenter-east-01', isAvailable: true },
+      { id: 'vc-2', name: 'vcenter-west-01', isAvailable: true },
+      { id: 'vc-3', name: 'vcenter-central-01', isAvailable: false },
+      { id: 'vc-4', name: 'vcenter-dev-01', isAvailable: true },
+      { id: 'vc-5', name: 'vcenter-test-01', isAvailable: true }
+    ],
     versions: [
       {
         version: '8.9',
@@ -74,6 +97,13 @@ const MOCK_TEMPLATES: TemplateOS[] = [
     description: 'Community enterprise operating system designed to be 100% bug-for-bug compatible with RHEL.',
     logoUrl: '/placeholder.svg',
     category: 'linux',
+    vCenterAvailability: [
+      { id: 'vc-1', name: 'vcenter-east-01', isAvailable: true },
+      { id: 'vc-2', name: 'vcenter-west-01', isAvailable: false },
+      { id: 'vc-3', name: 'vcenter-central-01', isAvailable: false },
+      { id: 'vc-4', name: 'vcenter-dev-01', isAvailable: true },
+      { id: 'vc-5', name: 'vcenter-test-01', isAvailable: false }
+    ],
     versions: [
       {
         version: '8.9',
@@ -325,4 +355,18 @@ export const fetchTemplateById = async (id: string): Promise<TemplateOS | null> 
 export const fetchTemplatesForVCenter = async (vCenterId: string, filters?: TemplateFilters): Promise<TemplateOS[]> => {
   // For the mock implementation, we're assuming all templates are available on all vCenters
   return fetchTemplates(filters);
+};
+
+// New function to fetch vCenter availability for a template
+export const fetchVCenterAvailabilityForTemplate = async (templateId: string): Promise<VCenterAvailability[]> => {
+  try {
+    // Simulate API delay
+    await new Promise(resolve => setTimeout(resolve, 400));
+    
+    const template = MOCK_TEMPLATES.find(t => t.id === templateId);
+    return template?.vCenterAvailability || [];
+  } catch (error) {
+    console.error(`Error fetching vCenter availability for template ${templateId}:`, error);
+    return [];
+  }
 };

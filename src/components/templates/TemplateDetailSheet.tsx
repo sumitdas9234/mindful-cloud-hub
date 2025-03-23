@@ -1,16 +1,17 @@
 
 import React from 'react';
-import { TemplateOS, Kernel } from '@/api/types/templates';
+import { TemplateOS, Kernel, VCenterAvailability } from '@/api/types/templates';
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { CheckCircle, Download, Server, Tag } from 'lucide-react';
+import { CheckCircle, Download, Server, Tag, Check, X } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { toast } from '@/hooks/use-toast';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
 interface TemplateDetailSheetProps {
   template: TemplateOS | null;
@@ -69,9 +70,10 @@ export const TemplateDetailSheet: React.FC<TemplateDetailSheetProps> = ({
             </div>
             
             <Tabs defaultValue="versions">
-              <TabsList className="grid w-full grid-cols-2">
+              <TabsList className="grid w-full grid-cols-3">
                 <TabsTrigger value="versions">Versions</TabsTrigger>
                 <TabsTrigger value="availability">Availability</TabsTrigger>
+                <TabsTrigger value="vcenters">vCenters</TabsTrigger>
               </TabsList>
               
               <TabsContent value="versions" className="pt-4 space-y-6">
@@ -82,7 +84,7 @@ export const TemplateDetailSheet: React.FC<TemplateDetailSheetProps> = ({
                         <div className="flex items-center gap-2">
                           <span>{version.version}</span>
                           {version.isLatest && (
-                            <Badge variant="outline" className="bg-blue-100 dark:bg-blue-900/20 text-blue-800 dark:text-blue-400 border-blue-200 dark:border-blue-800">
+                            <Badge variant="outline" className="bg-blue-100 dark:bg-blue-900/20 text-blue-800 dark:text-blue-400 border-blue-200 dark:border-blue-800 text-xs">
                               Latest
                             </Badge>
                           )}
@@ -150,6 +152,53 @@ export const TemplateDetailSheet: React.FC<TemplateDetailSheetProps> = ({
                         <span className="text-sm">Standard resource requirements</span>
                       </div>
                     </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+              
+              <TabsContent value="vcenters" className="pt-4">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-base">vCenter Status</CardTitle>
+                    <CardDescription>
+                      Check which vCenters have this template available
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    {template.vCenterAvailability ? (
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>vCenter Name</TableHead>
+                            <TableHead className="text-right">Status</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {template.vCenterAvailability.map((vcenter) => (
+                            <TableRow key={vcenter.id}>
+                              <TableCell className="font-medium">{vcenter.name}</TableCell>
+                              <TableCell className="text-right">
+                                {vcenter.isAvailable ? (
+                                  <div className="flex items-center justify-end gap-1 text-green-600">
+                                    <Check className="h-4 w-4" />
+                                    <span>Available</span>
+                                  </div>
+                                ) : (
+                                  <div className="flex items-center justify-end gap-1 text-red-600">
+                                    <X className="h-4 w-4" />
+                                    <span>Missing</span>
+                                  </div>
+                                )}
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    ) : (
+                      <div className="text-center py-4 text-muted-foreground">
+                        No vCenter availability information available
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
               </TabsContent>

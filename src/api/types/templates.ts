@@ -15,6 +15,12 @@ export interface TemplateVersion {
   isRecommended?: boolean;
 }
 
+export interface VCenterAvailability {
+  id: string;
+  name: string;
+  isAvailable: boolean;
+}
+
 export interface TemplateOS {
   id: string;
   name: string;
@@ -23,6 +29,7 @@ export interface TemplateOS {
   versions: TemplateVersion[];
   category: 'linux' | 'windows' | 'other';
   isPopular?: boolean;
+  vCenterAvailability?: VCenterAvailability[];
 }
 
 export interface TemplateStats {
