@@ -13,7 +13,6 @@ interface TemplateCardProps {
 
 export const TemplateCard: React.FC<TemplateCardProps> = ({ template, onClick }) => {
   const latestVersion = template.versions.find(v => v.isLatest) || template.versions[0];
-  const recommendedVersion = template.versions.find(v => v.isRecommended);
   
   const getVCenterAvailabilityStatus = () => {
     if (!template.vCenterAvailability || template.vCenterAvailability.length === 0) {
@@ -38,6 +37,27 @@ export const TemplateCard: React.FC<TemplateCardProps> = ({ template, onClick })
   
   const vcStatus = getVCenterAvailabilityStatus();
   const VCIcon = vcStatus.icon;
+
+  // Function to determine which font-logos icon to use based on template name
+  const getDistroIcon = (templateName: string) => {
+    const name = templateName.toLowerCase();
+    
+    if (name.includes('ubuntu')) return 'fl-ubuntu';
+    if (name.includes('debian')) return 'fl-debian';
+    if (name.includes('fedora')) return 'fl-fedora';
+    if (name.includes('centos')) return 'fl-centos';
+    if (name.includes('arch')) return 'fl-archlinux';
+    if (name.includes('alpine')) return 'fl-alpine';
+    if (name.includes('redhat') || name.includes('rhel')) return 'fl-redhat';
+    if (name.includes('suse') || name.includes('sles')) return 'fl-opensuse';
+    if (name.includes('rocky')) return 'fl-rocky-linux';
+    if (name.includes('gentoo')) return 'fl-gentoo';
+    if (name.includes('flatcar')) return 'fl-tux';
+    if (name.includes('photon')) return 'fl-vmware';
+    
+    // Default icon if no match
+    return 'fl-tux';
+  };
   
   return (
     <Card 
@@ -51,9 +71,7 @@ export const TemplateCard: React.FC<TemplateCardProps> = ({ template, onClick })
               {template.logoUrl ? (
                 <img src={template.logoUrl} alt={template.name} className="h-6 w-6 object-contain" />
               ) : (
-                <div className="h-6 w-6 bg-primary/10 flex items-center justify-center rounded">
-                  <span className="text-xs font-medium text-primary">{template.name.substring(0, 2)}</span>
-                </div>
+                <span className={`${getDistroIcon(template.name)} text-lg`}></span>
               )}
             </div>
             <CardTitle className="text-base">{template.name}</CardTitle>
@@ -69,18 +87,6 @@ export const TemplateCard: React.FC<TemplateCardProps> = ({ template, onClick })
         <p className="text-sm text-muted-foreground line-clamp-2">{template.description}</p>
         
         <div className="mt-4 space-y-2">
-          <div className="flex items-center justify-between">
-            <span className="text-xs text-muted-foreground">Latest version:</span>
-            <span className="text-xs font-medium">{latestVersion?.version || 'N/A'}</span>
-          </div>
-          
-          {recommendedVersion && (
-            <div className="flex items-center justify-between">
-              <span className="text-xs text-muted-foreground">Recommended:</span>
-              <span className="text-xs font-medium">{recommendedVersion.version}</span>
-            </div>
-          )}
-          
           <div className="flex items-center justify-between">
             <span className="text-xs text-muted-foreground">Kernel versions:</span>
             <span className="text-xs font-medium">{latestVersion?.kernels.length || 0}</span>
