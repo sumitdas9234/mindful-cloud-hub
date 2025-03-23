@@ -175,7 +175,7 @@ const KernelCard: React.FC<KernelCardProps> = ({ kernel, version, onDeploy }) =>
           <div className="flex items-center gap-2">
             <span className="font-medium">{kernel.version}</span>
             {kernel.isLatest && (
-              <Badge variant="outline" size="sm" className="bg-blue-100 dark:bg-blue-900/20 text-blue-800 dark:text-blue-400 border-blue-200 dark:border-blue-800 text-xs">
+              <Badge variant="outline" className="bg-blue-100 dark:bg-blue-900/20 text-blue-800 dark:text-blue-400 border-blue-200 dark:border-blue-800 text-xs">
                 Latest
               </Badge>
             )}
