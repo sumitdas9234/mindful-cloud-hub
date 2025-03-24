@@ -142,7 +142,7 @@ export const SubnetDetailSheet: React.FC<SubnetDetailSheetProps> = ({
             <Button variant="outline" size="sm" onClick={handleExportSubnet}>
               Export
             </Button>
-            <Button variant="outline" size="sm" variant="destructive" onClick={handleDeleteSubnet}>
+            <Button variant="destructive" size="sm" onClick={handleDeleteSubnet}>
               Delete
             </Button>
           </div>
