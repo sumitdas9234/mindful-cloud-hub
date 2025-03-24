@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { 
   Select, 
@@ -73,10 +74,15 @@ export const SelectionControls: React.FC<SelectionControlsProps> = ({
   }, [vCenters, selectedVCenter, onVCenterChange]);
 
   useEffect(() => {
+    // Log for debugging
+    console.log("Clusters data:", clusters);
+    
     if (clusters.length > 0 && !selectedCluster) {
+      console.log("Setting selected cluster to:", clusters[0].id);
       setSelectedCluster(clusters[0].id);
       onClusterChange(clusters[0].id);
     } else if (selectedVCenter && clusters.length === 0) {
+      console.log("No clusters available for vCenter, resetting selection");
       setSelectedCluster('');
       onClusterChange('');
     }
@@ -89,6 +95,7 @@ export const SelectionControls: React.FC<SelectionControlsProps> = ({
   };
 
   const handleClusterChange = (value: string) => {
+    console.log("Cluster selected:", value);
     setSelectedCluster(value);
     onClusterChange(value);
   };

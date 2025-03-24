@@ -1,8 +1,7 @@
-
 import axios from 'axios';
-import { ResourceUsageData, StatsData, SystemLoadData, VCenterClusterData, CountResponse, VCenterData, ClusterData, InfraTagData, ServerData } from './types';
+import { ResourceUsageData, StatsData, SystemLoadData, VCenterClusterData, CountResponse, VCenterData, ClusterData, InfraTagData } from './types';
 import env from '@/config/env';
-import { fetchClusters as fetchAllClusters } from './clustersApi';
+import { fetchClusters as fetchAllClustersFromApi } from './clustersApi';
 
 // Base API URL from environment config
 const BASE_API_URL = env.API_BASE_URL;
@@ -34,7 +33,7 @@ interface TimeseriesResponse {
 export const fetchVCentersAndClusters = async (): Promise<VCenterClusterData> => {
   try {
     // Fetch all clusters using the existing clustersApi
-    const clusters = await fetchAllClusters();
+    const clusters = await fetchAllClustersFromApi();
     
     // Create a map of vCenters to clusters
     const vcMap: VCenterClusterData = {};
@@ -126,22 +125,20 @@ export const fetchVCenters = async (): Promise<{ id: string; name: string }[]> =
 };
 
 // Modified function to fetch clusters for a specific vCenter
-export const fetchClustersForVCenter = async (vCenterId: string, tagIds?: string[]): Promise<{ id: string; name: string; vCenterId: string; tags?: string[] }[]> => {
+export const fetchClustersForVCenter = async (vCenterId: string, tagIds?: string[]): Promise<{ id: string; name: string }[]> => {
   try {
     // Fetch all clusters using the existing clustersApi
-    const allClusters = await fetchAllClusters();
+    const allClusters = await fetchAllClustersFromApi();
     
     // Filter clusters by vCenter
     const filteredClusters = allClusters.filter(cluster => cluster.vc === vCenterId);
     
     return filteredClusters.map(cluster => ({
       id: cluster.id,
-      name: cluster.id, // Using ID as name
-      vCenterId: cluster.vc,
-      tags: cluster.tags
+      name: cluster.id // Using ID as name
     }));
   } catch (error) {
-    console.error("Error fetching clusters:", error);
+    console.error("Error fetching clusters for vCenter:", error);
     return [];
   }
 };
@@ -324,7 +321,7 @@ export const fetchServers = async (params: {
   clusterId?: string, 
   tagIds?: string[],
   category?: string 
-}): Promise<ServerData[]> => {
+}): Promise<any[]> => {
   if (!params.clusterId) {
     return [];
   }
