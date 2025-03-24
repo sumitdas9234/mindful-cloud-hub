@@ -95,7 +95,7 @@ export function DataTable<T>({
                   {column.header}
                 </TableHead>
               ))}
-              {actionColumn && <TableHead className="w-[50px]"></TableHead>}
+              {actionColumn && <TableHead key="action-header" className="w-[50px]"></TableHead>}
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -117,7 +117,7 @@ export function DataTable<T>({
                   </TableCell>
                 ))}
                 {actionColumn && (
-                  <TableCell className="py-3" onClick={(e) => e.stopPropagation()}>
+                  <TableCell key={`${keyExtractor(item)}-actions`} className="py-3" onClick={(e) => e.stopPropagation()}>
                     {actionColumn(item)}
                   </TableCell>
                 )}
