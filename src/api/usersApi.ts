@@ -23,7 +23,7 @@ export const fetchUsers = async (
 ): Promise<UserListResponse> => {
   try {
     // Fetch all users from the API
-    const response = await axios.get(env.USERS_API_URL);
+    const response = await apiClient.get(USERS_ENDPOINT);
     let users = response.data as User[];
     
     // Ensure all users have the required fields
@@ -120,7 +120,7 @@ export const fetchUsers = async (
 
 export const fetchUserStats = async (): Promise<UserStats> => {
   try {
-    const response = await axios.get(env.USERS_API_URL);
+    const response = await apiClient.get(USERS_ENDPOINT);
     const users = response.data as User[];
     
     // Default values in case the array is empty
@@ -176,7 +176,7 @@ export const fetchUserStats = async (): Promise<UserStats> => {
 
 export const fetchUserById = async (id: string): Promise<User> => {
   try {
-    const response = await axios.get(env.USERS_API_URL);
+    const response = await apiClient.get(USERS_ENDPOINT);
     const users = response.data as User[];
     const user = users.find(user => user._id === id);
     
@@ -192,35 +192,50 @@ export const fetchUserById = async (id: string): Promise<User> => {
 };
 
 export const createUser = async (userData: Omit<User, '_id'>): Promise<User> => {
-  // In a real API, we would post to the endpoint
-  // For now, we'll just return a mock response since the API is read-only
-  console.log('Creating user:', userData);
-  return {
-    _id: `user-${Date.now()}`,
-    ...userData,
-  };
+  try {
+    // In a real API, we would post to the endpoint
+    console.log('Creating user:', userData);
+    const response = await apiClient.post(USERS_ENDPOINT, userData);
+    return response.data;
+  } catch (error) {
+    console.error("Error creating user:", error);
+    // For development, return a mock response
+    return {
+      _id: `user-${Date.now()}`,
+      ...userData,
+    };
+  }
 };
 
 export const updateUser = async (id: string, userData: Partial<User>): Promise<User> => {
-  // In a real API, we would put to the endpoint
-  // For now, we'll fetch the user and return a mock updated version
   try {
-    const user = await fetchUserById(id);
+    // In a real API, we would put to the endpoint
     console.log('Updating user:', id, userData);
-    
-    // Return a merged version
-    return {
-      ...user,
-      ...userData
-    };
+    const response = await apiClient.put(`${USERS_ENDPOINT}/${id}`, userData);
+    return response.data;
   } catch (error) {
     console.error("Error updating user:", error);
-    throw error;
+    // For development, fetch and return a mock updated version
+    try {
+      const user = await fetchUserById(id);
+      return {
+        ...user,
+        ...userData
+      };
+    } catch (innerError) {
+      console.error("Error fetching user for mock update:", innerError);
+      throw error;
+    }
   }
 };
 
 export const deleteUser = async (id: string): Promise<void> => {
-  // In a real API, we would delete from the endpoint
-  // For now, we'll just log the action
-  console.log('Deleting user:', id);
+  try {
+    // In a real API, we would delete from the endpoint
+    console.log('Deleting user:', id);
+    await apiClient.delete(`${USERS_ENDPOINT}/${id}`);
+  } catch (error) {
+    console.error("Error deleting user:", error);
+    throw error;
+  }
 };
