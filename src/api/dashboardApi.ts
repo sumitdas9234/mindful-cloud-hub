@@ -125,17 +125,21 @@ export const fetchVCenters = async (): Promise<{ id: string; name: string }[]> =
 };
 
 // Modified function to fetch clusters for a specific vCenter
-export const fetchClustersForVCenter = async (vCenterId: string, tagIds?: string[]): Promise<{ id: string; name: string }[]> => {
+export const fetchClustersForVCenter = async (vCenterName: string, tagIds?: string[]): Promise<{ id: string; name: string }[]> => {
   try {
+    console.log("Fetching clusters for vCenter:", vCenterName);
+    
     // Fetch all clusters using the existing clustersApi
     const allClusters = await fetchAllClustersFromApi();
     
-    // Filter clusters by vCenter
-    const filteredClusters = allClusters.filter(cluster => cluster.vc === vCenterId);
+    // Filter clusters by vCenter name
+    const filteredClusters = allClusters.filter(cluster => cluster.vc === vCenterName);
+    
+    console.log("Filtered clusters:", filteredClusters);
     
     return filteredClusters.map(cluster => ({
       id: cluster.id,
-      name: cluster.id // Using ID as name
+      name: cluster.id // Using ID as name for display
     }));
   } catch (error) {
     console.error("Error fetching clusters for vCenter:", error);

@@ -49,6 +49,7 @@ export const SelectionControls: React.FC<SelectionControlsProps> = ({
     setSelectedTags(propSelectedTags);
   }, [propSelectedTags]);
 
+  // Fetch clusters based on the selected vCenter by name
   const { data: clusters = [], isLoading: isLoadingClusters } = useQuery({
     queryKey: ['clusters', selectedVCenter],
     queryFn: () => selectedVCenter ? fetchClustersForVCenter(selectedVCenter) : Promise.resolve([]),
