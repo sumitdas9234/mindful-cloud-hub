@@ -1,7 +1,8 @@
+
 import axios from 'axios';
-import { ResourceUsageData, StatsData, SystemLoadData, VCenterClusterData, CountResponse, VCenterData, ClusterData, InfraTagData } from './types';
+import { ResourceUsageData, StatsData, SystemLoadData, VCenterClusterData, CountResponse, VCenterData, ClusterData, InfraTagData, ServerData } from './types';
 import env from '@/config/env';
-import { fetchClusters } from './clustersApi';
+import { fetchClusters as fetchAllClusters } from './clustersApi';
 
 // Base API URL from environment config
 const BASE_API_URL = env.API_BASE_URL;
@@ -33,7 +34,7 @@ interface TimeseriesResponse {
 export const fetchVCentersAndClusters = async (): Promise<VCenterClusterData> => {
   try {
     // Fetch all clusters using the existing clustersApi
-    const clusters = await fetchClusters();
+    const clusters = await fetchAllClusters();
     
     // Create a map of vCenters to clusters
     const vcMap: VCenterClusterData = {};
@@ -125,10 +126,10 @@ export const fetchVCenters = async (): Promise<{ id: string; name: string }[]> =
 };
 
 // Modified function to fetch clusters for a specific vCenter
-export const fetchClusters = async (vCenterId: string, tagIds?: string[]): Promise<{ id: string; name: string; vCenterId: string; tags?: string[] }[]> => {
+export const fetchClustersForVCenter = async (vCenterId: string, tagIds?: string[]): Promise<{ id: string; name: string; vCenterId: string; tags?: string[] }[]> => {
   try {
     // Fetch all clusters using the existing clustersApi
-    const allClusters = await fetchClusters();
+    const allClusters = await fetchAllClusters();
     
     // Filter clusters by vCenter
     const filteredClusters = allClusters.filter(cluster => cluster.vc === vCenterId);

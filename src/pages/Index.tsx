@@ -5,6 +5,7 @@ import { DashboardHeader } from '@/components/dashboard/DashboardHeader';
 import { StatsSummary } from '@/components/dashboard/sections/StatsSummary';
 import { ResourceUsageChart } from '@/components/dashboard/sections/ResourceUsageChart';
 import { SystemLoad } from '@/components/dashboard/sections/SystemLoad';
+import { ManagedServices } from '@/components/dashboard/sections/ManagedServices';
 import { SelectionControls } from '@/components/dashboard/SelectionControls';
 import { StatCardSkeleton, ChartSkeleton, ResourceCardSkeleton } from '@/components/ui/skeleton';
 import { fetchStatsData, fetchResourceUsageData, fetchSystemLoad, fetchVCentersAndClusters } from '@/api/dashboardApi';
@@ -59,13 +60,8 @@ const Index = () => {
     if (vCentersAndClustersQuery.data && Object.keys(vCentersAndClustersQuery.data).length > 0 && !selectedVCenter) {
       const firstVCenter = Object.keys(vCentersAndClustersQuery.data)[0];
       setSelectedVCenter(firstVCenter);
-      
-      const clustersForVCenter = vCentersAndClustersQuery.data[firstVCenter];
-      if (clustersForVCenter && clustersForVCenter.length > 0) {
-        setSelectedCluster(clustersForVCenter[0]);
-      }
     }
-  }, [vCentersAndClustersQuery.data, selectedVCenter, selectedCluster]);
+  }, [vCentersAndClustersQuery.data, selectedVCenter]);
 
   useEffect(() => {
     // When selection changes, show loading state
@@ -78,14 +74,7 @@ const Index = () => {
     if (vCenterId !== selectedVCenter) {
       setIsSelectionChanging(true);
       setSelectedVCenter(vCenterId);
-      
-      // Reset cluster selection when vCenter changes
-      setSelectedCluster('');
-      
-      // Set first cluster for this vCenter if available
-      if (vCentersAndClustersQuery.data && vCentersAndClustersQuery.data[vCenterId] && vCentersAndClustersQuery.data[vCenterId].length > 0) {
-        setSelectedCluster(vCentersAndClustersQuery.data[vCenterId][0]);
-      }
+      setSelectedCluster(''); // Reset cluster when vCenter changes
     }
   };
 
@@ -178,6 +167,14 @@ const Index = () => {
           tagIds={selectedTags}
         />
       </div>
+      
+      {selectedCluster && (
+        <ManagedServices
+          vCenterId={selectedVCenter}
+          clusterId={selectedCluster}
+          tagIds={selectedTags}
+        />
+      )}
     </div>
   );
 };

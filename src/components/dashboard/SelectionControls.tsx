@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { 
   Select, 
@@ -8,7 +7,7 @@ import {
   SelectValue 
 } from "@/components/ui/select";
 import { useQuery } from '@tanstack/react-query';
-import { fetchInfraTags } from '@/api/dashboardApi';
+import { fetchInfraTags, fetchClustersForVCenter } from '@/api/dashboardApi';
 import { VCenterClusterData } from '@/api/types';
 
 interface SelectionControlsProps {
@@ -49,6 +48,12 @@ export const SelectionControls: React.FC<SelectionControlsProps> = ({
     setSelectedTags(propSelectedTags);
   }, [propSelectedTags]);
 
+  const { data: clusters = [], isLoading: isLoadingClusters } = useQuery({
+    queryKey: ['clusters', selectedVCenter],
+    queryFn: () => selectedVCenter ? fetchClustersForVCenter(selectedVCenter) : Promise.resolve([]),
+    enabled: !!selectedVCenter
+  });
+
   const { data: infraTags, isLoading: isLoadingTags } = useQuery({
     queryKey: ['infraTags'],
     queryFn: fetchInfraTags
@@ -59,14 +64,6 @@ export const SelectionControls: React.FC<SelectionControlsProps> = ({
     id: vc,
     name: vc
   }));
-
-  // Get clusters for the selected vCenter
-  const clusters = selectedVCenter && vCentersAndClusters[selectedVCenter] 
-    ? vCentersAndClusters[selectedVCenter].map(clusterId => ({
-        id: clusterId,
-        name: clusterId
-      }))
-    : [];
 
   useEffect(() => {
     if (vCenters.length > 0 && !selectedVCenter) {
@@ -140,7 +137,7 @@ export const SelectionControls: React.FC<SelectionControlsProps> = ({
           <Select 
             value={selectedCluster} 
             onValueChange={handleClusterChange}
-            disabled={isDisabled || !selectedVCenter || clusters.length === 0}
+            disabled={isDisabled || !selectedVCenter || isLoadingClusters}
           >
             <SelectTrigger className="w-full">
               <SelectValue placeholder="Select Cluster" />
