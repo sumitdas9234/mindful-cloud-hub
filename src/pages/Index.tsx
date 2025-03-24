@@ -7,7 +7,7 @@ import { ResourceUsageChart } from '@/components/dashboard/sections/ResourceUsag
 import { SystemLoad } from '@/components/dashboard/sections/SystemLoad';
 import { SelectionControls } from '@/components/dashboard/SelectionControls';
 import { StatCardSkeleton, ChartSkeleton, ResourceCardSkeleton } from '@/components/ui/skeleton';
-import { fetchStatsData, fetchResourceUsageData, fetchSystemLoad } from '@/api/dashboardApi';
+import { fetchStatsData, fetchResourceUsageData, fetchSystemLoad, fetchVCentersAndClusters } from '@/api/dashboardApi';
 import { Separator } from '@/components/ui/separator';
 
 const Index = () => {
@@ -16,25 +16,56 @@ const Index = () => {
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [isSelectionChanging, setIsSelectionChanging] = useState(false);
   
+  // Fetch vCenters and clusters to populate dropdowns
+  const vCentersAndClustersQuery = useQuery({
+    queryKey: ['vCentersAndClusters'],
+    queryFn: fetchVCentersAndClusters
+  });
+  
   // Fetch all data in parallel
   const statsQuery = useQuery({
     queryKey: ['dashboardStats', selectedVCenter, selectedCluster, selectedTags],
-    queryFn: () => fetchStatsData({ vCenterId: selectedVCenter, clusterId: selectedCluster, tagIds: selectedTags })
+    queryFn: () => fetchStatsData({ vCenterId: selectedVCenter, clusterId: selectedCluster, tagIds: selectedTags }),
+    enabled: !!selectedCluster || !!selectedVCenter
   });
   
   const resourceUsageQuery = useQuery({
     queryKey: ['resourceUsage', selectedVCenter, selectedCluster, selectedTags],
     queryFn: () => fetchResourceUsageData({ vCenterId: selectedVCenter, clusterId: selectedCluster, tagIds: selectedTags }),
+    enabled: !!selectedCluster || !!selectedVCenter
   });
   
   const systemLoadQuery = useQuery({
     queryKey: ['systemLoad', selectedVCenter, selectedCluster, selectedTags],
     queryFn: () => fetchSystemLoad({ vCenterId: selectedVCenter, clusterId: selectedCluster, tagIds: selectedTags }),
+    enabled: !!selectedCluster || !!selectedVCenter
   });
   
   // Check if all data is loaded
-  const isLoading = statsQuery.isLoading || resourceUsageQuery.isLoading || systemLoadQuery.isLoading;
-  const isFetching = statsQuery.isFetching || resourceUsageQuery.isFetching || systemLoadQuery.isFetching;
+  const isLoading = 
+    vCentersAndClustersQuery.isLoading || 
+    statsQuery.isLoading || 
+    resourceUsageQuery.isLoading || 
+    systemLoadQuery.isLoading;
+    
+  const isFetching = 
+    vCentersAndClustersQuery.isFetching || 
+    statsQuery.isFetching || 
+    resourceUsageQuery.isFetching || 
+    systemLoadQuery.isFetching;
+
+  // Set default vCenter and cluster if available and none selected
+  useEffect(() => {
+    if (vCentersAndClustersQuery.data && Object.keys(vCentersAndClustersQuery.data).length > 0 && !selectedVCenter) {
+      const firstVCenter = Object.keys(vCentersAndClustersQuery.data)[0];
+      setSelectedVCenter(firstVCenter);
+      
+      const clustersForVCenter = vCentersAndClustersQuery.data[firstVCenter];
+      if (clustersForVCenter && clustersForVCenter.length > 0) {
+        setSelectedCluster(clustersForVCenter[0]);
+      }
+    }
+  }, [vCentersAndClustersQuery.data, selectedVCenter, selectedCluster]);
 
   useEffect(() => {
     // When selection changes, show loading state
@@ -47,6 +78,14 @@ const Index = () => {
     if (vCenterId !== selectedVCenter) {
       setIsSelectionChanging(true);
       setSelectedVCenter(vCenterId);
+      
+      // Reset cluster selection when vCenter changes
+      setSelectedCluster('');
+      
+      // Set first cluster for this vCenter if available
+      if (vCentersAndClustersQuery.data && vCentersAndClustersQuery.data[vCenterId] && vCentersAndClustersQuery.data[vCenterId].length > 0) {
+        setSelectedCluster(vCentersAndClustersQuery.data[vCenterId][0]);
+      }
     }
   };
 
@@ -79,6 +118,7 @@ const Index = () => {
           selectedCluster={selectedCluster}
           selectedTags={selectedTags}
           disabled={isLoading} // Only disable during initial load
+          vCentersAndClusters={vCentersAndClustersQuery.data}
         />
         
         <Separator className="my-6" />
@@ -115,6 +155,7 @@ const Index = () => {
         selectedVCenter={selectedVCenter}
         selectedCluster={selectedCluster}
         selectedTags={selectedTags}
+        vCentersAndClusters={vCentersAndClustersQuery.data}
       />
       
       <Separator className="my-6" />

@@ -3,7 +3,7 @@ import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Server, Route, LayoutGrid, Monitor } from 'lucide-react';
 import { StatsCard } from '@/components/dashboard/StatsCard';
-import { fetchStatsData, fetchClusters } from '@/api/dashboardApi';
+import { fetchStatsData } from '@/api/dashboardApi';
 
 interface StatsSummaryProps {
   vCenterId?: string;
@@ -12,27 +12,20 @@ interface StatsSummaryProps {
 }
 
 export const StatsSummary: React.FC<StatsSummaryProps> = ({ vCenterId, clusterId, tagIds }) => {
-  // Get cluster name for debugging
-  const { data: clusters } = useQuery({
-    queryKey: ['clusters', vCenterId],
-    queryFn: () => vCenterId ? fetchClusters(vCenterId) : Promise.resolve([]),
-    enabled: !!vCenterId,
-  });
-
-  const clusterName = clusterId && clusters ? 
-    clusters.find(c => c.id === clusterId)?.name : undefined;
-
   // Log the current selection for debugging
   React.useEffect(() => {
-    if (clusterId && clusterName) {
-      console.log(`Loading stats for cluster: ${clusterName} (${clusterId})`);
+    if (clusterId) {
+      console.log(`Loading stats for cluster: ${clusterId}`);
     }
-  }, [clusterId, clusterName]);
+    if (vCenterId) {
+      console.log(`Loading stats for vCenter: ${vCenterId}`);
+    }
+  }, [clusterId, vCenterId]);
 
   const { data: stats, isLoading } = useQuery({
     queryKey: ['dashboardStats', vCenterId, clusterId, tagIds],
     queryFn: () => fetchStatsData({ vCenterId, clusterId, tagIds }),
-    enabled: !!clusterId,
+    enabled: !!(clusterId || vCenterId),
   });
 
   const iconMap = {

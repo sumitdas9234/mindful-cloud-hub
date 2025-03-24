@@ -3,7 +3,7 @@ import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Monitor, Cpu, HardDrive, Users } from 'lucide-react';
 import { ResourceCard } from '@/components/dashboard/ResourceCard';
-import { fetchSystemLoad, fetchClusters } from '@/api/dashboardApi';
+import { fetchSystemLoad } from '@/api/dashboardApi';
 
 interface SystemLoadProps {
   vCenterId?: string;
@@ -12,28 +12,11 @@ interface SystemLoadProps {
 }
 
 export const SystemLoad: React.FC<SystemLoadProps> = ({ vCenterId, clusterId, tagIds }) => {
-  // Get cluster name for debugging
-  const { data: clusters } = useQuery({
-    queryKey: ['clusters', vCenterId],
-    queryFn: () => vCenterId ? fetchClusters(vCenterId) : Promise.resolve([]),
-    enabled: !!vCenterId,
-  });
-
-  const clusterName = clusterId && clusters ? 
-    clusters.find(c => c.id === clusterId)?.name : undefined;
-
-  // Log the current selection for debugging
-  React.useEffect(() => {
-    if (clusterId && clusterName) {
-      console.log(`Loading system data for cluster: ${clusterName} (${clusterId})`);
-    }
-  }, [clusterId, clusterName]);
-
   const { data, isLoading } = useQuery({
     queryKey: ['systemLoad', vCenterId, clusterId, tagIds],
     queryFn: () => fetchSystemLoad({ vCenterId, clusterId, tagIds }),
     refetchInterval: 30000, // Refetch every 30 seconds
-    enabled: !!clusterId,
+    enabled: !!(clusterId || vCenterId),
   });
 
   return (

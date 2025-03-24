@@ -8,7 +8,8 @@ import {
   SelectValue 
 } from "@/components/ui/select";
 import { useQuery } from '@tanstack/react-query';
-import { fetchVCenters, fetchClusters, fetchInfraTags } from '@/api/dashboardApi';
+import { fetchInfraTags } from '@/api/dashboardApi';
+import { VCenterClusterData } from '@/api/types';
 
 interface SelectionControlsProps {
   onVCenterChange: (vCenterId: string) => void;
@@ -18,6 +19,7 @@ interface SelectionControlsProps {
   selectedCluster?: string;
   selectedTags?: string[];
   disabled?: boolean;
+  vCentersAndClusters?: VCenterClusterData;
 }
 
 export const SelectionControls: React.FC<SelectionControlsProps> = ({
@@ -27,7 +29,8 @@ export const SelectionControls: React.FC<SelectionControlsProps> = ({
   selectedVCenter: propSelectedVCenter = '',
   selectedCluster: propSelectedCluster = '',
   selectedTags: propSelectedTags = [],
-  disabled = false
+  disabled = false,
+  vCentersAndClusters = {}
 }) => {
   const [selectedVCenter, setSelectedVCenter] = useState<string>(propSelectedVCenter);
   const [selectedCluster, setSelectedCluster] = useState<string>(propSelectedCluster);
@@ -46,34 +49,37 @@ export const SelectionControls: React.FC<SelectionControlsProps> = ({
     setSelectedTags(propSelectedTags);
   }, [propSelectedTags]);
 
-  const { data: vCenters, isLoading: isLoadingVCenters } = useQuery({
-    queryKey: ['vCenters'],
-    queryFn: fetchVCenters
-  });
-
-  const { data: clusters, isLoading: isLoadingClusters } = useQuery({
-    queryKey: ['clusters', selectedVCenter, selectedTags],
-    queryFn: () => fetchClusters(selectedVCenter, selectedTags),
-    enabled: !!selectedVCenter,
-  });
-
   const { data: infraTags, isLoading: isLoadingTags } = useQuery({
     queryKey: ['infraTags'],
     queryFn: fetchInfraTags
   });
 
+  // Create vCenters list from the data
+  const vCenters = Object.keys(vCentersAndClusters).map(vc => ({
+    id: vc,
+    name: vc
+  }));
+
+  // Get clusters for the selected vCenter
+  const clusters = selectedVCenter && vCentersAndClusters[selectedVCenter] 
+    ? vCentersAndClusters[selectedVCenter].map(clusterId => ({
+        id: clusterId,
+        name: clusterId
+      }))
+    : [];
+
   useEffect(() => {
-    if (vCenters && vCenters.length > 0 && !selectedVCenter) {
+    if (vCenters.length > 0 && !selectedVCenter) {
       setSelectedVCenter(vCenters[0].id);
       onVCenterChange(vCenters[0].id);
     }
   }, [vCenters, selectedVCenter, onVCenterChange]);
 
   useEffect(() => {
-    if (clusters && clusters.length > 0 && !selectedCluster) {
+    if (clusters.length > 0 && !selectedCluster) {
       setSelectedCluster(clusters[0].id);
       onClusterChange(clusters[0].id);
-    } else if (selectedVCenter && (!clusters || clusters.length === 0)) {
+    } else if (selectedVCenter && clusters.length === 0) {
       setSelectedCluster('');
       onClusterChange('');
     }
@@ -105,7 +111,7 @@ export const SelectionControls: React.FC<SelectionControlsProps> = ({
     onTagsChange(newTags);
   };
 
-  const isDisabled = disabled || isLoadingVCenters || isLoadingTags;
+  const isDisabled = disabled || Object.keys(vCentersAndClusters).length === 0 || isLoadingTags;
 
   return (
     <div className="flex flex-wrap justify-between mb-6 gap-4">
@@ -121,7 +127,7 @@ export const SelectionControls: React.FC<SelectionControlsProps> = ({
               <SelectValue placeholder="Select vCenter" />
             </SelectTrigger>
             <SelectContent>
-              {vCenters?.map((vCenter) => (
+              {vCenters.map((vCenter) => (
                 <SelectItem key={vCenter.id} value={vCenter.id}>
                   {vCenter.name}
                 </SelectItem>
@@ -134,13 +140,13 @@ export const SelectionControls: React.FC<SelectionControlsProps> = ({
           <Select 
             value={selectedCluster} 
             onValueChange={handleClusterChange}
-            disabled={isDisabled || isLoadingClusters || !selectedVCenter}
+            disabled={isDisabled || !selectedVCenter || clusters.length === 0}
           >
             <SelectTrigger className="w-full">
               <SelectValue placeholder="Select Cluster" />
             </SelectTrigger>
             <SelectContent>
-              {clusters?.map((cluster) => (
+              {clusters.map((cluster) => (
                 <SelectItem key={cluster.id} value={cluster.id}>
                   {cluster.name}
                 </SelectItem>

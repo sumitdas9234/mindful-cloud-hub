@@ -1,6 +1,7 @@
 import axios from 'axios';
-import { ServerData, ResourceUsageData, StatsData, SystemLoadData, VCenterClusterData, CountResponse, VCenterData, ClusterData, InfraTagData } from './types';
+import { ResourceUsageData, StatsData, SystemLoadData, VCenterClusterData, CountResponse, VCenterData, ClusterData, InfraTagData } from './types';
 import env from '@/config/env';
+import { fetchClusters } from './clustersApi';
 
 // Base API URL from environment config
 const BASE_API_URL = env.API_BASE_URL;
@@ -11,40 +12,101 @@ interface ResourceUsageResponse {
   values: [number, string][];
 }
 
-// Fetch vCenters and clusters from API
+// New interfaces for the updated API responses
+interface MetricsResponse {
+  esxiCount: number;
+  vmsCount: number;
+  routesCount: number;
+  testbedsCount: number;
+  cpuUsage: number;
+  memoryUsage: number;
+  storageUsage: number;
+}
+
+interface TimeseriesResponse {
+  cpuUsage: [number, number][];
+  memoryUsage: [number, number][];
+  storageUsage: [number, number][];
+}
+
+// Fetch vCenters and clusters from API using clustersApi
 export const fetchVCentersAndClusters = async (): Promise<VCenterClusterData> => {
   try {
-    const response = await axios.get(`${BASE_API_URL}/overview`);
-    return response.data;
+    // Fetch all clusters using the existing clustersApi
+    const clusters = await fetchClusters();
+    
+    // Create a map of vCenters to clusters
+    const vcMap: VCenterClusterData = {};
+    
+    clusters.forEach(cluster => {
+      if (cluster.vc) {
+        if (!vcMap[cluster.vc]) {
+          vcMap[cluster.vc] = [];
+        }
+        vcMap[cluster.vc].push(cluster.id);
+      }
+    });
+    
+    return vcMap;
   } catch (error) {
     console.error("Error fetching vCenters and clusters:", error);
     return {};
   }
 };
 
-// Fetch count data from API with cluster-specific endpoint
-export const fetchCountData = async (metric: string, clusterName?: string): Promise<number> => {
+// Function to fetch metrics data from the new endpoint
+export const fetchMetricsData = async (params: { vCenterId?: string, clusterId?: string }): Promise<MetricsResponse> => {
   try {
-    if (!clusterName) {
-      console.error(`No cluster name provided for ${metric} count`);
-      return 0;
+    let url = `${BASE_API_URL}/overview/metrics`;
+    let queryParams = new URLSearchParams();
+    
+    if (params.clusterId) {
+      queryParams.append('cluster', params.clusterId);
     }
     
-    // Build the endpoint based on the metric
-    const endpoint = `${BASE_API_URL}/cluster/${clusterName}/${metric}`;
-    
-    console.log(`Fetching ${metric} from endpoint: ${endpoint}`);
-    
-    try {
-      const response = await axios.get<CountResponse>(endpoint);
-      return response.data.count;
-    } catch (apiError) {
-      console.error(`Error fetching ${metric} from API:`, apiError);
-      return 0;
+    if (params.vCenterId) {
+      queryParams.append('vcenter', params.vCenterId);
     }
+    
+    const response = await axios.get(`${url}?${queryParams.toString()}`);
+    return response.data;
   } catch (error) {
-    console.error(`Error fetching ${metric} count:`, error);
-    return 0;
+    console.error("Error fetching metrics data:", error);
+    return {
+      esxiCount: 0,
+      vmsCount: 0,
+      routesCount: 0,
+      testbedsCount: 0,
+      cpuUsage: 0,
+      memoryUsage: 0,
+      storageUsage: 0
+    };
+  }
+};
+
+// Function to fetch timeseries data from the new endpoint
+export const fetchTimeseriesData = async (params: { vCenterId?: string, clusterId?: string }): Promise<TimeseriesResponse> => {
+  try {
+    let url = `${BASE_API_URL}/overview/timeseries`;
+    let queryParams = new URLSearchParams();
+    
+    if (params.clusterId) {
+      queryParams.append('cluster', params.clusterId);
+    }
+    
+    if (params.vCenterId) {
+      queryParams.append('vcenter', params.vCenterId);
+    }
+    
+    const response = await axios.get(`${url}?${queryParams.toString()}`);
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching timeseries data:", error);
+    return {
+      cpuUsage: [],
+      memoryUsage: [],
+      storageUsage: []
+    };
   }
 };
 
@@ -65,14 +127,17 @@ export const fetchVCenters = async (): Promise<{ id: string; name: string }[]> =
 // Modified function to fetch clusters for a specific vCenter
 export const fetchClusters = async (vCenterId: string, tagIds?: string[]): Promise<{ id: string; name: string; vCenterId: string; tags?: string[] }[]> => {
   try {
-    const vcenterData = await fetchVCentersAndClusters();
-    const clusters = vcenterData[vCenterId] || [];
+    // Fetch all clusters using the existing clustersApi
+    const allClusters = await fetchClusters();
     
-    return clusters.map(cluster => ({
-      id: cluster,
-      name: cluster,
-      vCenterId,
-      tags: []
+    // Filter clusters by vCenter
+    const filteredClusters = allClusters.filter(cluster => cluster.vc === vCenterId);
+    
+    return filteredClusters.map(cluster => ({
+      id: cluster.id,
+      name: cluster.id, // Using ID as name
+      vCenterId: cluster.vc,
+      tags: cluster.tags
     }));
   } catch (error) {
     console.error("Error fetching clusters:", error);
@@ -91,122 +156,39 @@ export const fetchInfraTags = async (): Promise<{ id: string; name: string }[]> 
   }
 };
 
-// Fetch resource usage data for CPU, Memory, and Storage
-export const fetchResourceUsageData = async (params: { vCenterId?: string, clusterId?: string, tagIds?: string[] }): Promise<ResourceUsageData[]> => {
-  try {
-    if (!params.clusterId) {
-      return [];
-    }
-    
-    try {
-      // Fetch data from all resource endpoints
-      const [cpuResponse, memoryResponse, storageResponse] = await Promise.all([
-        axios.get<ResourceUsageResponse>(`${BASE_API_URL}/cluster/${params.clusterId}/cpu`),
-        axios.get<ResourceUsageResponse>(`${BASE_API_URL}/cluster/${params.clusterId}/memory`),
-        axios.get<ResourceUsageResponse>(`${BASE_API_URL}/cluster/${params.clusterId}/storage`)
-      ]);
-      
-      // Create a merged dataset with timestamps as keys
-      const timeMap = new Map<number, { name: string, cpu?: number, memory?: number, storage?: number }>();
-      
-      // Process CPU data
-      cpuResponse.data.values.forEach(([timestamp, value]) => {
-        const date = new Date(timestamp * 1000);
-        const formattedTime = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-        timeMap.set(timestamp, { 
-          name: formattedTime,
-          cpu: parseFloat(value)
-        });
-      });
-      
-      // Process memory data
-      memoryResponse.data.values.forEach(([timestamp, value]) => {
-        if (timeMap.has(timestamp)) {
-          const entry = timeMap.get(timestamp)!;
-          entry.memory = parseFloat(value);
-        } else {
-          const date = new Date(timestamp * 1000);
-          const formattedTime = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-          timeMap.set(timestamp, { 
-            name: formattedTime,
-            memory: parseFloat(value)
-          });
-        }
-      });
-      
-      // Process storage data
-      storageResponse.data.values.forEach(([timestamp, value]) => {
-        if (timeMap.has(timestamp)) {
-          const entry = timeMap.get(timestamp)!;
-          entry.storage = parseFloat(value);
-        } else {
-          const date = new Date(timestamp * 1000);
-          const formattedTime = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-          timeMap.set(timestamp, { 
-            name: formattedTime,
-            storage: parseFloat(value)
-          });
-        }
-      });
-      
-      // Convert map to sorted array
-      const result = Array.from(timeMap.entries())
-        .sort(([a], [b]) => a - b)
-        .map(([_, data]) => data as ResourceUsageData);
-      
-      return result;
-    } catch (apiError) {
-      console.error("Error fetching resource usage data from API:", apiError);
-      return [];
-    }
-  } catch (error) {
-    console.error("Error fetching resource usage data:", error);
-    return [];
-  }
-};
-
-// Updated function to fetch stats data using the cluster-specific API endpoints
+// Transform metrics data to stats data for the stats cards
 export const fetchStatsData = async (params: { vCenterId?: string, clusterId?: string, tagIds?: string[] }): Promise<StatsData[]> => {
   try {
-    // Get the actual cluster name if cluster ID is provided
-    let clusterName = params.clusterId;
-    if (!clusterName) {
-      return [];
-    }
-
-    // Fetch all count data in parallel for better performance
-    const [hostsCount, routesCount, testbedsCount, vmsCount] = await Promise.all([
-      fetchCountData('hosts', clusterName),
-      fetchCountData('routes', clusterName),
-      fetchCountData('testbeds', clusterName),
-      fetchCountData('vms', clusterName)
-    ]);
+    const metrics = await fetchMetricsData({
+      vCenterId: params.vCenterId,
+      clusterId: params.clusterId
+    });
     
     return [
       {
         title: "Total ESXI Hosts",
-        value: hostsCount.toString(),
+        value: metrics.esxiCount.toString(),
         description: "Active infrastructure",
         trend: "up",
         trendValue: "+2 from last month"
       },
       {
         title: "Total Routes",
-        value: routesCount.toString(),
+        value: metrics.routesCount.toString(),
         description: "Network routes",
         trend: "neutral",
         trendValue: "No change"
       },
       {
         title: "Total Testbeds",
-        value: testbedsCount.toString(),
+        value: metrics.testbedsCount.toString(),
         description: "Dev and test environments",
         trend: "up",
         trendValue: "+3 from last month"
       },
       {
         title: "Total VMs",
-        value: vmsCount.toString(),
+        value: metrics.vmsCount.toString(),
         description: "Virtual machines",
         trend: "up",
         trendValue: "+5 from last month"
@@ -218,52 +200,95 @@ export const fetchStatsData = async (params: { vCenterId?: string, clusterId?: s
   }
 };
 
-// Updated function to fetch system load with real-time resource usage data
+// Updated function to fetch resource usage data from the timeseries endpoint
+export const fetchResourceUsageData = async (params: { vCenterId?: string, clusterId?: string, tagIds?: string[] }): Promise<ResourceUsageData[]> => {
+  try {
+    const timeseries = await fetchTimeseriesData({
+      vCenterId: params.vCenterId,
+      clusterId: params.clusterId
+    });
+    
+    // Create a merged dataset with timestamps as keys
+    const timeMap = new Map<number, { name: string, cpu?: number, memory?: number, storage?: number }>();
+    
+    // Process CPU data
+    timeseries.cpuUsage.forEach(([timestamp, value]) => {
+      const date = new Date(timestamp * 1000);
+      const formattedTime = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      timeMap.set(timestamp, { 
+        name: formattedTime,
+        cpu: value
+      });
+    });
+    
+    // Process memory data
+    timeseries.memoryUsage.forEach(([timestamp, value]) => {
+      if (timeMap.has(timestamp)) {
+        const entry = timeMap.get(timestamp)!;
+        entry.memory = value;
+      } else {
+        const date = new Date(timestamp * 1000);
+        const formattedTime = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        timeMap.set(timestamp, { 
+          name: formattedTime,
+          memory: value
+        });
+      }
+    });
+    
+    // Process storage data
+    timeseries.storageUsage.forEach(([timestamp, value]) => {
+      if (timeMap.has(timestamp)) {
+        const entry = timeMap.get(timestamp)!;
+        entry.storage = value;
+      } else {
+        const date = new Date(timestamp * 1000);
+        const formattedTime = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        timeMap.set(timestamp, { 
+          name: formattedTime,
+          storage: value
+        });
+      }
+    });
+    
+    // Convert map to sorted array
+    const result = Array.from(timeMap.entries())
+      .sort(([a], [b]) => a - b)
+      .map(([_, data]) => data as ResourceUsageData);
+    
+    return result;
+  } catch (error) {
+    console.error("Error fetching resource usage data:", error);
+    return [];
+  }
+};
+
+// Updated function to fetch system load data from the metrics endpoint
 export const fetchSystemLoad = async (params: { vCenterId?: string, clusterId?: string, tagIds?: string[] }): Promise<SystemLoadData> => {
   try {
-    const clusterName = params.clusterId;
-    if (!clusterName) {
-      throw new Error("No cluster selected");
-    }
+    const metrics = await fetchMetricsData({
+      vCenterId: params.vCenterId,
+      clusterId: params.clusterId
+    });
     
-    try {
-      // Fetch current usage data from all resource endpoints
-      const [cpuResponse, memoryResponse, storageResponse] = await Promise.all([
-        axios.get<ResourceUsageResponse>(`${BASE_API_URL}/cluster/${clusterName}/cpu`),
-        axios.get<ResourceUsageResponse>(`${BASE_API_URL}/cluster/${clusterName}/memory`),
-        axios.get<ResourceUsageResponse>(`${BASE_API_URL}/cluster/${clusterName}/storage`)
-      ]);
-      
-      // Get session count from existing endpoint
-      const sessionCount = await fetchCountData('sessions', clusterName);
-      
-      // Extract current usage values
-      const cpuUsage = cpuResponse.data.usage;
-      const memoryUsage = memoryResponse.data.usage;
-      const storageUsage = storageResponse.data.usage;
-      
-      return {
-        cpu: cpuUsage,
-        memory: {
-          value: memoryUsage,
-          used: `${Math.round(memoryUsage * 0.5)} GB`,
-          total: "50 GB"
-        },
-        storage: {
-          value: storageUsage,
-          used: `${(storageUsage * 0.1).toFixed(1)} TB`,
-          total: "10 TB"
-        },
-        network: {
-          value: 58, // This is still a static value as we don't have a network usage API
-          used: sessionCount.toString(),
-          total: "1600 active"
-        }
-      };
-    } catch (apiError) {
-      console.error("Error fetching system data:", apiError);
-      throw apiError;
-    }
+    return {
+      cpu: metrics.cpuUsage,
+      memory: {
+        value: metrics.memoryUsage,
+        used: `${Math.round(metrics.memoryUsage * 0.5)} GB`,
+        total: "50 GB"
+      },
+      storage: {
+        value: metrics.storageUsage,
+        used: `${(metrics.storageUsage * 0.1).toFixed(1)} TB`,
+        total: "10 TB"
+      },
+      network: {
+        value: 58, // This is still a static value as we don't have a network usage API
+        used: metrics.routesCount.toString(),
+        total: "1600 active"
+      }
+    };
   } catch (error) {
     console.error("Error fetching system load:", error);
     return {
@@ -322,4 +347,3 @@ export const fetchServers = async (params: {
     return [];
   }
 };
-
