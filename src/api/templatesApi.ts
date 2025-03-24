@@ -20,7 +20,7 @@ const MOCK_TEMPLATES: TemplateOS[] = [
     id: 'ubuntu',
     name: 'Ubuntu',
     description: 'Ubuntu is a Linux distribution based on Debian.',
-    logoUrl: '/placeholder.svg',
+    icon: 'fl-ubuntu fl-fw',
     category: 'linux',
     isPopular: true,
     vCenterAvailability: [
@@ -61,7 +61,7 @@ const MOCK_TEMPLATES: TemplateOS[] = [
     id: 'rhel',
     name: 'Red Hat Enterprise Linux',
     description: 'Enterprise-grade Linux distribution provided by Red Hat.',
-    logoUrl: '/placeholder.svg',
+    icon: 'fl-redhat fl-fw',
     category: 'linux',
     isPopular: true,
     vCenterAvailability: [
@@ -95,7 +95,7 @@ const MOCK_TEMPLATES: TemplateOS[] = [
     id: 'rocky',
     name: 'Rocky Linux',
     description: 'Community enterprise operating system designed to be 100% bug-for-bug compatible with RHEL.',
-    logoUrl: '/placeholder.svg',
+    icon: 'fl-rocky-linux fl-fw',
     category: 'linux',
     vCenterAvailability: [
       { id: 'vc-1', name: 'vcenter-east-01', isAvailable: true },
@@ -127,7 +127,7 @@ const MOCK_TEMPLATES: TemplateOS[] = [
     id: 'sles',
     name: 'SUSE Linux Enterprise Server',
     description: 'Commercial Linux distribution provided by SUSE.',
-    logoUrl: '/placeholder.svg',
+    icon: 'fl-opensuse fl-fw',
     category: 'linux',
     versions: [
       {
@@ -152,7 +152,7 @@ const MOCK_TEMPLATES: TemplateOS[] = [
     id: 'sles-micro',
     name: 'SUSE Linux Enterprise Micro',
     description: 'Lightweight OS designed specifically for containerized and virtualized workloads.',
-    logoUrl: '/placeholder.svg',
+    icon: 'fl-opensuse fl-fw',
     category: 'linux',
     versions: [
       {
@@ -169,7 +169,7 @@ const MOCK_TEMPLATES: TemplateOS[] = [
     id: 'photon',
     name: 'VMware Photon OS',
     description: 'Linux container host optimized for VMware platforms.',
-    logoUrl: '/placeholder.svg',
+    icon: 'fl-tux fl-fw',
     category: 'linux',
     versions: [
       {
@@ -194,7 +194,7 @@ const MOCK_TEMPLATES: TemplateOS[] = [
     id: 'flatcar',
     name: 'Flatcar Container Linux',
     description: 'Immutable Linux distribution for containers.',
-    logoUrl: '/placeholder.svg',
+    icon: 'fl-tux fl-fw',
     category: 'linux',
     versions: [
       {
@@ -211,7 +211,7 @@ const MOCK_TEMPLATES: TemplateOS[] = [
     id: 'debian',
     name: 'Debian',
     description: 'Free and open-source Linux distribution.',
-    logoUrl: '/placeholder.svg',
+    icon: 'fl-debian fl-fw',
     category: 'linux',
     versions: [
       {
@@ -236,7 +236,7 @@ const MOCK_TEMPLATES: TemplateOS[] = [
     id: 'windows-server',
     name: 'Windows Server',
     description: 'Server operating system developed by Microsoft.',
-    logoUrl: '/placeholder.svg',
+    icon: '/placeholder.svg',
     category: 'windows',
     versions: [
       {

@@ -25,7 +25,7 @@ export interface TemplateOS {
   id: string;
   name: string;
   description?: string;
-  logoUrl?: string;
+  icon?: string;
   versions: TemplateVersion[];
   category: 'linux' | 'windows' | 'other';
   isPopular?: boolean;

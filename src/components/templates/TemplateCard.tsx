@@ -47,10 +47,10 @@ export const TemplateCard: React.FC<TemplateCardProps> = ({ template, onClick })
         <div className="flex justify-between items-start">
           <div className="flex items-center gap-2">
             <div className="h-8 w-8 rounded-md bg-muted flex items-center justify-center overflow-hidden">
-              {template.logoUrl ? (
-                <img src={template.logoUrl} alt={template.name} className="h-6 w-6 object-contain" />
+              {template.icon ? (
+                <i className={`${template.icon} h-6 w-6 object-contain`}></i>
               ) : (
-                <ServerIcon className="h-5 w-5 text-muted-foreground" />
+                <i className={`fl-tux fl-fw h-6 w-6 object-contain`}></i>
               )}
             </div>
             <CardTitle className="text-base">{template.name}</CardTitle>

@@ -1,7 +1,9 @@
 
+@import 'font-logos/assets/font-logos.css';
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
 
 @layer base {
   :root {
