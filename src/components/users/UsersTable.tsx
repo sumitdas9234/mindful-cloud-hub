@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { format, parseISO } from 'date-fns';
 import { DataTable, Column } from '@/components/compute/DataTable';
@@ -93,7 +94,7 @@ export const UsersTable: React.FC<UsersTableProps> = ({
       cell: (user) => (
         <div className="flex flex-wrap gap-1">
           {(user.roles || ['user']).map((role) => (
-            <UserRoleBadge key={role} role={role} size="sm" />
+            <UserRoleBadge key={`${user._id}-${role}`} role={role} size="sm" />
           ))}
         </div>
       ),
