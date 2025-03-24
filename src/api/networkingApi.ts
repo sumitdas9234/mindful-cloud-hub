@@ -18,8 +18,7 @@ const SUBNETS_ENDPOINT = '/subnets';
 // Transform API response to match our application's data structure
 const transformSubnetData = (data: SubnetApiResponse[]): TransformedSubnetData[] => {
   return data.map(subnet => ({
-    id: subnet._id.$oid,
-    rawId: subnet._id.$oid,
+    id: subnet.id,
     name: subnet.name,
     cidr: subnet.cidr,
     description: `${subnet.domain} - ${subnet.datacenter}`,

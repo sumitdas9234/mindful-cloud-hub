@@ -1,3 +1,4 @@
+
 export interface SubnetData {
   id: string;
   name: string;
@@ -33,26 +34,23 @@ export interface TransformedSubnetData extends SubnetData {
     reserved: number;
     orphaned: number;
   };
-  rawId?: string; // To store the $oid value
 }
 
 export interface SubnetApiResponse {
-  _id: {
-    $oid: string;
-  };
+  id: string;
+  name: string;
   cidr: string;
+  gateway: string;
   range: {
     starts: string;
     ends: string;
   };
-  gateway: string;
-  vc: string;
-  name: string;
   domain: string;
   cluster: string;
-  datastore: string;
-  datacenter: string;
   isActive: boolean;
+  datastore: string;
+  vc: string;
+  datacenter: string;
   netmask: string;
   metadata?: {
     total: number;
@@ -97,14 +95,12 @@ export type RouteFilter = {
 };
 
 export interface RouteApiResponse {
-  _id: {
-    $oid: string;
-  };
+  id: string;
+  name: string;
   subnet: string;
   status: 'available' | 'attached' | 'reserved' | 'orphaned';
   expiry: string | null;
   testbed: string | null;
-  name: string;
   // For static routes
   ip?: string;
   type?: string;

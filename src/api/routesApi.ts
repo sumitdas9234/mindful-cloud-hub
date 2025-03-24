@@ -18,21 +18,21 @@ const ROUTES_ENDPOINT = '/routes';
 // Transform routes from API response format to app format
 const transformRouteData = (data: RouteApiResponse[]): RouteData[] => {
   return data.map(route => ({
-    id: route._id.$oid,
+    id: route.id,
     name: route.name,
     subnetId: route.subnet,
     subnetName: route.subnet, // In a real app, you'd look up the human-readable name
     // Determine type based on presence of fields
-    type: route.type === 'anthos' ? 'static' : 'openshift',
+    type: route.type === 'static' || route.ip ? 'static' : 'openshift',
     status: route.status,
     testbed: route.testbed,
     expiry: route.expiry,
     createdAt: new Date().toISOString(), // Mock date
     updatedAt: new Date().toISOString(), // Mock date
     // Conditional properties based on type
-    ...(route.type === 'anthos' ? { ip: route.ip } : {}),
-    ...(route.type !== 'anthos' && route.vip ? { vip: route.vip } : {}),
-    ...(route.type !== 'anthos' && route.apps ? { apps: route.apps } : {})
+    ...(route.ip ? { ip: route.ip } : {}),
+    ...(route.vip ? { vip: route.vip } : {}),
+    ...(route.apps ? { apps: route.apps } : {})
   }));
 };
 
@@ -64,10 +64,8 @@ export const fetchRoutesBySubnet = async (subnetId: string): Promise<RouteData[]
 // Fetch a single route by ID
 export const fetchRouteById = async (routeId: string): Promise<RouteData | null> => {
   try {
-    const response = await apiClient.get<RouteApiResponse[]>(`${ROUTES_ENDPOINT}/${routeId}`);
-    const route = Array.isArray(response.data) 
-      ? response.data.find(r => r._id.$oid === routeId)
-      : response.data;
+    const response = await apiClient.get<RouteApiResponse>(`${ROUTES_ENDPOINT}/${routeId}`);
+    const route = response.data;
     return route ? transformRouteData([route])[0] : null;
   } catch (error) {
     console.error(`Error fetching route ${routeId}:`, error);
