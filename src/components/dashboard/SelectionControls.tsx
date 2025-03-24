@@ -10,6 +10,8 @@ import {
 import { useQuery } from '@tanstack/react-query';
 import { fetchInfraTags, fetchClustersForVCenter } from '@/api/dashboardApi';
 import { VCenterClusterData } from '@/api/types';
+import { EmptyState } from '@/components/compute/EmptyState';
+import { ServerOff } from 'lucide-react';
 
 interface SelectionControlsProps {
   onVCenterChange: (vCenterId: string) => void;
@@ -67,36 +69,39 @@ export const SelectionControls: React.FC<SelectionControlsProps> = ({
     name: vc
   }));
 
+  // Set default vCenter when available
   useEffect(() => {
     if (vCenters.length > 0 && !selectedVCenter) {
+      console.log("Setting default vCenter:", vCenters[0].id);
       setSelectedVCenter(vCenters[0].id);
       onVCenterChange(vCenters[0].id);
     }
   }, [vCenters, selectedVCenter, onVCenterChange]);
 
+  // Set default cluster when available
   useEffect(() => {
-    // Log for debugging
-    console.log("Clusters data:", clusters);
-    
-    if (clusters.length > 0 && !selectedCluster) {
-      console.log("Setting selected cluster to:", clusters[0].id);
+    // Only if we have clusters and no cluster is selected yet
+    if (clusters && clusters.length > 0 && !selectedCluster) {
+      console.log("Setting default cluster:", clusters[0].id);
       setSelectedCluster(clusters[0].id);
       onClusterChange(clusters[0].id);
-    } else if (selectedVCenter && clusters.length === 0) {
-      console.log("No clusters available for vCenter, resetting selection");
+    } else if (selectedVCenter && clusters && clusters.length === 0) {
+      // If no clusters available for this vCenter, clear selection
+      console.log("No clusters available for vCenter, clearing selection");
       setSelectedCluster('');
       onClusterChange('');
     }
   }, [clusters, selectedCluster, selectedVCenter, onClusterChange]);
 
   const handleVCenterChange = (value: string) => {
+    console.log("vCenter changed to:", value);
     setSelectedVCenter(value);
     setSelectedCluster(''); // Reset cluster when vCenter changes
     onVCenterChange(value);
   };
 
   const handleClusterChange = (value: string) => {
-    console.log("Cluster selected:", value);
+    console.log("Cluster changed to:", value);
     setSelectedCluster(value);
     onClusterChange(value);
   };
@@ -118,6 +123,9 @@ export const SelectionControls: React.FC<SelectionControlsProps> = ({
 
   const isDisabled = disabled || Object.keys(vCentersAndClusters).length === 0 || isLoadingTags;
 
+  // Show loading state for clusters
+  const showClusterLoading = isLoadingClusters && selectedVCenter;
+
   return (
     <div className="flex flex-wrap justify-between mb-6 gap-4">
       <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-1/2">
@@ -132,11 +140,17 @@ export const SelectionControls: React.FC<SelectionControlsProps> = ({
               <SelectValue placeholder="Select vCenter" />
             </SelectTrigger>
             <SelectContent>
-              {vCenters.map((vCenter) => (
-                <SelectItem key={vCenter.id} value={vCenter.id}>
-                  {vCenter.name}
-                </SelectItem>
-              ))}
+              {vCenters.length > 0 ? (
+                vCenters.map((vCenter) => (
+                  <SelectItem key={vCenter.id} value={vCenter.id}>
+                    {vCenter.name}
+                  </SelectItem>
+                ))
+              ) : (
+                <div className="p-2 text-center text-muted-foreground">
+                  No vCenters available
+                </div>
+              )}
             </SelectContent>
           </Select>
         </div>
@@ -148,14 +162,24 @@ export const SelectionControls: React.FC<SelectionControlsProps> = ({
             disabled={isDisabled || !selectedVCenter || isLoadingClusters}
           >
             <SelectTrigger className="w-full">
-              <SelectValue placeholder="Select Cluster" />
+              <SelectValue placeholder={showClusterLoading ? "Loading..." : "Select Cluster"} />
             </SelectTrigger>
             <SelectContent>
-              {clusters.map((cluster) => (
-                <SelectItem key={cluster.id} value={cluster.id}>
-                  {cluster.name}
-                </SelectItem>
-              ))}
+              {clusters.length > 0 ? (
+                clusters.map((cluster) => (
+                  <SelectItem key={cluster.id} value={cluster.id}>
+                    {cluster.name}
+                  </SelectItem>
+                ))
+              ) : (
+                <div className="p-2 text-center text-muted-foreground">
+                  {isLoadingClusters ? (
+                    "Loading clusters..."
+                  ) : (
+                    "No clusters available"
+                  )}
+                </div>
+              )}
             </SelectContent>
           </Select>
         </div>
@@ -170,21 +194,27 @@ export const SelectionControls: React.FC<SelectionControlsProps> = ({
             <SelectValue placeholder="Filter by Tags" />
           </SelectTrigger>
           <SelectContent>
-            {infraTags?.map((tag) => (
-              <SelectItem 
-                key={tag.id} 
-                value={tag.id}
-                onClick={() => handleTagsChange(tag.id)}
-                className={selectedTags.includes(tag.id) ? "bg-secondary" : ""}
-              >
-                <span className="flex items-center gap-2">
-                  {tag.name}
-                  {selectedTags.includes(tag.id) && (
-                    <span className="h-2 w-2 rounded-full bg-primary"></span>
-                  )}
-                </span>
-              </SelectItem>
-            ))}
+            {infraTags && infraTags.length > 0 ? (
+              infraTags.map((tag) => (
+                <SelectItem 
+                  key={tag.id} 
+                  value={tag.id}
+                  onClick={() => handleTagsChange(tag.id)}
+                  className={selectedTags.includes(tag.id) ? "bg-secondary" : ""}
+                >
+                  <span className="flex items-center gap-2">
+                    {tag.name}
+                    {selectedTags.includes(tag.id) && (
+                      <span className="h-2 w-2 rounded-full bg-primary"></span>
+                    )}
+                  </span>
+                </SelectItem>
+              ))
+            ) : (
+              <div className="p-2 text-center text-muted-foreground">
+                {isLoadingTags ? "Loading tags..." : "No tags available"}
+              </div>
+            )}
           </SelectContent>
         </Select>
       </div>

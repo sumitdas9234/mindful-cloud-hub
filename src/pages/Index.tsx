@@ -1,10 +1,10 @@
+
 import React, { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { StatsSummary } from "@/components/dashboard/sections/StatsSummary";
 import { ResourceUsageChart } from "@/components/dashboard/sections/ResourceUsageChart";
 import { SystemLoad } from "@/components/dashboard/sections/SystemLoad";
-import { ManagedServices } from "@/components/dashboard/sections/ManagedServices";
 import { SelectionControls } from "@/components/dashboard/SelectionControls";
 import {
   StatCardSkeleton,
@@ -18,12 +18,16 @@ import {
   fetchVCentersAndClusters,
 } from "@/api/dashboardApi";
 import { Separator } from "@/components/ui/separator";
+import { EmptyState } from "@/components/compute/EmptyState";
+import { ServerOff } from "lucide-react";
+import { ErrorBoundary } from "@/components/ui/error-boundary";
 
 const Index = () => {
   const [selectedVCenter, setSelectedVCenter] = useState<string>("");
   const [selectedCluster, setSelectedCluster] = useState<string>("");
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [isSelectionChanging, setIsSelectionChanging] = useState(false);
+  const [isInitializing, setIsInitializing] = useState(true);
 
   // Fetch vCenters and clusters to populate dropdowns
   const vCentersAndClustersQuery = useQuery({
@@ -31,7 +35,11 @@ const Index = () => {
     queryFn: fetchVCentersAndClusters,
   });
 
-  // Fetch all data in parallel
+  // Only fetch data when selection is ready and not initializing
+  const dataQueryEnabled = 
+    (!isInitializing && (!!selectedCluster || !!selectedVCenter));
+
+  // Fetch all data in parallel, but only when we have selections
   const statsQuery = useQuery({
     queryKey: [
       "dashboardStats",
@@ -45,7 +53,7 @@ const Index = () => {
         clusterId: selectedCluster,
         tagIds: selectedTags,
       }),
-    enabled: !!selectedCluster || !!selectedVCenter,
+    enabled: dataQueryEnabled,
   });
 
   const resourceUsageQuery = useQuery({
@@ -56,7 +64,7 @@ const Index = () => {
         clusterId: selectedCluster,
         tagIds: selectedTags,
       }),
-    enabled: !!selectedCluster || !!selectedVCenter,
+    enabled: dataQueryEnabled,
   });
 
   const systemLoadQuery = useQuery({
@@ -67,7 +75,7 @@ const Index = () => {
         clusterId: selectedCluster,
         tagIds: selectedTags,
       }),
-    enabled: !!selectedCluster || !!selectedVCenter,
+    enabled: dataQueryEnabled,
   });
 
   // Check if all data is loaded
@@ -92,8 +100,16 @@ const Index = () => {
     ) {
       const firstVCenter = Object.keys(vCentersAndClustersQuery.data)[0];
       setSelectedVCenter(firstVCenter);
+      console.log("Setting default vCenter:", firstVCenter);
     }
   }, [vCentersAndClustersQuery.data, selectedVCenter]);
+
+  // After initialization is complete, stop initializing state
+  useEffect(() => {
+    if (selectedVCenter && !isInitializing) {
+      setIsInitializing(false);
+    }
+  }, [selectedVCenter, isInitializing]);
 
   useEffect(() => {
     // When selection changes, show loading state
@@ -122,8 +138,33 @@ const Index = () => {
     setSelectedTags(tagIds);
   };
 
+  // When we change dropdown selections, wait until we are not initializing anymore
+  useEffect(() => {
+    if (selectedVCenter && vCentersAndClustersQuery.isSuccess) {
+      setIsInitializing(false);
+    }
+  }, [selectedVCenter, vCentersAndClustersQuery.isSuccess]);
+
   // Show loading skeletons during initial load or when selections change
   const showSkeletons = isLoading || (isSelectionChanging && isFetching);
+
+  // If there are no vCenters or clusters, show empty state
+  const noData = vCentersAndClustersQuery.isSuccess && 
+    Object.keys(vCentersAndClustersQuery.data || {}).length === 0;
+
+  // Render empty state if no vCenters or clusters found
+  if (noData) {
+    return (
+      <div className="space-y-6">
+        <DashboardHeader />
+        <EmptyState
+          icon={<ServerOff className="h-12 w-12 text-muted-foreground mb-4" />}
+          title="No vCenters or Clusters Found"
+          description="There are no vCenters or clusters configured in the system."
+        />
+      </div>
+    );
+  }
 
   // Render skeleton loading state
   if (showSkeletons) {
@@ -173,36 +214,51 @@ const Index = () => {
     <div className="space-y-6 animate-in fade-in duration-500">
       <DashboardHeader />
 
-      <SelectionControls
-        onVCenterChange={handleVCenterChange}
-        onClusterChange={handleClusterChange}
-        onTagsChange={handleTagsChange}
-        selectedVCenter={selectedVCenter}
-        selectedCluster={selectedCluster}
-        selectedTags={selectedTags}
-        vCentersAndClusters={vCentersAndClustersQuery.data}
-      />
-
-      <Separator className="my-6" />
-
-      <StatsSummary
-        vCenterId={selectedVCenter}
-        clusterId={selectedCluster}
-        tagIds={selectedTags}
-      />
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <ResourceUsageChart
-          vCenterId={selectedVCenter}
-          clusterId={selectedCluster}
-          tagIds={selectedTags}
+      <ErrorBoundary fallback={<EmptyState 
+        title="Something went wrong" 
+        description="There was an error loading the dashboard data." 
+      />}>
+        <SelectionControls
+          onVCenterChange={handleVCenterChange}
+          onClusterChange={handleClusterChange}
+          onTagsChange={handleTagsChange}
+          selectedVCenter={selectedVCenter}
+          selectedCluster={selectedCluster}
+          selectedTags={selectedTags}
+          vCentersAndClusters={vCentersAndClustersQuery.data}
         />
-        <SystemLoad
-          vCenterId={selectedVCenter}
-          clusterId={selectedCluster}
-          tagIds={selectedTags}
-        />
-      </div>
+
+        <Separator className="my-6" />
+
+        {dataQueryEnabled ? (
+          <>
+            <StatsSummary
+              vCenterId={selectedVCenter}
+              clusterId={selectedCluster}
+              tagIds={selectedTags}
+            />
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <ResourceUsageChart
+                vCenterId={selectedVCenter}
+                clusterId={selectedCluster}
+                tagIds={selectedTags}
+              />
+              <SystemLoad
+                vCenterId={selectedVCenter}
+                clusterId={selectedCluster}
+                tagIds={selectedTags}
+              />
+            </div>
+          </>
+        ) : (
+          <EmptyState
+            icon={<ServerOff className="h-8 w-8 text-muted-foreground mb-2" />}
+            title="No Data Available"
+            description="Please select a vCenter and Cluster to view dashboard data."
+          />
+        )}
+      </ErrorBoundary>
     </div>
   );
 };
