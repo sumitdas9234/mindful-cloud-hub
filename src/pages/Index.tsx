@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
@@ -29,17 +28,14 @@ const Index = () => {
   const [isSelectionChanging, setIsSelectionChanging] = useState(false);
   const [isInitializing, setIsInitializing] = useState(true);
 
-  // Fetch vCenters and clusters to populate dropdowns
   const vCentersAndClustersQuery = useQuery({
     queryKey: ["vCentersAndClusters"],
     queryFn: fetchVCentersAndClusters,
   });
 
-  // Only fetch data when selection is ready and not initializing
   const dataQueryEnabled = 
     (!isInitializing && (!!selectedCluster || !!selectedVCenter));
 
-  // Fetch all data in parallel, but only when we have selections
   const statsQuery = useQuery({
     queryKey: [
       "dashboardStats",
@@ -78,7 +74,6 @@ const Index = () => {
     enabled: dataQueryEnabled,
   });
 
-  // Check if all data is loaded
   const isLoading =
     vCentersAndClustersQuery.isLoading ||
     statsQuery.isLoading ||
@@ -91,7 +86,6 @@ const Index = () => {
     resourceUsageQuery.isFetching ||
     systemLoadQuery.isFetching;
 
-  // Set default vCenter and cluster if available and none selected
   useEffect(() => {
     if (
       vCentersAndClustersQuery.data &&
@@ -104,7 +98,6 @@ const Index = () => {
     }
   }, [vCentersAndClustersQuery.data, selectedVCenter]);
 
-  // After initialization is complete, stop initializing state
   useEffect(() => {
     if (selectedVCenter && !isInitializing) {
       setIsInitializing(false);
@@ -112,7 +105,6 @@ const Index = () => {
   }, [selectedVCenter, isInitializing]);
 
   useEffect(() => {
-    // When selection changes, show loading state
     if (isSelectionChanging && !isFetching) {
       setIsSelectionChanging(false);
     }
@@ -138,35 +130,32 @@ const Index = () => {
     setSelectedTags(tagIds);
   };
 
-  // When we change dropdown selections, wait until we are not initializing anymore
   useEffect(() => {
     if (selectedVCenter && vCentersAndClustersQuery.isSuccess) {
       setIsInitializing(false);
     }
   }, [selectedVCenter, vCentersAndClustersQuery.isSuccess]);
 
-  // Show loading skeletons during initial load or when selections change
   const showSkeletons = isLoading || (isSelectionChanging && isFetching);
 
-  // If there are no vCenters or clusters, show empty state
   const noData = vCentersAndClustersQuery.isSuccess && 
     Object.keys(vCentersAndClustersQuery.data || {}).length === 0;
 
-  // Render empty state if no vCenters or clusters found
   if (noData) {
     return (
-      <div className="space-y-6">
+      <div className="flex flex-col h-full min-h-[calc(100vh-10rem)]">
         <DashboardHeader />
-        <EmptyState
-          icon={<ServerOff className="h-12 w-12 text-muted-foreground mb-4" />}
-          title="No vCenters or Clusters Found"
-          description="There are no vCenters or clusters configured in the system."
-        />
+        <div className="flex-1 flex items-center justify-center">
+          <EmptyState
+            icon={<ServerOff className="h-12 w-12 text-muted-foreground mb-4" />}
+            title="No vCenters or Clusters Found"
+            description="There are no vCenters or clusters configured in the system."
+          />
+        </div>
       </div>
     );
   }
 
-  // Render skeleton loading state
   if (showSkeletons) {
     return (
       <div className="space-y-6">
@@ -179,7 +168,7 @@ const Index = () => {
           selectedVCenter={selectedVCenter}
           selectedCluster={selectedCluster}
           selectedTags={selectedTags}
-          disabled={isLoading} // Only disable during initial load
+          disabled={isLoading}
           vCentersAndClusters={vCentersAndClustersQuery.data}
         />
 
@@ -214,10 +203,14 @@ const Index = () => {
     <div className="space-y-6 animate-in fade-in duration-500">
       <DashboardHeader />
 
-      <ErrorBoundary fallback={<EmptyState 
-        title="Something went wrong" 
-        description="There was an error loading the dashboard data." 
-      />}>
+      <ErrorBoundary fallback={
+        <div className="flex-1 flex items-center justify-center min-h-[calc(100vh-15rem)]">
+          <EmptyState 
+            title="Something went wrong" 
+            description="There was an error loading the dashboard data." 
+          />
+        </div>
+      }>
         <SelectionControls
           onVCenterChange={handleVCenterChange}
           onClusterChange={handleClusterChange}
@@ -252,11 +245,13 @@ const Index = () => {
             </div>
           </>
         ) : (
-          <EmptyState
-            icon={<ServerOff className="h-8 w-8 text-muted-foreground mb-2" />}
-            title="No Data Available"
-            description="Please select a vCenter and Cluster to view dashboard data."
-          />
+          <div className="flex-1 flex items-center justify-center min-h-[calc(100vh-15rem)]">
+            <EmptyState
+              icon={<ServerOff className="h-8 w-8 text-muted-foreground mb-2" />}
+              title="No Data Available"
+              description="Please select a vCenter and Cluster to view dashboard data."
+            />
+          </div>
         )}
       </ErrorBoundary>
     </div>
