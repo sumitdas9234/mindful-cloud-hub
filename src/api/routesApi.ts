@@ -22,8 +22,8 @@ const transformRouteData = (data: RouteApiResponse[]): RouteData[] => {
     name: route.name,
     subnetId: route.subnet,
     subnetName: route.subnet, // In a real app, you'd look up the human-readable name
-    // Determine type based on presence of fields
-    type: route.type === 'static' || route.ip ? 'static' : 'openshift',
+    // Determine type based on presence of fields or explicit type
+    type: route.type === 'static' || route.type === 'anthos' || route.ip ? 'static' : 'openshift',
     status: route.status,
     testbed: route.testbed,
     expiry: route.expiry,
