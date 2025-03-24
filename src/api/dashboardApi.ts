@@ -137,10 +137,15 @@ export const fetchClustersForVCenter = async (vCenterName: string, tagIds?: stri
     
     console.log("Filtered clusters:", filteredClusters);
     
-    return filteredClusters.map(cluster => ({
-      id: cluster.id,
-      name: cluster.id // Using ID as name for display
-    }));
+    return filteredClusters.map(cluster => {
+      // Ensure we have a valid ID, fall back to _id if needed
+      const clusterId = cluster.id || cluster._id;
+      
+      return {
+        id: clusterId,
+        name: clusterId // Use the same ID as the name for display
+      };
+    });
   } catch (error) {
     console.error("Error fetching clusters for vCenter:", error);
     return [];
