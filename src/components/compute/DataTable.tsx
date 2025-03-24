@@ -1,5 +1,4 @@
-
-import React, { ReactNode, useState } from 'react';
+import React, { ReactNode, useState } from "react";
 import {
   Table,
   TableBody,
@@ -7,9 +6,9 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table';
-import { EmptyState } from './EmptyState';
-import { TablePagination } from './TablePagination';
+} from "@/components/ui/table";
+import { EmptyState } from "./EmptyState";
+import { TablePagination } from "./TablePagination";
 import { cn } from "@/lib/utils";
 
 export interface Column<T> {
@@ -44,16 +43,24 @@ export function DataTable<T>({
   onRowClick,
   actionColumn,
   renderPagination,
-  disableInternalPagination = false
+  disableInternalPagination = false,
 }: DataTableProps<T>) {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
   // Calculate pagination only if internal pagination is enabled
-  const totalPages = !disableInternalPagination ? Math.ceil(data.length / itemsPerPage) : 1;
-  const startIndex = !disableInternalPagination ? (currentPage - 1) * itemsPerPage : 0;
-  const endIndex = !disableInternalPagination ? startIndex + itemsPerPage : data.length;
-  const currentPageData = !disableInternalPagination ? data.slice(startIndex, endIndex) : data;
+  const totalPages = !disableInternalPagination
+    ? Math.ceil(data.length / itemsPerPage)
+    : 1;
+  const startIndex = !disableInternalPagination
+    ? (currentPage - 1) * itemsPerPage
+    : 0;
+  const endIndex = !disableInternalPagination
+    ? startIndex + itemsPerPage
+    : data.length;
+  const currentPageData = !disableInternalPagination
+    ? data.slice(startIndex, endIndex)
+    : data;
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
@@ -69,9 +76,13 @@ export function DataTable<T>({
 
   if (data.length === 0) {
     return (
-      <EmptyState 
+      <EmptyState
         title={emptyTitle}
-        description={searchQuery ? "No items match your search criteria." : emptyDescription}
+        description={
+          searchQuery
+            ? "No items match your search criteria."
+            : emptyDescription
+        }
       />
     );
   }
@@ -95,29 +106,37 @@ export function DataTable<T>({
                   {column.header}
                 </TableHead>
               ))}
-              {actionColumn && <TableHead key="action-header" className="w-[50px]"></TableHead>}
+              {actionColumn && (
+                <TableHead key="action-header" className="w-[50px]"></TableHead>
+              )}
             </TableRow>
           </TableHeader>
           <TableBody>
-            {currentPageData.map((item) => (
-              <TableRow 
-                key={keyExtractor(item)} 
+            {currentPageData.map((item, index) => (
+              <TableRow
+                key={keyExtractor(item) || index}
                 className={cn(
                   "bg-white dark:bg-secondary/20",
                   onRowClick ? "cursor-pointer hover:bg-muted/50" : ""
                 )}
-                onClick={onRowClick ? (e) => handleRowClick(item, e) : undefined}
+                onClick={
+                  onRowClick ? (e) => handleRowClick(item, e) : undefined
+                }
               >
                 {columns.map((column) => (
-                  <TableCell 
-                    key={`${keyExtractor(item)}-${column.key}`} 
+                  <TableCell
+                    key={`${keyExtractor(item)}-${column.key}`}
                     className={`py-3 ${column.className || ""}`}
                   >
                     {column.cell(item)}
                   </TableCell>
                 ))}
                 {actionColumn && (
-                  <TableCell key={`${keyExtractor(item)}-actions`} className="py-3" onClick={(e) => e.stopPropagation()}>
+                  <TableCell
+                    key={`${keyExtractor(item)}-actions`}
+                    className="py-3"
+                    onClick={(e) => e.stopPropagation()}
+                  >
                     {actionColumn(item)}
                   </TableCell>
                 )}
