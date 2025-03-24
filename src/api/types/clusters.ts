@@ -25,7 +25,7 @@ export interface ClusterData {
 }
 
 export interface ClusterApiResponse {
-  _id: string;
+  id: string;
   org: string;
   vc: string;
   username: string;

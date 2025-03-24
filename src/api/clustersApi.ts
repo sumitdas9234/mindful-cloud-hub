@@ -6,7 +6,7 @@ import env from '@/config/env';
 // Transform clusters from API response format to app format
 const transformClusterData = (data: ClusterApiResponse[]): ClusterData[] => {
   return data.map(cluster => ({
-    id: cluster._id,
+    id: cluster.id,
     org: cluster.org,
     vc: cluster.vc,
     username: cluster.username,
@@ -26,7 +26,7 @@ const transformClusterData = (data: ClusterApiResponse[]): ClusterData[] => {
     hasDatastoreCluster: cluster.hasDatastoreCluster,
     // Additional UI properties
     status: cluster.isActive ? 'active' : 'inactive',
-    name: cluster._id, // Using _id as name for UI
+    name: cluster.id, // Using _id as name for UI
   }));
 };
 

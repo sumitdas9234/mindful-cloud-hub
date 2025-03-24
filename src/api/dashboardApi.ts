@@ -139,7 +139,7 @@ export const fetchClustersForVCenter = async (vCenterName: string, tagIds?: stri
     
     return filteredClusters.map(cluster => {
       // Ensure we have a valid ID, fall back to _id if needed
-      const clusterId = cluster.id || cluster._id;
+      const clusterId = cluster.id;
       
       return {
         id: clusterId,
