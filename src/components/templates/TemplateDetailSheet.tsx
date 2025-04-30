@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { TemplateOS, Kernel, VCenterAvailability } from '@/api/types/templates';
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet';
@@ -41,8 +40,8 @@ export const TemplateDetailSheet: React.FC<TemplateDetailSheetProps> = ({
             <SheetHeader className="text-left">
               <div className="flex items-center gap-3">
                 <div className="h-10 w-10 rounded-md bg-muted flex items-center justify-center overflow-hidden">
-                  {template.logoUrl ? (
-                    <img src={template.logoUrl} alt={template.name} className="h-8 w-8 object-contain" />
+                  {template.icon ? (
+                    <i className={`${template.icon} h-8 w-8 flex items-center justify-center`}></i>
                   ) : (
                     <div className="h-8 w-8 bg-primary/10 flex items-center justify-center rounded">
                       <span className="text-sm font-medium text-primary">{template.name.substring(0, 2)}</span>
