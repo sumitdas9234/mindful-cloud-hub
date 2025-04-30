@@ -7,7 +7,9 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { Navbar } from "@/components/layout/Navbar";
 import PublicLayout from "@/components/layout/PublicLayout";
+import AuthLayout from "@/components/layout/AuthLayout";
 import Index from "./pages/Index";
+import Login from "./pages/auth/Login";
 import NotFound from "./pages/NotFound";
 import SystemStatus from "./pages/public/SystemStatus";
 import VCenters from "./pages/compute/VCenters";
@@ -53,6 +55,16 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <Routes>
+          {/* Auth Routes */}
+          <Route 
+            path="/login" 
+            element={
+              <AuthLayout>
+                <Login />
+              </AuthLayout>
+            }
+          />
+          
           {/* Public Routes (No Auth Required) */}
           <Route 
             path="/system-status" 
