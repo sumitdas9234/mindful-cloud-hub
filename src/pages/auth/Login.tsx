@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Eye, EyeOff, Lock, Mail, Info, AlertTriangle, Bell, SeparatorVertical } from 'lucide-react';
+import { Eye, EyeOff, Lock, Mail, Info, AlertTriangle, Bell, FileText, LifeBuoy, Server } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -53,138 +53,142 @@ const Login = () => {
   ];
 
   return (
-    <div className="flex flex-col md:flex-row h-full min-h-screen bg-gradient-to-b from-background to-background/80">
+    <div className="flex flex-col h-full min-h-screen bg-gradient-to-b from-background to-background/80">
       <div className="absolute inset-0 z-0 overflow-hidden">
         <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 text-[20rem] font-bold text-primary/5 pointer-events-none select-none">
           PX
         </div>
       </div>
       
-      {/* Announcements Section (Left) */}
-      <div className="w-full md:w-1/2 p-6 z-10 flex flex-col">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2 text-primary">Management Portal</h1>
+      {/* Header/Navigation bar */}
+      <div className="relative z-10 flex items-center justify-between w-full p-6 border-b border-border/40 backdrop-blur-sm">
+        <div>
+          <h1 className="text-3xl font-bold text-primary">Management Portal</h1>
           <p className="text-muted-foreground">Platform announcements and updates</p>
         </div>
         
-        <div className="space-y-4 overflow-auto max-h-[70vh]">
-          {announcements.map((announcement, index) => (
-            <Card key={index} className="glass-card backdrop-blur-sm bg-white/5 border border-white/10 shadow-sm hover:shadow-md transition-all">
-              <CardHeader className="p-4 pb-2">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <div className={`p-1.5 rounded-full 
-                      ${announcement.type === 'maintenance' ? 'bg-destructive/10 text-destructive' : 
-                        announcement.type === 'new-feature' ? 'bg-primary/10 text-primary' : 
-                        'bg-muted/80 text-foreground'}`}>
-                      <announcement.icon className="h-4 w-4" />
-                    </div>
-                    <CardTitle className="text-lg">{announcement.title}</CardTitle>
-                  </div>
-                  <span className="text-xs text-muted-foreground">{announcement.date}</span>
-                </div>
-              </CardHeader>
-              <CardContent className="p-4 pt-2">
-                <p className="text-sm text-muted-foreground">{announcement.description}</p>
-              </CardContent>
-            </Card>
-          ))}
+        <div className="flex items-center space-x-3">
+          <Button variant="ghost" size="sm" className="gap-2 hover:bg-white/20 hover:text-primary transition-all">
+            <FileText className="h-4 w-4" />
+            Documentation
+          </Button>
+          <Button variant="ghost" size="sm" className="gap-2 hover:bg-white/20 hover:text-primary transition-all">
+            <LifeBuoy className="h-4 w-4" />
+            Support
+          </Button>
+          <Button variant="ghost" size="sm" className="gap-2 hover:bg-white/20 hover:text-primary transition-all">
+            <Server className="h-4 w-4" />
+            System Status
+          </Button>
         </div>
-        
-        <div className="mt-auto pt-6">
-          <div className="bg-card/30 backdrop-blur-sm rounded-lg p-5 border border-muted/20">
-            <h3 className="text-lg font-semibold mb-3 text-primary">Resources</h3>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-              <Button variant="outline" size="sm" className="glass-effect hover:bg-white/20 hover:text-primary transition-all">
-                Documentation
-              </Button>
-              <Button variant="outline" size="sm" className="glass-effect hover:bg-white/20 hover:text-primary transition-all">
-                Support
-              </Button>
-              <Button variant="outline" size="sm" className="glass-effect hover:bg-white/20 hover:text-primary transition-all">
-                System Status
-              </Button>
-            </div>
+      </div>
+      
+      {/* Main content area - Announcements and Login */}
+      <div className="flex flex-col md:flex-row flex-grow z-10">
+        {/* Announcements Section (Left - 60%) */}
+        <div className="w-full md:w-3/5 p-6 flex flex-col">
+          <div className="space-y-4 overflow-auto max-h-[70vh]">
+            {announcements.map((announcement, index) => (
+              <Card key={index} className="glass-card backdrop-blur-sm bg-white/5 border border-white/10 shadow-sm hover:shadow-md transition-all">
+                <CardHeader className="p-4 pb-2">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <div className={`p-1.5 rounded-full 
+                        ${announcement.type === 'maintenance' ? 'bg-destructive/10 text-destructive' : 
+                          announcement.type === 'new-feature' ? 'bg-primary/10 text-primary' : 
+                          'bg-muted/80 text-foreground'}`}>
+                        <announcement.icon className="h-4 w-4" />
+                      </div>
+                      <CardTitle className="text-lg">{announcement.title}</CardTitle>
+                    </div>
+                    <span className="text-xs text-muted-foreground">{announcement.date}</span>
+                  </div>
+                </CardHeader>
+                <CardContent className="p-4 pt-2">
+                  <p className="text-sm text-muted-foreground">{announcement.description}</p>
+                </CardContent>
+              </Card>
+            ))}
           </div>
         </div>
-      </div>
-      
-      {/* Vertical Divider */}
-      <div className="hidden md:flex items-center justify-center">
-        <Separator orientation="vertical" className="h-5/6 bg-border/50" />
-      </div>
-      
-      {/* Login Form Section (Right) */}
-      <div className="w-full md:w-1/2 z-10 flex items-center justify-center p-6">
-        <div className="w-full max-w-md">
-          <Card className="glass-card backdrop-blur-xl bg-white/10 border border-white/20 shadow-lg">
-            <CardHeader className="space-y-1">
-              <CardTitle className="text-2xl text-center">Login</CardTitle>
-              <CardDescription className="text-center">
-                Enter your credentials to continue
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
-                  <div className="relative">
-                    <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input 
-                      id="email"
-                      placeholder="name@example.com"
-                      type="email"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      className="pl-10"
-                      required
-                    />
+        
+        {/* Vertical Divider */}
+        <div className="hidden md:flex items-center justify-center">
+          <Separator orientation="vertical" className="h-5/6 bg-border/50" />
+        </div>
+        
+        {/* Login Form Section (Right - 40%) */}
+        <div className="w-full md:w-2/5 z-10 flex items-center justify-center p-6">
+          <div className="w-full max-w-md">
+            <Card className="glass-card backdrop-blur-xl bg-white/10 border border-white/20 shadow-lg">
+              <CardHeader className="space-y-1">
+                <CardTitle className="text-2xl text-center">Login</CardTitle>
+                <CardDescription className="text-center">
+                  Enter your credentials to continue
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <form onSubmit={handleSubmit} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="email">Email</Label>
+                    <div className="relative">
+                      <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <Input 
+                        id="email"
+                        placeholder="name@example.com"
+                        type="email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        className="pl-10"
+                        required
+                      />
+                    </div>
                   </div>
-                </div>
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <Label htmlFor="password">Password</Label>
-                    <a href="#" className="text-sm text-primary hover:underline">
-                      Forgot password?
-                    </a>
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <Label htmlFor="password">Password</Label>
+                      <a href="#" className="text-sm text-primary hover:underline">
+                        Forgot password?
+                      </a>
+                    </div>
+                    <div className="relative">
+                      <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        id="password"
+                        type={showPassword ? "text" : "password"}
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        className="pl-10"
+                        required
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                      >
+                        {showPassword ? (
+                          <EyeOff className="h-4 w-4" />
+                        ) : (
+                          <Eye className="h-4 w-4" />
+                        )}
+                      </button>
+                    </div>
                   </div>
-                  <div className="relative">
-                    <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      id="password"
-                      type={showPassword ? "text" : "password"}
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      className="pl-10"
-                      required
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                    >
-                      {showPassword ? (
-                        <EyeOff className="h-4 w-4" />
-                      ) : (
-                        <Eye className="h-4 w-4" />
-                      )}
-                    </button>
-                  </div>
-                </div>
-                <Button type="submit" className="w-full" disabled={isLoading}>
-                  {isLoading ? "Signing in..." : "Sign in"}
-                </Button>
-              </form>
-            </CardContent>
-            <CardFooter className="flex justify-center">
-              <p className="text-sm text-center text-muted-foreground">
-                Don't have an account?{" "}
-                <a href="#" className="text-primary hover:underline">
-                  Sign up
-                </a>
-              </p>
-            </CardFooter>
-          </Card>
+                  <Button type="submit" className="w-full" disabled={isLoading}>
+                    {isLoading ? "Signing in..." : "Sign in"}
+                  </Button>
+                </form>
+              </CardContent>
+              <CardFooter className="flex justify-center">
+                <p className="text-sm text-center text-muted-foreground">
+                  Don't have an account?{" "}
+                  <a href="#" className="text-primary hover:underline">
+                    Sign up
+                  </a>
+                </p>
+              </CardFooter>
+            </Card>
+          </div>
         </div>
       </div>
       
