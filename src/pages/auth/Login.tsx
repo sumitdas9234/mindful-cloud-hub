@@ -1,10 +1,11 @@
 
 import React, { useState } from 'react';
-import { Eye, EyeOff, Lock, Mail, Info, AlertTriangle, Bell } from 'lucide-react';
+import { Eye, EyeOff, Lock, Mail, Info, AlertTriangle, Bell, SeparatorVertical } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Separator } from '@/components/ui/separator';
 import { useNavigate } from 'react-router-dom';
 
 const Login = () => {
@@ -52,7 +53,7 @@ const Login = () => {
   ];
 
   return (
-    <div className="flex flex-col md:flex-row h-full min-h-screen p-4 bg-gradient-to-b from-background to-background/80">
+    <div className="flex flex-col md:flex-row h-full min-h-screen bg-gradient-to-b from-background to-background/80">
       <div className="absolute inset-0 z-0 overflow-hidden">
         <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 text-[20rem] font-bold text-primary/5 pointer-events-none select-none">
           PX
@@ -91,13 +92,26 @@ const Login = () => {
         </div>
         
         <div className="mt-auto pt-6">
-          <h3 className="text-lg font-semibold mb-2">Resources</h3>
-          <div className="flex flex-wrap gap-2">
-            <Button variant="outline" size="sm" className="glass-effect">Documentation</Button>
-            <Button variant="outline" size="sm" className="glass-effect">Support</Button>
-            <Button variant="outline" size="sm" className="glass-effect">System Status</Button>
+          <div className="bg-card/30 backdrop-blur-sm rounded-lg p-5 border border-muted/20">
+            <h3 className="text-lg font-semibold mb-3 text-primary">Resources</h3>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+              <Button variant="outline" size="sm" className="glass-effect hover:bg-white/20 hover:text-primary transition-all">
+                Documentation
+              </Button>
+              <Button variant="outline" size="sm" className="glass-effect hover:bg-white/20 hover:text-primary transition-all">
+                Support
+              </Button>
+              <Button variant="outline" size="sm" className="glass-effect hover:bg-white/20 hover:text-primary transition-all">
+                System Status
+              </Button>
+            </div>
           </div>
         </div>
+      </div>
+      
+      {/* Vertical Divider */}
+      <div className="hidden md:flex items-center justify-center">
+        <Separator orientation="vertical" className="h-5/6 bg-border/50" />
       </div>
       
       {/* Login Form Section (Right) */}
