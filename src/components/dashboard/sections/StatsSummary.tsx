@@ -57,7 +57,7 @@ export const StatsSummary: React.FC<StatsSummaryProps> = ({ vCenterId, clusterId
       title: "Total ESXI Hosts",
       value: esxiQuery.data?.length || 0,
       description: "Active infrastructure",
-      trend: "up",
+      trend: "up" as const,
       trendValue: "+2 from last month",
       isLoading: esxiQuery.isLoading,
       icon: Server
@@ -66,7 +66,7 @@ export const StatsSummary: React.FC<StatsSummaryProps> = ({ vCenterId, clusterId
       title: "Total Routes",
       value: routesQuery.data?.length || 0,
       description: "Network routes",
-      trend: "neutral",
+      trend: "neutral" as const,
       trendValue: "No change",
       isLoading: routesQuery.isLoading,
       icon: Route
@@ -75,7 +75,7 @@ export const StatsSummary: React.FC<StatsSummaryProps> = ({ vCenterId, clusterId
       title: "Total Testbeds",
       value: testbedsQuery.data?.length || 0,
       description: "Dev and test environments",
-      trend: "up",
+      trend: "up" as const,
       trendValue: "+3 from last month",
       isLoading: testbedsQuery.isLoading,
       icon: LayoutGrid
@@ -84,7 +84,7 @@ export const StatsSummary: React.FC<StatsSummaryProps> = ({ vCenterId, clusterId
       title: "Total VMs",
       value: vmsQuery.data || 0,
       description: "Virtual machines",
-      trend: "up",
+      trend: "up" as const,
       trendValue: "+5 from last month",
       isLoading: vmsQuery.isLoading,
       icon: Monitor
