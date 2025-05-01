@@ -1,3 +1,4 @@
+
 import axios from 'axios';
 import { ResourceUsageData, StatsData, SystemLoadData, VCenterClusterData, CountResponse, VCenterData, ClusterData, InfraTagData } from './types';
 import env from '@/config/env';
@@ -34,6 +35,42 @@ interface ESXIHost {
   name: string;
   vcenter: string;
   cluster: string;
+}
+
+// New interface for Route data
+interface RouteData {
+  id: string;
+  name: string;
+  subnet: string;
+  status: string;
+  expiry: string;
+  testbed: string;
+  vip?: {
+    fqdn: string;
+    ip: string;
+  };
+  apps?: {
+    fqdn: string;
+    ip: string;
+  };
+}
+
+// New interface for Testbed data
+interface TestbedData {
+  testbed: string;
+  isActive: boolean;
+  owner: string;
+  lease: number;
+  environment: string | null;
+  testbedName: string | null;
+  metadata: any | null;
+  isWhitelisted: boolean;
+  comments: string | null;
+  "CreatedOn(UTC)": string;
+  "ExpiresOn(UTC)": string;
+  vms: string[];
+  tags: string[] | null;
+  id: string;
 }
 
 // Fetch vCenters and clusters from API using clustersApi
@@ -183,43 +220,83 @@ export const fetchESXIHosts = async (clusterId: string): Promise<ESXIHost[]> => 
   }
 };
 
+// New function to fetch routes for a specific cluster
+export const fetchRoutes = async (clusterId: string): Promise<RouteData[]> => {
+  try {
+    if (!clusterId) {
+      return [];
+    }
+    
+    const response = await axios.get(`${BASE_API_URL}/routes/?cluster=${clusterId}`);
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching routes:", error);
+    return [];
+  }
+};
+
+// New function to fetch testbeds for a specific cluster
+export const fetchTestbeds = async (clusterId: string): Promise<TestbedData[]> => {
+  try {
+    if (!clusterId) {
+      return [];
+    }
+    
+    const response = await axios.get(`${BASE_API_URL}/testbeds/?cluster=${clusterId}`);
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching testbeds:", error);
+    return [];
+  }
+};
+
+// Mock function to simulate VM count API
+export const fetchVMsCount = async (clusterId: string): Promise<number> => {
+  // Simulate API call with random VM count between 10-50
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      const randomCount = Math.floor(Math.random() * 41) + 10; // Random number between 10-50
+      resolve(randomCount);
+    }, 200); // Simulate a short delay
+  });
+};
+
 // Transform metrics data to stats data for the stats cards
 export const fetchStatsData = async (params: { vCenterId?: string, clusterId?: string, tagIds?: string[] }): Promise<StatsData[]> => {
   try {
-    // If we have a clusterId, fetch ESXI hosts for that cluster
-    const esxiHosts = params.clusterId ? await fetchESXIHosts(params.clusterId) : [];
-    
-    // For the other metrics, use the existing function
-    const metrics = await fetchMetricsData({
-      vCenterId: params.vCenterId,
-      clusterId: params.clusterId
-    });
+    // Parallel API calls to fetch all required data
+    const [esxiHosts, routes, testbeds, vmsCount] = await Promise.all([
+      params.clusterId ? fetchESXIHosts(params.clusterId) : Promise.resolve([]),
+      params.clusterId ? fetchRoutes(params.clusterId) : Promise.resolve([]),
+      params.clusterId ? fetchTestbeds(params.clusterId) : Promise.resolve([]),
+      params.clusterId ? fetchVMsCount(params.clusterId) : Promise.resolve(0)
+    ]);
     
     return [
       {
         title: "Total ESXI Hosts",
-        value: esxiHosts.length.toString(), // Use the actual count from the new API
+        value: esxiHosts.length.toString(),
         description: "Active infrastructure",
         trend: "up",
         trendValue: "+2 from last month"
       },
       {
         title: "Total Routes",
-        value: metrics.routesCount.toString(),
+        value: routes.length.toString(),
         description: "Network routes",
         trend: "neutral",
         trendValue: "No change"
       },
       {
         title: "Total Testbeds",
-        value: metrics.testbedsCount.toString(),
+        value: testbeds.length.toString(),
         description: "Dev and test environments",
         trend: "up",
         trendValue: "+3 from last month"
       },
       {
         title: "Total VMs",
-        value: metrics.vmsCount.toString(),
+        value: vmsCount.toString(),
         description: "Virtual machines",
         trend: "up",
         trendValue: "+5 from last month"
