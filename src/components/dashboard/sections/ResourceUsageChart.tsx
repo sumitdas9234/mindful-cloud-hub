@@ -15,7 +15,7 @@ export const ResourceUsageChart: React.FC<ResourceUsageChartProps> = ({ vCenterI
     queryKey: ['resourceUsage', vCenterId, clusterId, tagIds],
     queryFn: () => fetchResourceUsageData({ vCenterId, clusterId, tagIds }),
     refetchInterval: 60000, // Refetch every minute
-    enabled: !!(clusterId || vCenterId),
+    enabled: !!clusterId,
   });
 
   // Debug the data we're receiving
@@ -29,10 +29,14 @@ export const ResourceUsageChart: React.FC<ResourceUsageChartProps> = ({ vCenterI
     <div className="h-full">
       {isLoading ? (
         <div className="h-80 rounded-lg bg-muted/50 animate-pulse" />
+      ) : !data || data.length === 0 ? (
+        <div className="h-80 rounded-lg border border-dashed flex items-center justify-center">
+          <p className="text-muted-foreground">No resource data available</p>
+        </div>
       ) : (
         <UsageChart
           title="Resource Usage (24h)"
-          data={data || []}
+          data={data}
           dataKeys={[
             { key: 'cpu', name: 'CPU', color: '#3b82f6' }, // Bright blue
             { key: 'memory', name: 'Memory', color: '#8b5cf6' }, // Purple

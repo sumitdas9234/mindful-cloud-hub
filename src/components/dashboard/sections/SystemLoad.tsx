@@ -16,8 +16,15 @@ export const SystemLoad: React.FC<SystemLoadProps> = ({ vCenterId, clusterId, ta
     queryKey: ['systemLoad', vCenterId, clusterId, tagIds],
     queryFn: () => fetchSystemLoad({ vCenterId, clusterId, tagIds }),
     refetchInterval: 30000, // Refetch every 30 seconds
-    enabled: !!(clusterId || vCenterId),
+    enabled: !!clusterId,
   });
+
+  // Debug data
+  React.useEffect(() => {
+    if (data) {
+      console.log("System Load Data:", data);
+    }
+  }, [data]);
 
   return (
     <div className="space-y-4">
