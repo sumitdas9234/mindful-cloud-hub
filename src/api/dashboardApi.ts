@@ -29,6 +29,13 @@ interface TimeseriesResponse {
   storageUsage: [number, number][];
 }
 
+// New interface for ESXI host data
+interface ESXIHost {
+  name: string;
+  vcenter: string;
+  cluster: string;
+}
+
 // Fetch vCenters and clusters from API using clustersApi
 export const fetchVCentersAndClusters = async (): Promise<VCenterClusterData> => {
   try {
@@ -161,9 +168,28 @@ export const fetchInfraTags = async (): Promise<{ id: string; name: string }[]> 
   }
 };
 
+// New function to fetch ESXI hosts for a specific cluster
+export const fetchESXIHosts = async (clusterId: string): Promise<ESXIHost[]> => {
+  try {
+    if (!clusterId) {
+      return [];
+    }
+    
+    const response = await axios.get(`${BASE_API_URL}/clusters/${clusterId}/esxi`);
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching ESXI hosts:", error);
+    return [];
+  }
+};
+
 // Transform metrics data to stats data for the stats cards
 export const fetchStatsData = async (params: { vCenterId?: string, clusterId?: string, tagIds?: string[] }): Promise<StatsData[]> => {
   try {
+    // If we have a clusterId, fetch ESXI hosts for that cluster
+    const esxiHosts = params.clusterId ? await fetchESXIHosts(params.clusterId) : [];
+    
+    // For the other metrics, use the existing function
     const metrics = await fetchMetricsData({
       vCenterId: params.vCenterId,
       clusterId: params.clusterId
@@ -172,7 +198,7 @@ export const fetchStatsData = async (params: { vCenterId?: string, clusterId?: s
     return [
       {
         title: "Total ESXI Hosts",
-        value: metrics.esxiCount.toString(),
+        value: esxiHosts.length.toString(), // Use the actual count from the new API
         description: "Active infrastructure",
         trend: "up",
         trendValue: "+2 from last month"
