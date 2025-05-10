@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -25,9 +24,25 @@ import Templates from "./pages/infrastructure/Templates";
 import Alerts from "./pages/observability/Alerts";
 import UsersPage from "./pages/administration/Users";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 60 * 1000, // 1 minute
+      gcTime: 5 * 60 * 1000, // 5 minutes
+      refetchOnWindowFocus: false,
+      retry: 1,
+      retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+    },
+  },
+});
 
-const Layout = ({ children, title }: { children: React.ReactNode; title: string }) => {
+const Layout = ({
+  children,
+  title,
+}: {
+  children: React.ReactNode;
+  title: string;
+}) => {
   return (
     <div className="flex h-screen w-full overflow-hidden bg-background">
       <Sidebar />
@@ -56,143 +71,143 @@ const App = () => (
       <BrowserRouter>
         <Routes>
           {/* Auth Routes */}
-          <Route 
-            path="/login" 
+          <Route
+            path="/login"
             element={
               <AuthLayout>
                 <Login />
               </AuthLayout>
             }
           />
-          
+
           {/* Public Routes (No Auth Required) */}
-          <Route 
-            path="/system-status" 
+          <Route
+            path="/system-status"
             element={
               <PublicLayout>
                 <SystemStatus />
               </PublicLayout>
             }
           />
-          
+
           {/* Protected Routes (Auth Required) */}
-          <Route 
-            path="/" 
+          <Route
+            path="/"
             element={
               <Layout title="Dashboard">
                 <Index />
               </Layout>
-            } 
+            }
           />
-          
-          <Route 
-            path="/kubernetes" 
+
+          <Route
+            path="/kubernetes"
             element={
               <Layout title="Kubernetes Management">
                 <Kubernetes />
               </Layout>
-            } 
+            }
           />
-          <Route 
-            path="/apps" 
+          <Route
+            path="/apps"
             element={
               <Layout title="Apps and Services">
                 <AppsAndServices />
               </Layout>
-            } 
+            }
           />
-          
-          <Route 
-            path="/vcenters" 
+
+          <Route
+            path="/vcenters"
             element={
               <Layout title="vCenter Management">
                 <VCenters />
               </Layout>
-            } 
+            }
           />
-          <Route 
-            path="/testbeds" 
+          <Route
+            path="/testbeds"
             element={
               <Layout title="Testbed Management">
                 <Testbeds />
               </Layout>
-            } 
+            }
           />
-          <Route 
-            path="/templates" 
+          <Route
+            path="/templates"
             element={
               <Layout title="VM Templates">
                 <Templates />
               </Layout>
-            } 
+            }
           />
-          <Route 
-            path="/clusters" 
+          <Route
+            path="/clusters"
             element={
               <Layout title="Cluster Management">
                 <ClustersPage />
               </Layout>
-            } 
+            }
           />
-          <Route 
-            path="/networking" 
+          <Route
+            path="/networking"
             element={
               <Layout title="Network Overview">
                 <Networking />
               </Layout>
-            } 
+            }
           />
-          <Route 
-            path="/networking/subnets" 
+          <Route
+            path="/networking/subnets"
             element={
               <Layout title="Subnet Management">
                 <Subnets />
               </Layout>
-            } 
+            }
           />
-          <Route 
-            path="/networking/routes" 
+          <Route
+            path="/networking/routes"
             element={
               <Layout title="Route Management">
                 <RoutesPage />
               </Layout>
-            } 
+            }
           />
-          <Route 
-            path="/storage" 
+          <Route
+            path="/storage"
             element={
               <Layout title="Storage Management">
                 <StorageManagement />
               </Layout>
-            } 
+            }
           />
-          
-          <Route 
-            path="/monitoring" 
+
+          <Route
+            path="/monitoring"
             element={
               <Layout title="Monitoring">
                 <ComingSoon feature="Monitoring" />
               </Layout>
-            } 
+            }
           />
-          <Route 
-            path="/alerts" 
+          <Route
+            path="/alerts"
             element={
               <Layout title="Alerts">
                 <Alerts />
               </Layout>
-            } 
+            }
           />
-          
-          <Route 
-            path="/users" 
+
+          <Route
+            path="/users"
             element={
               <Layout title="User Management">
                 <UsersPage />
               </Layout>
-            } 
+            }
           />
-          
+
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>

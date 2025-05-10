@@ -86,10 +86,10 @@ export const fetchVCentersAndClusters = async (): Promise<VCenterClusterData> =>
   try {
     // Fetch all clusters using the existing clustersApi
     const clusters = await fetchAllClustersFromApi();
-    
+
     // Create a map of vCenters to clusters
     const vcMap: VCenterClusterData = {};
-    
+
     clusters.forEach(cluster => {
       if (cluster.vc) {
         if (!vcMap[cluster.vc]) {
@@ -98,7 +98,7 @@ export const fetchVCentersAndClusters = async (): Promise<VCenterClusterData> =>
         vcMap[cluster.vc].push(cluster.id);
       }
     });
-    
+
     return vcMap;
   } catch (error) {
     console.error("Error fetching vCenters and clusters:", error);
@@ -111,15 +111,15 @@ export const fetchMetricsData = async (params: { vCenterId?: string, clusterId?:
   try {
     let url = `${BASE_API_URL}/overview/metrics`;
     let queryParams = new URLSearchParams();
-    
+
     if (params.clusterId) {
       queryParams.append('cluster', params.clusterId);
     }
-    
+
     if (params.vCenterId) {
       queryParams.append('vcenter', params.vCenterId);
     }
-    
+
     const response = await axios.get(`${url}?${queryParams.toString()}`);
     return response.data;
   } catch (error) {
@@ -141,15 +141,15 @@ export const fetchTimeseriesData = async (params: { vCenterId?: string, clusterI
   try {
     let url = `${BASE_API_URL}/overview/timeseries`;
     let queryParams = new URLSearchParams();
-    
+
     if (params.clusterId) {
       queryParams.append('cluster', params.clusterId);
     }
-    
+
     if (params.vCenterId) {
       queryParams.append('vcenter', params.vCenterId);
     }
-    
+
     const response = await axios.get(`${url}?${queryParams.toString()}`);
     return response.data;
   } catch (error) {
@@ -177,18 +177,18 @@ export const fetchVCenters = async (): Promise<{ id: string; name: string }[]> =
 };
 
 // Modified function to fetch clusters for a specific vCenter
-export const fetchClustersForVCenter = async (vCenterName: string, tagIds?: string[]): Promise<{ id: string; name: string }[]> => {
+export const fetchClustersForVCenter = async (vCenterName: string): Promise<{ id: string; name: string }[]> => {
   try {
     console.log("Fetching clusters for vCenter:", vCenterName);
-    
+
     // Fetch all clusters using the existing clustersApi
     const allClusters = await fetchAllClustersFromApi();
-    
+
     // Filter clusters by vCenter name
     const filteredClusters = allClusters.filter(cluster => cluster.vc === vCenterName);
-    
+
     console.log("Filtered clusters:", filteredClusters);
-    
+
     return filteredClusters.map(cluster => {
       // Use cluster.id for both id and name
       return {
@@ -202,24 +202,13 @@ export const fetchClustersForVCenter = async (vCenterName: string, tagIds?: stri
   }
 };
 
-// Fetch all infra tags
-export const fetchInfraTags = async (): Promise<{ id: string; name: string }[]> => {
-  try {
-    const response = await axios.get(`${BASE_API_URL}/tags`);
-    return response.data;
-  } catch (error) {
-    console.error("Error fetching infrastructure tags:", error);
-    return [];
-  }
-};
-
 // New function to fetch ESXI hosts for a specific cluster
 export const fetchESXIHosts = async (clusterId: string): Promise<ESXIHost[]> => {
   try {
     if (!clusterId) {
       return [];
     }
-    
+
     const response = await axios.get(`${BASE_API_URL}/clusters/${clusterId}/esxi`);
     return response.data;
   } catch (error) {
@@ -234,7 +223,7 @@ export const fetchRoutes = async (clusterId: string): Promise<RouteData[]> => {
     if (!clusterId) {
       return [];
     }
-    
+
     const response = await axios.get(`${BASE_API_URL}/routes/?cluster=${clusterId}`);
     return response.data;
   } catch (error) {
@@ -249,7 +238,7 @@ export const fetchTestbeds = async (clusterId: string): Promise<TestbedData[]> =
     if (!clusterId) {
       return [];
     }
-    
+
     const response = await axios.get(`${BASE_API_URL}/testbeds/?cluster=${clusterId}`);
     return response.data;
   } catch (error) {
@@ -275,7 +264,7 @@ export const fetchCPUUsage = async (clusterId: string): Promise<number> => {
     if (!clusterId) {
       return 0;
     }
-    
+
     const response = await axios.get<ResourceValue>(`${BASE_API_URL}/clusters/${clusterId}/cpu`);
     return response.data.value;
   } catch (error) {
@@ -290,7 +279,7 @@ export const fetchMemoryUsage = async (clusterId: string): Promise<number> => {
     if (!clusterId) {
       return 0;
     }
-    
+
     const response = await axios.get<ResourceValue>(`${BASE_API_URL}/clusters/${clusterId}/memory`);
     return response.data.value;
   } catch (error) {
@@ -305,7 +294,7 @@ export const fetchStorageUsage = async (clusterId: string): Promise<number> => {
     if (!clusterId) {
       return 0;
     }
-    
+
     const response = await axios.get<ResourceValue>(`${BASE_API_URL}/clusters/${clusterId}/storage`);
     return response.data.value;
   } catch (error) {
@@ -320,11 +309,11 @@ export const fetchCPUTimeSeriesData = async (clusterId: string): Promise<[number
     if (!clusterId) {
       return [];
     }
-    
+
     // Calculate start (24 hours ago) and end (now) timestamps
     const end = Math.floor(Date.now() / 1000);
     const start = end - (24 * 60 * 60); // 24 hours in seconds
-    
+
     const response = await axios.get<TimeSeriesPoints>(
       `${BASE_API_URL}/clusters/${clusterId}/cpu?start=${start}&end=${end}`
     );
@@ -341,11 +330,11 @@ export const fetchMemoryTimeSeriesData = async (clusterId: string): Promise<[num
     if (!clusterId) {
       return [];
     }
-    
+
     // Calculate start (24 hours ago) and end (now) timestamps
     const end = Math.floor(Date.now() / 1000);
     const start = end - (24 * 60 * 60); // 24 hours in seconds
-    
+
     const response = await axios.get<TimeSeriesPoints>(
       `${BASE_API_URL}/clusters/${clusterId}/memory?start=${start}&end=${end}`
     );
@@ -362,11 +351,11 @@ export const fetchStorageTimeSeriesData = async (clusterId: string): Promise<[nu
     if (!clusterId) {
       return [];
     }
-    
+
     // Calculate start (24 hours ago) and end (now) timestamps
     const end = Math.floor(Date.now() / 1000);
     const start = end - (24 * 60 * 60); // 24 hours in seconds
-    
+
     const response = await axios.get<TimeSeriesPoints>(
       `${BASE_API_URL}/clusters/${clusterId}/storage?start=${start}&end=${end}`
     );
@@ -378,7 +367,7 @@ export const fetchStorageTimeSeriesData = async (clusterId: string): Promise<[nu
 };
 
 // Transform metrics data to stats data for the stats cards
-export const fetchStatsData = async (params: { vCenterId?: string, clusterId?: string, tagIds?: string[] }): Promise<StatsData[]> => {
+export const fetchStatsData = async (params: { vCenterId?: string, clusterId?: string }): Promise<StatsData[]> => {
   try {
     // Parallel API calls to fetch all required data
     const [esxiHosts, routes, testbeds, vmsCount] = await Promise.all([
@@ -387,7 +376,7 @@ export const fetchStatsData = async (params: { vCenterId?: string, clusterId?: s
       params.clusterId ? fetchTestbeds(params.clusterId) : Promise.resolve([]),
       params.clusterId ? fetchVMsCount(params.clusterId) : Promise.resolve(0)
     ]);
-    
+
     return [
       {
         title: "Total ESXI Hosts",
@@ -425,32 +414,32 @@ export const fetchStatsData = async (params: { vCenterId?: string, clusterId?: s
 };
 
 // Updated function to fetch resource usage data from the new time series endpoints
-export const fetchResourceUsageData = async (params: { vCenterId?: string, clusterId?: string, tagIds?: string[] }): Promise<ResourceUsageData[]> => {
+export const fetchResourceUsageData = async (params: { vCenterId?: string, clusterId?: string }): Promise<ResourceUsageData[]> => {
   try {
     if (!params.clusterId) {
       return [];
     }
-    
+
     // Fetch time series data for all resources in parallel
     const [cpuData, memoryData, storageData] = await Promise.all([
       fetchCPUTimeSeriesData(params.clusterId),
       fetchMemoryTimeSeriesData(params.clusterId),
       fetchStorageTimeSeriesData(params.clusterId)
     ]);
-    
+
     // Create a merged dataset with timestamps as keys
     const timeMap = new Map<number, { name: string, cpu?: number, memory?: number, storage?: number }>();
-    
+
     // Process CPU data
     cpuData.forEach(([timestamp, value]) => {
       const date = new Date(timestamp * 1000);
       const formattedTime = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-      timeMap.set(timestamp, { 
+      timeMap.set(timestamp, {
         name: formattedTime,
         cpu: value
       });
     });
-    
+
     // Process memory data
     memoryData.forEach(([timestamp, value]) => {
       if (timeMap.has(timestamp)) {
@@ -459,13 +448,13 @@ export const fetchResourceUsageData = async (params: { vCenterId?: string, clust
       } else {
         const date = new Date(timestamp * 1000);
         const formattedTime = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-        timeMap.set(timestamp, { 
+        timeMap.set(timestamp, {
           name: formattedTime,
           memory: value
         });
       }
     });
-    
+
     // Process storage data
     storageData.forEach(([timestamp, value]) => {
       if (timeMap.has(timestamp)) {
@@ -474,18 +463,18 @@ export const fetchResourceUsageData = async (params: { vCenterId?: string, clust
       } else {
         const date = new Date(timestamp * 1000);
         const formattedTime = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-        timeMap.set(timestamp, { 
+        timeMap.set(timestamp, {
           name: formattedTime,
           storage: value
         });
       }
     });
-    
+
     // Convert map to sorted array
     const result = Array.from(timeMap.entries())
       .sort(([a], [b]) => a - b)
       .map(([_, data]) => data as ResourceUsageData);
-    
+
     return result;
   } catch (error) {
     console.error("Error fetching resource usage data:", error);
@@ -494,7 +483,7 @@ export const fetchResourceUsageData = async (params: { vCenterId?: string, clust
 };
 
 // Updated function to fetch system load data from the new CPU, Memory, and Storage endpoints
-export const fetchSystemLoad = async (params: { vCenterId?: string, clusterId?: string, tagIds?: string[] }): Promise<SystemLoadData> => {
+export const fetchSystemLoad = async (params: { vCenterId?: string, clusterId?: string }): Promise<SystemLoadData> => {
   try {
     if (!params.clusterId) {
       return {
@@ -504,7 +493,7 @@ export const fetchSystemLoad = async (params: { vCenterId?: string, clusterId?: 
         network: { value: 0, used: "0", total: "0 active" }
       };
     }
-    
+
     // Fetch all resource usage data in parallel
     const [cpuUsage, memoryUsage, storageUsage, routes] = await Promise.all([
       fetchCPUUsage(params.clusterId),
@@ -512,7 +501,7 @@ export const fetchSystemLoad = async (params: { vCenterId?: string, clusterId?: 
       fetchStorageUsage(params.clusterId),
       fetchRoutes(params.clusterId)
     ]);
-    
+
     return {
       cpu: cpuUsage,
       memory: {
@@ -542,46 +531,24 @@ export const fetchSystemLoad = async (params: { vCenterId?: string, clusterId?: 
   }
 };
 
-// Fetch clusters for specific tags across all vCenters
-export const fetchClustersByTags = async (tagIds: string[]): Promise<{ id: string; name: string; vCenterId: string; tags?: string[] }[]> => {
-  if (!tagIds || tagIds.length === 0) {
-    return [];
-  }
-  
-  try {
-    const response = await axios.get(`${BASE_API_URL}/clusters/tags`, {
-      params: { tags: tagIds.join(',') }
-    });
-    return response.data;
-  } catch (error) {
-    console.error("Error fetching clusters by tags:", error);
-    return [];
-  }
-};
-
 // Fetch servers
-export const fetchServers = async (params: { 
-  vCenterId?: string, 
-  clusterId?: string, 
-  tagIds?: string[],
-  category?: string 
+export const fetchServers = async (params: {
+  vCenterId?: string,
+  clusterId?: string,
+  category?: string
 }): Promise<any[]> => {
   if (!params.clusterId) {
     return [];
   }
-  
+
   try {
     const url = `${BASE_API_URL}/cluster/${params.clusterId}/servers`;
     const queryParams: Record<string, string> = {};
-    
+
     if (params.category) {
       queryParams.category = params.category;
     }
-    
-    if (params.tagIds && params.tagIds.length > 0) {
-      queryParams.tags = params.tagIds.join(',');
-    }
-    
+
     const response = await axios.get(url, { params: queryParams });
     return response.data;
   } catch (error) {
